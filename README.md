@@ -28,39 +28,39 @@ When you visit a website, MailFiller creates an email address by combining:
 
 ### First-Time Setup
 
-1. Click the MailFiller icon in your extensions bar
-2. Click "Settings" at the bottom of the popup
-3. Enter your email domain (e.g., `mg1.de`)
-4. Click "Save Settings"
+1. After installing, the extension will automatically open the settings page
+2. Enter your email domain (e.g., `mg1.de`)
+3. Click "Save Settings"
+4. You can access settings later by right-clicking the extension icon and selecting "Options"
 
 ## Usage
 
 1. **Navigate to any website**
 2. **Click on a text field** where you want to enter an email (or let the extension find email fields automatically)
-3. **Click the MailFiller icon** in your extensions bar
-4. **Click "Fill Email"** to insert the generated email address
+3. **Click the MailFiller icon** in your extensions bar - the email will be filled immediately!
 
 The extension will:
 - First try to fill the currently focused field
 - If no field is focused, it will look for email input fields
 - As a fallback, it will find any suitable text input field
+- Show a notification with the filled email address
+- Show error notifications if something goes wrong
 
 ## File Structure
 
 ```
 MailFiller/
 ├── manifest.json          # Extension configuration
-├── popup.html            # Popup interface HTML
-├── popup.js              # Popup logic
-├── content.js            # Content script for filling emails
-├── options.html          # Settings page HTML
-├── options.js            # Settings page logic
-├── icons/                # Extension icons
+├── background.js          # Service worker for handling icon clicks
+├── content.js             # Content script for filling emails
+├── options.html           # Settings page HTML
+├── options.js             # Settings page logic
+├── icons/                 # Extension icons
 │   ├── icon16.png
 │   ├── icon32.png
 │   ├── icon48.png
 │   └── icon128.png
-└── README.md             # This file
+└── README.md              # This file
 ```
 
 ## Permissions
@@ -68,6 +68,7 @@ MailFiller/
 The extension requires minimal permissions:
 - **activeTab**: To interact with the current tab
 - **storage**: To save your email domain preference
+- **notifications**: To show success/error messages
 
 ## Privacy
 
