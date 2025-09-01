@@ -1,0 +1,111 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Validate manifest.json
+      run: |
+        echo "Validating manifest.json..."
+        python3 -c "
+        import json
+        import sys
+        
+        try:
+            with open('manifest.json', 'r') as f:
+                manifest = json.load(f)
+                print(f'✅ Manifest valid. Version: {manifest.get(\"version\")}')
+                print(f'   Name: {manifest.get(\"name\")}')
+                print(f'   Description: {manifest.get(\"description\")}')
+        except Exception as e:
+            print(f'❌ Manifest validation failed: {e}')
+            sys.exit(1)
+        "
+    
+    - name: Check required files
+      run: |
+        echo "Checking required files..."
+        required_files=(
+          "manifest.json"
+          "background.js"
+          "content.js"
+          "options.html"
+          "options.js"
+          "icons/icon16.png"
+          "icons/icon32.png"
+          "icons/icon48.png"
+          "icons/icon128.png"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file exists"
+          else
+            echo "❌ $file is missing"
+            exit 1
+          fi
+        done
+    
+    - name: Create extension package
+      run: |
+        echo "Creating extension package..."
+        # Create a clean directory for the extension
+        mkdir -p dist
+        
+        # Copy all necessary files
+        cp manifest.json dist/
+        cp background.js dist/
+        cp content.js dist/
+        cp options.html dist/
+        cp options.js dist/
+        cp -r icons dist/
+        
+        # Create zip file
+        cd dist
+        zip -r ../mailfiller-extension.zip . -x "*.DS_Store" "*__MACOSX*"
+        cd ..
+        
+        echo "✅ Extension package created: mailfiller-extension.zip"
+        echo "📦 Package size: $(du -h mailfiller-extension.zip | cut -f1)"
+    
+    - name: Upload extension artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mailfiller-extension
+        path: mailfiller-extension.zip
+        retention-days: 30
+    
+    - name: Generate build report
+      run: |
+        echo "## Build Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Extension Details" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: mailfiller-extension.zip" >> $GITHUB_STEP_SUMMARY
+        echo "- **Size**: $(du -h mailfiller-extension.zip | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Files**: $(unzip -l mailfiller-extension.zip | tail -1 | awk '{print $2}')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Manifest Info" >> $GITHUB_STEP_SUMMARY
+        python3 -c "
+        import json
+        with open('manifest.json', 'r') as f:
+            m = json.load(f)
+            print(f\"- **Version**: {m.get('version')}\")
+            print(f\"- **Name**: {m.get('name')}\")
+            print(f\"- **Permissions**: {', '.join(m.get('permissions', []))}\")
+        " >> $GITHUB_STEP_SUMMARY

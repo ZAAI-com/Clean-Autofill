@@ -1,0 +1,31 @@
+{
+  "name": "mailfiller-chrome-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension that automatically fills email addresses based on the current website domain",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "pack": "node scripts/pack.js",
+    "bump:patch": "node scripts/bump-version.js patch",
+    "bump:minor": "node scripts/bump-version.js minor",
+    "bump:major": "node scripts/bump-version.js major",
+    "release": "npm run pack && echo 'Ready for release. Tag and push to trigger GitHub Actions.'",
+    "test": "echo 'No tests configured yet'",
+    "validate": "node scripts/validate.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZAAI-com/MailFiller.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "email",
+    "autofill",
+    "productivity"
+  ],
+  "author": "ZAAI",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

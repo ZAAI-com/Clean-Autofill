@@ -1,0 +1,221 @@
+name: Release to Chrome Web Store
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Get version from manifest
+      id: get_version
+      run: |
+        VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $VERSION"
+    
+    - name: Update version (if workflow_dispatch)
+      if: github.event_name == 'workflow_dispatch'
+      id: bump_version
+      run: |
+        python3 -c "
+        import json
+        import sys
+        
+        def bump_version(version, bump_type):
+            parts = version.split('.')
+            major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+            
+            if bump_type == 'major':
+                major += 1
+                minor = 0
+                patch = 0
+            elif bump_type == 'minor':
+                minor += 1
+                patch = 0
+            elif bump_type == 'patch':
+                patch += 1
+            
+            return f'{major}.{minor}.{patch}'
+        
+        with open('manifest.json', 'r') as f:
+            manifest = json.load(f)
+        
+        old_version = manifest['version']
+        new_version = bump_version(old_version, '${{ github.event.inputs.release_type }}')
+        manifest['version'] = new_version
+        
+        with open('manifest.json', 'w') as f:
+            json.dump(manifest, f, indent=2)
+        
+        print(f'Version bumped from {old_version} to {new_version}')
+        print(f'NEW_VERSION={new_version}')
+        "
+        NEW_VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Create extension package
+      run: |
+        echo "Creating extension package..."
+        mkdir -p dist
+        
+        # Copy all necessary files
+        cp manifest.json dist/
+        cp background.js dist/
+        cp content.js dist/
+        cp options.html dist/
+        cp options.js dist/
+        cp -r icons dist/
+        
+        # Create zip file
+        cd dist
+        zip -r ../mailfiller-extension.zip . -x "*.DS_Store" "*__MACOSX*"
+        cd ..
+        
+        echo "✅ Extension package created"
+    
+    - name: Upload to Chrome Web Store
+      id: upload
+      env:
+        CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+        CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+        CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      run: |
+        # Check if credentials are set
+        if [ -z "$CHROME_CLIENT_ID" ] || [ -z "$CHROME_CLIENT_SECRET" ] || [ -z "$CHROME_REFRESH_TOKEN" ] || [ -z "$CHROME_EXTENSION_ID" ]; then
+          echo "⚠️  Chrome Web Store credentials not configured. Skipping upload."
+          echo "Please set the following secrets in your repository:"
+          echo "  - CHROME_CLIENT_ID"
+          echo "  - CHROME_CLIENT_SECRET"
+          echo "  - CHROME_REFRESH_TOKEN"
+          echo "  - CHROME_EXTENSION_ID"
+          echo "UPLOAD_SKIPPED=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        # Get access token
+        echo "Getting access token..."
+        ACCESS_TOKEN=$(curl -s -X POST \
+          -d "client_id=$CHROME_CLIENT_ID" \
+          -d "client_secret=$CHROME_CLIENT_SECRET" \
+          -d "refresh_token=$CHROME_REFRESH_TOKEN" \
+          -d "grant_type=refresh_token" \
+          https://oauth2.googleapis.com/token | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+        
+        # Upload to Chrome Web Store
+        echo "Uploading to Chrome Web Store..."
+        UPLOAD_RESPONSE=$(curl -s -X PUT \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "x-goog-api-version: 2" \
+          -T mailfiller-extension.zip \
+          "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$CHROME_EXTENSION_ID")
+        
+        echo "Upload response: $UPLOAD_RESPONSE"
+        
+        # Check upload status
+        if echo "$UPLOAD_RESPONSE" | grep -q "SUCCESS"; then
+          echo "✅ Upload successful"
+          echo "UPLOAD_SUCCESS=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Upload failed"
+          echo "$UPLOAD_RESPONSE"
+          exit 1
+        fi
+    
+    - name: Publish to Chrome Web Store
+      if: steps.upload.outputs.UPLOAD_SUCCESS == 'true'
+      env:
+        CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+        CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+        CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      run: |
+        # Get access token
+        ACCESS_TOKEN=$(curl -s -X POST \
+          -d "client_id=$CHROME_CLIENT_ID" \
+          -d "client_secret=$CHROME_CLIENT_SECRET" \
+          -d "refresh_token=$CHROME_REFRESH_TOKEN" \
+          -d "grant_type=refresh_token" \
+          https://oauth2.googleapis.com/token | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+        
+        # Publish the extension
+        echo "Publishing extension..."
+        PUBLISH_RESPONSE=$(curl -s -X POST \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "x-goog-api-version: 2" \
+          -H "Content-Length: 0" \
+          "https://www.googleapis.com/chromewebstore/v1.1/items/$CHROME_EXTENSION_ID/publish")
+        
+        echo "Publish response: $PUBLISH_RESPONSE"
+        
+        if echo "$PUBLISH_RESPONSE" | grep -q "OK"; then
+          echo "✅ Extension published successfully"
+        else
+          echo "⚠️  Publishing might be pending review"
+        fi
+    
+    - name: Create GitHub Release
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: mailfiller-extension.zip
+        generate_release_notes: true
+        body: |
+          ## MailFiller Chrome Extension Release
+          
+          ### Version: ${{ steps.get_version.outputs.VERSION }}
+          
+          This release includes the packaged Chrome extension ready for installation.
+          
+          #### Installation Instructions:
+          1. Download `mailfiller-extension.zip`
+          2. Extract the zip file
+          3. Open Chrome and go to `chrome://extensions/`
+          4. Enable Developer Mode
+          5. Click "Load unpacked" and select the extracted folder
+          
+          #### Chrome Web Store:
+          The extension has been submitted to the Chrome Web Store for review.
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mailfiller-extension-release
+        path: mailfiller-extension.zip
+        retention-days: 90
+    
+    - name: Commit version bump
+      if: github.event_name == 'workflow_dispatch' && steps.bump_version.outputs.NEW_VERSION
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add manifest.json
+        git commit -m "Bump version to ${{ steps.bump_version.outputs.NEW_VERSION }}"
+        git tag "v${{ steps.bump_version.outputs.NEW_VERSION }}"
+        git push origin HEAD:${GITHUB_REF#refs/heads/}
+        git push origin "v${{ steps.bump_version.outputs.NEW_VERSION }}"

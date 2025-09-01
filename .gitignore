@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+*.zip
+*.crx
+*.pem
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Chrome Web Store credentials
+chrome-credentials.json
+refresh-token.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Design files (keep source, ignore temp)
+icons/designs/
+*.psd
+*.sketch
+*.fig
+
+# Backup files
+*.backup
+*.bak
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
