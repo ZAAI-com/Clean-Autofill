@@ -12,7 +12,7 @@ A Chrome extension that automatically generates and fills email addresses based 
 ## How It Works
 
 When you visit a website, MailFiller creates an email address by combining:
-- The current website's domain (e.g., `example.com`)
+- The current website's main domain (subdomains are removed, e.g., `subdomain.example.com` becomes `example.com`)
 - Your configured email domain (e.g., `mg1.de`)
 - Result: `example.com@mg1.de`
 

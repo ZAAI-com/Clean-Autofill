@@ -76,6 +76,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 3000);
   }
   
+  // Extract main domain from hostname (remove subdomains)
+  function extractMainDomain(hostname) {
+    // Handle localhost and IP addresses
+    if (hostname === 'localhost' || hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+      return hostname;
+    }
+
+    // Remove 'www.' prefix if present
+    let domain = hostname.replace(/^www\./, '');
+
+    // Split by dots
+    const parts = domain.split('.');
+
+    // Handle special TLDs (like .co.uk, .com.au)
+    const specialTLDs = ['co.uk', 'com.au', 'com.br', 'co.jp', 'org.uk', 'net.au'];
+    const lastTwoParts = parts.slice(-2).join('.');
+    const lastThreeParts = parts.slice(-3).join('.');
+
+    if (parts.length >= 3 && specialTLDs.includes(lastTwoParts)) {
+      // For special TLDs like .co.uk, take last 3 parts
+      return lastThreeParts;
+    } else if (parts.length >= 2) {
+      // For regular TLDs like .com, .org, take last 2 parts
+      return lastTwoParts;
+    } else {
+      // Fallback to original domain
+      return domain;
+    }
+  }
+
   // Update preview
   function updatePreview() {
     const domain = emailDomainInput.value.trim();
@@ -85,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tabs[0] && tabs[0].url) {
           try {
             const url = new URL(tabs[0].url);
-            const currentDomain = url.hostname.replace(/^www\./, '');
+            const currentDomain = extractMainDomain(url.hostname);
             previewBox.textContent = `${currentDomain}@${domain}`;
           } catch (e) {
             previewBox.textContent = `example.com@${domain}`;
@@ -102,7 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Update examples
   function updateExamples() {
     const domain = emailDomainInput.value.trim() || 'yourdomain.com';
-    exampleEmail.textContent = `example.com@${domain}`;
+    // Show examples with main domains only (no subdomains)
+    exampleEmail.textContent = `google.com@${domain}`;
     exampleEmail2.textContent = `github.com@${domain}`;
   }
   

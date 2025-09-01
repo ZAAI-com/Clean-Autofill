@@ -54,25 +54,55 @@ async function generateEmailForTab(tab) {
   // Get user's email domain from storage
   const result = await chrome.storage.sync.get(['emailDomain']);
   const userDomain = result.emailDomain;
-  
+
   if (!userDomain) {
     return null; // No domain configured
   }
-  
+
   // Extract domain from tab URL
   if (!tab || !tab.url) {
     throw new Error('Unable to get current website domain');
   }
-  
+
   try {
     const url = new URL(tab.url);
-    // Remove 'www.' prefix if present
-    let domain = url.hostname.replace(/^www\./, '');
-    
+    // Extract only the main domain (without subdomains)
+    let domain = extractMainDomain(url.hostname);
+
     // Generate email
     return `${domain}@${userDomain}`;
   } catch (e) {
     throw new Error('Unable to parse current website URL');
+  }
+}
+
+// Extract main domain from hostname (remove subdomains)
+function extractMainDomain(hostname) {
+  // Handle localhost and IP addresses
+  if (hostname === 'localhost' || hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+    return hostname;
+  }
+
+  // Remove 'www.' prefix if present
+  let domain = hostname.replace(/^www\./, '');
+
+  // Split by dots
+  const parts = domain.split('.');
+
+  // Handle special TLDs (like .co.uk, .com.au)
+  const specialTLDs = ['co.uk', 'com.au', 'com.br', 'co.jp', 'org.uk', 'net.au'];
+  const lastTwoParts = parts.slice(-2).join('.');
+  const lastThreeParts = parts.slice(-3).join('.');
+
+  if (parts.length >= 3 && specialTLDs.includes(lastTwoParts)) {
+    // For special TLDs like .co.uk, take last 3 parts
+    return lastThreeParts;
+  } else if (parts.length >= 2) {
+    // For regular TLDs like .com, .org, take last 2 parts
+    return lastTwoParts;
+  } else {
+    // Fallback to original domain
+    return domain;
   }
 }
 
