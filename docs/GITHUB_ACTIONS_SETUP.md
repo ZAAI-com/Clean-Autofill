@@ -1,6 +1,6 @@
 # GitHub Actions Setup for Chrome Extension Deployment
 
-This guide explains how to set up automated deployment of the MailFiller Chrome Extension to the Chrome Web Store using GitHub Actions.
+This guide explains how to set up automated deployment of the Clean-Autofill Chrome Extension to the Chrome Web Store using GitHub Actions.
 
 ## 📋 Prerequisites
 
@@ -226,4 +226,4 @@ For issues with:
 ---
 
 Last updated: 2024
-MailFiller Chrome Extension
+Clean-Autofill Chrome Extension

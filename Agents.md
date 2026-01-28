@@ -1,10 +1,10 @@
 # 🤖 AI Agents Documentation
 
-This document outlines the AI agents and automation tools used in the development of the MailFiller Chrome extension. It serves as a guide for developers working with AI-assisted development workflows.
+This document outlines the AI agents and automation tools used in the development of the Clean-Autofill Chrome extension. It serves as a guide for developers working with AI-assisted development workflows.
 
 ## 🎯 Overview
 
-The MailFiller project leverages AI agents to streamline development, automate repetitive tasks, and maintain high code quality. This document provides guidelines for working with AI assistants and maintaining consistent development practices.
+The Clean-Autofill project leverages AI agents to streamline development, automate repetitive tasks, and maintain high code quality. This document provides guidelines for working with AI assistants and maintaining consistent development practices.
 
 ## 🤖 Primary AI Agent: Claude
 
@@ -145,7 +145,7 @@ npm run build
 
 ### Directory Organization
 ```
-MailFiller/
+Clean-Autofill/
 ├── 📁 .github/workflows/     # CI/CD automation
 ├── 📁 scripts/              # Development utilities
 ├── 📁 icons/                # Extension icons (all sizes)

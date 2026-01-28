@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('📦 Packing MailFiller Chrome Extension...\n');
+console.log('📦 Packing Clean-Autofill Chrome Extension...\n');
 
 // First run build to validate
 console.log('🔨 Running build validation...');
@@ -61,7 +61,7 @@ iconFiles.forEach(icon => {
 // Create ZIP file
 console.log('\n🗜️  Creating ZIP archive...');
 
-const zipFileName = 'mailfiller-extension.zip';
+const zipFileName = 'clean-autofill-extension.zip';
 const zipPath = path.join(rootPath, zipFileName);
 
 // Remove old zip if exists
@@ -90,7 +90,7 @@ try {
     
     console.log('\n📤 Next steps:');
     console.log('   1. Test locally: Load dist/ folder in Chrome extensions page');
-    console.log('   2. Upload to Chrome Web Store: Use mailfiller-extension.zip');
+    console.log('   2. Upload to Chrome Web Store: Use clean-autofill-extension.zip');
     console.log('   3. Or use GitHub Actions: git tag v' + manifest.version + ' && git push --tags');
     
 } catch (error) {

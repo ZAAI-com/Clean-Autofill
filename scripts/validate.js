@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔍 Validating MailFiller Chrome Extension...\n');
+console.log('🔍 Validating Clean-Autofill Chrome Extension...\n');
 
 let errors = 0;
 let warnings = 0;

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔨 Building MailFiller Chrome Extension...\n');
+console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 
 // Check required files
 const requiredFiles = [

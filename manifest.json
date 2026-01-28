@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "MailFiller",
+  "name": "Clean-Autofill",
   "version": "0.2.0",
   "description": "Automatically fill email addresses based on the current website domain",
   "permissions": [

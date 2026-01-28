@@ -9,7 +9,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icons/icon48.png',
-        title: 'MailFiller',
+        title: 'Clean-Autofill',
         message: 'Please set your email domain in extension options first.'
       });
       
@@ -29,7 +29,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icons/icon48.png',
-        title: 'MailFiller',
+        title: 'Clean-Autofill',
         message: `Email filled: ${email}`
       });
     } else {
@@ -37,13 +37,13 @@ chrome.action.onClicked.addListener(async (tab) => {
     }
     
   } catch (error) {
-    console.error('MailFiller error:', error);
+    console.error('Clean-Autofill error:', error);
     
     // Show error notification
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon48.png',
-      title: 'MailFiller Error',
+      title: 'Clean-Autofill Error',
       message: error.message || 'Failed to fill email'
     });
   }
@@ -112,7 +112,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon48.png',
-      title: 'MailFiller Installed',
+      title: 'Clean-Autofill Installed',
       message: 'Click the extension icon to fill emails! Configure your domain in options first.'
     });
     

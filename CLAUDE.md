@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MailFiller is a Chrome extension that automatically generates email addresses based on the current website's domain. It combines the main domain of the current website with a user-configured email domain (e.g., `example.com@mg1.de`).
+Clean-Autofill is a Chrome extension that automatically generates email addresses based on the current website's domain. It combines the main domain of the current website with a user-configured email domain (e.g., `example.com@mg1.de`).
 
 ## Build and Development Commands
 
