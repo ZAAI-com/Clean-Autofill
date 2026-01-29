@@ -9,7 +9,7 @@ console.log('📦 Packing Clean-Autofill Chrome Extension...\n');
 // First run build
 console.log('🔨 Running build...');
 try {
-    execSync('node tools/build.js', { stdio: 'inherit' });
+    execSync('node toolkit/scripts/build.js', { stdio: 'inherit' });
 } catch (error) {
     console.error('❌ Build failed. Cannot proceed with packing.');
     process.exit(1);
@@ -17,7 +17,7 @@ try {
 
 console.log('\n🗜️  Creating ZIP archive...');
 
-const rootPath = path.join(__dirname, '..');
+const rootPath = path.join(__dirname, '../..');
 const distPath = path.join(rootPath, 'dist');
 const zipFileName = 'Clean-Autofill.zip';
 const zipPath = path.join(distPath, zipFileName);

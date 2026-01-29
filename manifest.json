@@ -33,9 +33,10 @@
         "<all_urls>"
       ],
       "js": [
-        "utils.js",
+        "utils-content.js",
         "content.js"
-      ]
+      ],
+      "all_frames": true
     }
   ]
 }

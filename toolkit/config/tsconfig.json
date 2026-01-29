@@ -9,13 +9,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "../dist",
-    "rootDir": "../src",
+    "outDir": "../../dist",
+    "rootDir": "../../src",
     "declaration": false,
     "sourceMap": false,
     "moduleResolution": "bundler",
     "types": ["chrome"]
   },
-  "include": ["../src/**/*.ts"],
-  "exclude": ["../node_modules", "../dist", "../src/**/*.test.ts"]
+  "include": ["../../src/**/*.ts"],
+  "exclude": ["../../node_modules", "../../dist", "../../src/**/*.test.ts"]
 }

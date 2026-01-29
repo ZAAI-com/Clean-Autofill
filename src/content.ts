@@ -1,8 +1,9 @@
 // Access shared utilities (loaded via manifest before this script)
 import type { CleanAutofillUtils, FillEmailRequest, FillEmailResponse } from './types';
 
-const { isValidEmail } =
-  (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
+// Get utils object reference (use different name to avoid conflict with 'utils' declared in utils-content.js)
+const cleanAutofillUtils = (globalThis as { CleanAutofillUtils?: CleanAutofillUtils })
+  .CleanAutofillUtils;
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(
@@ -13,7 +14,7 @@ chrome.runtime.onMessage.addListener(
   ) => {
     if (request.action === 'fillEmail') {
       // Validate email before using
-      if (!isValidEmail || !isValidEmail(request.email)) {
+      if (!cleanAutofillUtils?.isValidEmail || !cleanAutofillUtils.isValidEmail(request.email)) {
         sendResponse({ success: false, error: 'Invalid email format received' });
         return true;
       }

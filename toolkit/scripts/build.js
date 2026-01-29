@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '../..');
 const DIST = path.join(ROOT, 'dist');
 const SRC = path.join(ROOT, 'src');
 
@@ -47,7 +47,7 @@ console.log('  ✅ dist directory cleaned');
 // Compile TypeScript
 console.log('\n📦 Compiling TypeScript...');
 try {
-    execSync('npx tsc -p config/tsconfig.json', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx tsc -p toolkit/config/tsconfig.json', { cwd: ROOT, stdio: 'inherit' });
     console.log('  ✅ TypeScript compilation successful');
 } catch (error) {
     console.error('  ❌ TypeScript compilation failed');
@@ -59,8 +59,25 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'u
 const usesESModules = manifest.background?.type === 'module';
 
 if (usesESModules) {
-    console.log('\n🔧 ES modules enabled - preserving import/export statements...');
-    // Only strip empty exports from non-module files (content scripts)
+    console.log('\n🔧 ES modules enabled - processing scripts...');
+
+    // utils.js is used by both:
+    // - background.js (ES module) - needs exports
+    // - content scripts (classic scripts) - can't have exports
+    // Solution: Create utils-content.js (no exports) for content scripts
+    const utilsPath = path.join(DIST, 'utils.js');
+    const utilsContentPath = path.join(DIST, 'utils-content.js');
+    if (fs.existsSync(utilsPath)) {
+        let utilsContent = fs.readFileSync(utilsPath, 'utf8');
+        // Strip exports for content script version
+        utilsContent = utilsContent.replace(/^export \{\};?\s*$/gm, '');
+        utilsContent = utilsContent.replace(/^export \{[^}]*\};?\s*$/gm, '');
+        fs.writeFileSync(utilsContentPath, utilsContent.trim() + '\n');
+        console.log(`  ✅ utils-content.js (created for content scripts)`);
+        console.log(`  ✅ utils.js (ES module preserved for background.js)`);
+    }
+
+    // Strip exports from other content script files
     const contentScriptFiles = ['content.js', 'options.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
@@ -73,7 +90,6 @@ if (usesESModules) {
         }
     }
     console.log(`  ✅ background.js (ES module preserved)`);
-    console.log(`  ✅ utils.js (ES module preserved)`);
 } else {
     // Strip ES module exports for classic script compatibility
     console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
@@ -119,6 +135,7 @@ const requiredCompiledFiles = [
     'content.js',
     'options.js',
     'utils.js',
+    'utils-content.js',
     'manifest.json',
     'options.html',
     'icons/icon16.png',
