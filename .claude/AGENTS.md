@@ -111,7 +111,7 @@ Testing: [Validation criteria]
 
 ### Development Scripts
 
-#### 1. Version Management (`scripts/bump-version.js`)
+#### 1. Version Management (`tools/bump-version.js`)
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
 npm run bump:patch
@@ -123,19 +123,19 @@ npm run bump:minor
 npm run bump:major
 ```
 
-#### 2. Extension Packaging (`scripts/pack.js`)
+#### 2. Extension Packaging (`tools/pack.js`)
 ```bash
 # Validate and package extension
 npm run pack
 ```
 
-#### 3. Comprehensive Validation (`scripts/validate.js`)
+#### 3. Comprehensive Validation (`tools/validate.js`)
 ```bash
 # Run full validation suite
 npm run validate
 ```
 
-#### 4. Build Validation (`scripts/build.js`)
+#### 4. Build Validation (`tools/build.js`)
 ```bash
 # Check project structure and dependencies
 npm run build
@@ -147,15 +147,19 @@ npm run build
 ```
 Clean-Autofill/
 ├── 📁 .github/workflows/     # CI/CD automation
-├── 📁 scripts/              # Development utilities
-├── 📁 icons/                # Extension icons (all sizes)
+├── 📁 src/                  # Extension source code
+│   ├── 📄 background.js     # Service worker logic
+│   ├── 📄 content.js        # Content script
+│   ├── 📄 options.js        # Settings page logic
+│   ├── 📄 options.html      # Settings page UI
+│   └── 📁 icons/            # Extension icons (all sizes)
+├── 📁 tools/                # Development utilities
 ├── 📁 docs/                 # Documentation
 ├── 📄 manifest.json         # Extension configuration
-├── 📄 background.js         # Service worker logic
-├── 📄 content.js            # Content script
-├── 📄 options.js            # Settings page logic
-├── 📄 options.html          # Settings page UI
-└── 📄 package.json          # NPM configuration
+├── 📄 package.json          # NPM configuration
+└── 📁 dist/                 # Build output (gitignored)
+    ├── 📁 Clean-Autofill/   # Unpacked extension
+    └── 📄 Clean-Autofill.zip # Chrome Web Store package
 ```
 
 ### Coding Standards
@@ -314,6 +318,6 @@ For questions about AI agent workflows or development processes:
 
 ---
 
-**Last Updated**: December 2024
+**Last Updated**: January 2026
 **Version**: 0.2.0
-**Maintained by**: ZAAI Development Team
+**Maintained by**: Manuel Gruber

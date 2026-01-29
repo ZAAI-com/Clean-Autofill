@@ -8,14 +8,14 @@ console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 // Check required files
 const requiredFiles = [
     'manifest.json',
-    'background.js',
-    'content.js',
-    'options.html',
-    'options.js',
-    'icons/icon16.png',
-    'icons/icon32.png',
-    'icons/icon48.png',
-    'icons/icon128.png'
+    'src/background.js',
+    'src/content.js',
+    'src/options.html',
+    'src/options.js',
+    'src/icons/icon16.png',
+    'src/icons/icon32.png',
+    'src/icons/icon48.png',
+    'src/icons/icon128.png'
 ];
 
 let hasErrors = false;

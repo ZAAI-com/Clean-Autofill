@@ -73,10 +73,10 @@ try {
 // Check file sizes
 console.log('\n📏 Checking file sizes:');
 const files = [
-    { path: 'background.js', maxSize: 1024 * 100 }, // 100KB
-    { path: 'content.js', maxSize: 1024 * 100 },    // 100KB
-    { path: 'options.js', maxSize: 1024 * 50 },     // 50KB
-    { path: 'options.html', maxSize: 1024 * 50 },   // 50KB
+    { path: 'src/background.js', maxSize: 1024 * 100 }, // 100KB
+    { path: 'src/content.js', maxSize: 1024 * 100 },    // 100KB
+    { path: 'src/options.js', maxSize: 1024 * 50 },     // 50KB
+    { path: 'src/options.html', maxSize: 1024 * 50 },   // 50KB
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {
@@ -100,7 +100,7 @@ files.forEach(({ path: filePath, maxSize }) => {
 console.log('\n🎨 Checking icons:');
 const iconSizes = [16, 32, 48, 128];
 iconSizes.forEach(size => {
-    const iconPath = path.join(__dirname, '..', 'icons', `icon${size}.png`);
+    const iconPath = path.join(__dirname, '..', 'src', 'icons', `icon${size}.png`);
     if (fs.existsSync(iconPath)) {
         const stats = fs.statSync(iconPath);
         const sizeKB = (stats.size / 1024).toFixed(2);
@@ -115,7 +115,7 @@ iconSizes.forEach(size => {
 console.log('\n🔎 Checking for common issues:');
 
 // Check for console.log in production code
-const jsFiles = ['background.js', 'content.js', 'options.js'];
+const jsFiles = ['src/background.js', 'src/content.js', 'src/options.js'];
 jsFiles.forEach(file => {
     const filePath = path.join(__dirname, '..', file);
     if (fs.existsSync(filePath)) {

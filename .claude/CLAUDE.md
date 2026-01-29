@@ -33,14 +33,14 @@ No test suite is currently configured (package.json shows placeholder test comma
 
 The extension follows Chrome Extension Manifest V3 architecture with three main components:
 
-### 1. Service Worker (`background.js`)
+### 1. Service Worker (`src/background.js`)
 - Handles extension icon clicks via `chrome.action.onClicked`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
 - Manages Chrome storage API for user settings
 - Shows notifications for success/error states
 - Opens options page on first install
 
-### 2. Content Script (`content.js`)
+### 2. Content Script (`src/content.js`)
 - Injected into all web pages (`<all_urls>`)
 - Receives messages from service worker to fill email fields
 - Smart field detection with priority order:
@@ -49,30 +49,37 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
   3. General text input fields
 - Handles React/framework compatibility with native input events
 
-### 3. Options Page (`options.html` + `options.js`)
+### 3. Options Page (`src/options.html` + `src/options.js`)
 - Settings interface for configuring user's email domain
 - Uses Chrome sync storage for cross-device settings
 
 ## Key Functions
 
-- `extractMainDomain()` in background.js:712: Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
-- `fillEmailInField()` in content.js:14: Core email filling logic with field prioritization
-- `findEmailFields()` in content.js:67: Detects email input fields using multiple selectors
-- `fillInput()` in content.js:124: Handles input filling with proper event dispatching for modern frameworks
+- `extractMainDomain()` in src/background.js: Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
+- `fillEmailInField()` in src/content.js: Core email filling logic with field prioritization
+- `findEmailFields()` in src/content.js: Detects email input fields using multiple selectors
+- `fillInput()` in src/content.js: Handles input filling with proper event dispatching for modern frameworks
 
 ## File Structure
 
 ```
 ├── manifest.json          # Extension configuration (MV3)
-├── background.js          # Service worker
-├── content.js             # Content script for email filling
-├── options.html/js        # Settings page
-├── scripts/               # Build and utility scripts
-│   ├── build.js          # Validates required files
-│   ├── pack.js           # Creates distribution package
-│   ├── validate.js       # Manifest and file validation
-│   └── bump-version.js   # Version management
-└── icons/                # Extension icons (16, 32, 48, 128px)
+├── package.json           # NPM configuration
+├── src/                   # Extension source code
+│   ├── background.js      # Service worker
+│   ├── content.js         # Content script for email filling
+│   ├── options.html       # Settings page
+│   ├── options.js         # Settings logic
+│   └── icons/             # Extension icons (16, 32, 48, 128px)
+├── tools/                 # Build and utility scripts
+│   ├── build.js           # Validates required files
+│   ├── pack.js            # Creates distribution package
+│   ├── validate.js        # Manifest and file validation
+│   └── bump-version.js    # Version management
+├── docs/                  # Documentation
+└── dist/                  # Build output (gitignored)
+    ├── Clean-Autofill/    # Load in Chrome for testing
+    └── Clean-Autofill.zip # Upload to Chrome Web Store
 ```
 
 ## Development Notes

@@ -82,7 +82,7 @@ Add these secrets:
 
 1. **Bump version locally**:
    ```bash
-   node scripts/bump-version.js patch  # or minor/major
+   node tools/bump-version.js patch  # or minor/major
    ```
 
 2. **Commit and tag**:
@@ -153,12 +153,12 @@ For any push or PR:
 Test the package locally:
 ```bash
 # Create package
-zip -r extension.zip manifest.json *.js *.html icons/
+npm run pack
 
 # Load in Chrome
 1. Open chrome://extensions/
 2. Enable Developer Mode
-3. Load unpacked → select extracted folder
+3. Load unpacked → select dist/Clean-Autofill/ folder
 ```
 
 ## 📊 Version Management
@@ -171,13 +171,13 @@ zip -r extension.zip manifest.json *.js *.html icons/
 ### Version Bump Script
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
-node scripts/bump-version.js patch
+npm run bump:patch
 
 # Bump minor version (1.0.0 → 1.1.0)
-node scripts/bump-version.js minor
+npm run bump:minor
 
 # Bump major version (1.0.0 → 2.0.0)
-node scripts/bump-version.js major
+npm run bump:major
 ```
 
 ## 🔐 Security Best Practices
@@ -225,5 +225,5 @@ For issues with:
 
 ---
 
-Last updated: 2024
+Last updated: January 2026
 Clean-Autofill Chrome Extension

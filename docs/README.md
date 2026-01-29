@@ -51,16 +51,22 @@ The extension will:
 ```
 Clean-Autofill/
 ├── manifest.json          # Extension configuration
-├── background.js          # Service worker for handling icon clicks
-├── content.js             # Content script for filling emails
-├── options.html           # Settings page HTML
-├── options.js             # Settings page logic
-├── icons/                 # Extension icons
-│   ├── icon16.png
-│   ├── icon32.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md              # This file
+├── package.json           # NPM configuration
+├── src/                   # Extension source code
+│   ├── background.js      # Service worker for handling icon clicks
+│   ├── content.js         # Content script for filling emails
+│   ├── options.html       # Settings page HTML
+│   ├── options.js         # Settings page logic
+│   └── icons/             # Extension icons (16, 32, 48, 128px)
+├── tools/                 # Build and utility scripts
+│   ├── build.js           # Validates required files
+│   ├── pack.js            # Creates distribution package
+│   ├── validate.js        # Manifest and file validation
+│   └── bump-version.js    # Version management
+├── docs/                  # Documentation
+└── dist/                  # Build output (gitignored)
+    ├── Clean-Autofill/    # Unpacked extension folder
+    └── Clean-Autofill.zip # Chrome Web Store package
 ```
 
 ## Permissions

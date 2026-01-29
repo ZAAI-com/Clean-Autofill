@@ -29,7 +29,7 @@ npm run pack
 
 # 2. Upload manually
 # - Go to Chrome Web Store Developer Dashboard
-# - Upload mailfiller-extension.zip
+# - Upload dist/Clean-Autofill.zip
 # - Submit for review
 ```
 

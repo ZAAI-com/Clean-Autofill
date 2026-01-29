@@ -43,16 +43,16 @@ jobs:
         echo "Checking required files..."
         required_files=(
           "manifest.json"
-          "background.js"
-          "content.js"
-          "options.html"
-          "options.js"
-          "icons/icon16.png"
-          "icons/icon32.png"
-          "icons/icon48.png"
-          "icons/icon128.png"
+          "src/background.js"
+          "src/content.js"
+          "src/options.html"
+          "src/options.js"
+          "src/icons/icon16.png"
+          "src/icons/icon32.png"
+          "src/icons/icon48.png"
+          "src/icons/icon128.png"
         )
-        
+
         for file in "${required_files[@]}"; do
           if [ -f "$file" ]; then
             echo "✅ $file exists"
@@ -61,44 +61,44 @@ jobs:
             exit 1
           fi
         done
-    
+
     - name: Create extension package
       run: |
         echo "Creating extension package..."
         # Create a clean directory for the extension
-        mkdir -p dist
-        
+        mkdir -p dist/Clean-Autofill/src/icons
+
         # Copy all necessary files
-        cp manifest.json dist/
-        cp background.js dist/
-        cp content.js dist/
-        cp options.html dist/
-        cp options.js dist/
-        cp -r icons dist/
-        
+        cp manifest.json dist/Clean-Autofill/
+        cp src/background.js dist/Clean-Autofill/src/
+        cp src/content.js dist/Clean-Autofill/src/
+        cp src/options.html dist/Clean-Autofill/src/
+        cp src/options.js dist/Clean-Autofill/src/
+        cp -r src/icons/* dist/Clean-Autofill/src/icons/
+
         # Create zip file
-        cd dist
-        zip -r ../mailfiller-extension.zip . -x "*.DS_Store" "*__MACOSX*"
-        cd ..
-        
-        echo "✅ Extension package created: mailfiller-extension.zip"
-        echo "📦 Package size: $(du -h mailfiller-extension.zip | cut -f1)"
-    
+        cd dist/Clean-Autofill
+        zip -r ../Clean-Autofill.zip . -x "*.DS_Store" "*__MACOSX*"
+        cd ../..
+
+        echo "✅ Extension package created: dist/Clean-Autofill.zip"
+        echo "📦 Package size: $(du -h dist/Clean-Autofill.zip | cut -f1)"
+
     - name: Upload extension artifact
       uses: actions/upload-artifact@v4
       with:
-        name: mailfiller-extension
-        path: mailfiller-extension.zip
+        name: Clean-Autofill
+        path: dist/Clean-Autofill.zip
         retention-days: 30
-    
+
     - name: Generate build report
       run: |
         echo "## Build Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Extension Details" >> $GITHUB_STEP_SUMMARY
-        echo "- **Package**: mailfiller-extension.zip" >> $GITHUB_STEP_SUMMARY
-        echo "- **Size**: $(du -h mailfiller-extension.zip | cut -f1)" >> $GITHUB_STEP_SUMMARY
-        echo "- **Files**: $(unzip -l mailfiller-extension.zip | tail -1 | awk '{print $2}')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: dist/Clean-Autofill.zip" >> $GITHUB_STEP_SUMMARY
+        echo "- **Size**: $(du -h dist/Clean-Autofill.zip | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Files**: $(unzip -l dist/Clean-Autofill.zip | tail -1 | awk '{print $2}')" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Manifest Info" >> $GITHUB_STEP_SUMMARY
         python3 -c "
