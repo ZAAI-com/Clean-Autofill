@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Chrome extension that automatically fills email addresses based on the current website domain",
   "scripts": {
+    "prepare": "husky config/husky",
     "build": "node tools/build.js",
     "pack": "node tools/pack.js",
     "bump:patch": "node tools/bump-version.js patch",
@@ -39,6 +40,7 @@
     "@happy-dom/global-registrator": "^20.4.0",
     "@types/chrome": "^0.1.36",
     "happy-dom": "^20.4.0",
+    "husky": "^9.1.7",
     "typescript": "^5.9.3"
   },
   "engines": {

@@ -12,7 +12,7 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 # Build extension (compile TypeScript + copy assets to dist/)
 bun run build
 
-# Run tests (88 tests with DOM support)
+# Run tests (119 tests with DOM support)
 bun test src/
 
 # Run tests in watch mode
@@ -41,6 +41,8 @@ bun run bump:major    # 0.1.0 → 1.0.0
 - **TypeScript** - Strict mode, compiles to `dist/`
 - **Biome** - Linting and formatting (single tool, replaces ESLint + Prettier)
 - **Bun** - Test runner with happy-dom for DOM testing
+- **Husky** - Pre-commit hooks for automated checks
+- **GitHub Actions** - CI/CD pipeline for automated testing
 - **Chrome Extension Manifest V3**
 
 ## Architecture
@@ -78,16 +80,22 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ```
 ├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
-├── tsconfig.json          # TypeScript configuration
 ├── bunfig.toml            # Bun test configuration (DOM support)
+├── .github/
+│   └── workflows/
+│       └── ci.yml         # GitHub Actions CI pipeline
 ├── config/
-│   └── biome.json         # Biome linter/formatter config
+│   ├── biome.json         # Biome linter/formatter config
+│   ├── tsconfig.json      # TypeScript configuration
+│   └── husky/
+│       └── pre-commit     # Pre-commit hook (typecheck, lint, test)
 ├── src/                   # TypeScript source (edit these)
 │   ├── background.ts      # Service worker
 │   ├── background.test.ts # Service worker tests
 │   ├── content.ts         # Content script for email filling
 │   ├── content.test.ts    # Content script tests
 │   ├── options.ts         # Options page logic
+│   ├── options.test.ts    # Options page tests
 │   ├── options.html       # Options page UI
 │   ├── utils.ts           # Shared utilities
 │   ├── utils.test.ts      # Utility tests
@@ -124,10 +132,27 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun test src/              # Run all 88 tests
+bun test src/              # Run all 119 tests
 bun run test:watch         # Watch mode
-bun run test:coverage      # Coverage report
+bun run test:coverage      # Coverage report (98%+ line coverage)
 ```
+
+## Pre-commit Hooks
+
+Husky runs automated checks before each commit:
+1. TypeScript type checking
+2. Biome lint and format check
+3. Full test suite
+
+To skip hooks in emergencies: `git commit --no-verify`
+
+## CI/CD
+
+GitHub Actions runs on push/PR to main:
+- Type checking
+- Linting and formatting
+- Test suite
+- Build validation
 
 ## Development Notes
 
