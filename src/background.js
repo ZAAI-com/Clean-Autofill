@@ -8,7 +8,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       // Show notification if no email domain is set
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: 'icons/icon48.png',
+        iconUrl: 'src/icons/icon48.png',
         title: 'Clean-Autofill',
         message: 'Please set your email domain in extension options first.'
       });
@@ -28,7 +28,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       // Show success notification
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: 'icons/icon48.png',
+        iconUrl: 'src/icons/icon48.png',
         title: 'Clean-Autofill',
         message: `Email filled: ${email}`
       });
@@ -42,7 +42,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     // Show error notification
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: 'icons/icon48.png',
+      iconUrl: 'src/icons/icon48.png',
       title: 'Clean-Autofill Error',
       message: error.message || 'Failed to fill email'
     });
@@ -111,7 +111,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: 'icons/icon48.png',
+      iconUrl: 'src/icons/icon48.png',
       title: 'Clean-Autofill Installed',
       message: 'Click the extension icon to fill emails! Configure your domain in options first.'
     });
