@@ -1,6 +1,6 @@
 {
   "name": "clean-autofill",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Chrome extension that automatically fills email addresses based on the current website domain",
   "scripts": {
     "prepare": "husky config/husky",
