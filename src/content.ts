@@ -37,7 +37,7 @@ function fillEmailInField(email: string): string {
   const activeElement = document.activeElement;
 
   if (activeElement && isInputField(activeElement)) {
-    fillInput(activeElement as HTMLInputElement | HTMLTextAreaElement, email);
+    fillInput(activeElement as HTMLElement, email);
     return 'Filled in active field';
   }
 
@@ -177,9 +177,30 @@ function isElementVisible(element: Element | null): boolean {
   return true;
 }
 
-function fillInput(element: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+function fillInput(element: HTMLElement, value: string): void {
   // Focus the element first
   element.focus();
+
+  // Handle contenteditable elements (e.g., ChatGPT, Claude)
+  if (element.isContentEditable) {
+    // Clear existing content and set new value
+    element.textContent = '';
+    element.textContent = value;
+
+    // Dispatch input event for frameworks
+    element.dispatchEvent(
+      new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'insertText',
+        data: value,
+      }),
+    );
+    return;
+  }
+
+  // Cast to input/textarea for value-based elements
+  const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
 
   // For React and other frameworks, use native setter for proper event handling
   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -200,12 +221,12 @@ function fillInput(element: HTMLInputElement | HTMLTextAreaElement, value: strin
 
   if (setter) {
     // Clear and set value using native setter
-    setter.call(element, '');
-    setter.call(element, value);
+    setter.call(inputElement, '');
+    setter.call(inputElement, value);
   } else {
     // Fallback for older browsers or edge cases
-    element.value = '';
-    element.value = value;
+    inputElement.value = '';
+    inputElement.value = value;
   }
 
   // Dispatch events to notify frameworks of the change

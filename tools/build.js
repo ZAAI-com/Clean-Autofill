@@ -47,7 +47,7 @@ console.log('  ✅ dist directory cleaned');
 // Compile TypeScript
 console.log('\n📦 Compiling TypeScript...');
 try {
-    execSync('npx tsc', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx tsc -p config/tsconfig.json', { cwd: ROOT, stdio: 'inherit' });
     console.log('  ✅ TypeScript compilation successful');
 } catch (error) {
     console.error('  ❌ TypeScript compilation failed');
