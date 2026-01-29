@@ -1,12 +1,6 @@
-// Import shared utilities (service worker uses importScripts)
-declare function importScripts(...urls: string[]): void;
-importScripts('utils.js');
-
-import type { CleanAutofillUtils, FillEmailResponse } from './types';
-
-const { extractMainDomain, createTimeout } = (
-  globalThis as { CleanAutofillUtils: CleanAutofillUtils }
-).CleanAutofillUtils;
+// Import shared utilities as ES module
+import { extractMainDomain, createTimeout } from './utils.js';
+import type { FillEmailResponse } from './types';
 
 // Message timeout in milliseconds
 const MESSAGE_TIMEOUT = 5000;

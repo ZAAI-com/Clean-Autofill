@@ -54,20 +54,41 @@ try {
     process.exit(1);
 }
 
-// Strip ES module exports for Chrome extension compatibility
-// Chrome Manifest V3 service workers cannot use ES module syntax
-console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
-const jsFiles = ['background.js', 'content.js', 'utils.js', 'options.js'];
-for (const file of jsFiles) {
-    const filePath = path.join(DIST, file);
-    if (fs.existsSync(filePath)) {
-        let content = fs.readFileSync(filePath, 'utf8');
-        // Remove "export {};" (empty exports from files with only type imports)
-        content = content.replace(/^export \{\};?\s*$/gm, '');
-        // Remove named exports (from utils.js)
-        content = content.replace(/^export \{[^}]*\};?\s*$/gm, '');
-        fs.writeFileSync(filePath, content.trim() + '\n');
-        console.log(`  ✅ ${file}`);
+// Check if service worker uses ES modules
+const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
+const usesESModules = manifest.background?.type === 'module';
+
+if (usesESModules) {
+    console.log('\n🔧 ES modules enabled - preserving import/export statements...');
+    // Only strip empty exports from non-module files (content scripts)
+    const contentScriptFiles = ['content.js', 'options.js'];
+    for (const file of contentScriptFiles) {
+        const filePath = path.join(DIST, file);
+        if (fs.existsSync(filePath)) {
+            let content = fs.readFileSync(filePath, 'utf8');
+            // Remove "export {};" (empty exports from files with only type imports)
+            content = content.replace(/^export \{\};?\s*$/gm, '');
+            fs.writeFileSync(filePath, content.trim() + '\n');
+            console.log(`  ✅ ${file} (stripped empty exports)`);
+        }
+    }
+    console.log(`  ✅ background.js (ES module preserved)`);
+    console.log(`  ✅ utils.js (ES module preserved)`);
+} else {
+    // Strip ES module exports for classic script compatibility
+    console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
+    const jsFiles = ['background.js', 'content.js', 'utils.js', 'options.js'];
+    for (const file of jsFiles) {
+        const filePath = path.join(DIST, file);
+        if (fs.existsSync(filePath)) {
+            let content = fs.readFileSync(filePath, 'utf8');
+            // Remove "export {};" (empty exports from files with only type imports)
+            content = content.replace(/^export \{\};?\s*$/gm, '');
+            // Remove named exports (from utils.js)
+            content = content.replace(/^export \{[^}]*\};?\s*$/gm, '');
+            fs.writeFileSync(filePath, content.trim() + '\n');
+            console.log(`  ✅ ${file}`);
+        }
     }
 }
 
