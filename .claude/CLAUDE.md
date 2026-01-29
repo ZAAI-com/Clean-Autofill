@@ -9,38 +9,52 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 ## Build and Development Commands
 
 ```bash
-# Build and validate the extension
-npm run build
+# Build extension (compile TypeScript + copy assets to dist/)
+bun run build
+
+# Run tests (88 tests with DOM support)
+bun test src/
+
+# Run tests in watch mode
+bun run test:watch
+
+# Lint and format check
+bun run check
+
+# Lint and format fix
+bun run check:fix
+
+# TypeScript type check only
+bun run typecheck
 
 # Package extension for distribution
-npm run pack
-
-# Validate manifest and files
-npm run validate
+bun run pack
 
 # Version bumping
-npm run bump:patch    # 0.1.0 → 0.1.1
-npm run bump:minor    # 0.1.0 → 0.2.0  
-npm run bump:major    # 0.1.0 → 1.0.0
-
-# Prepare for release
-npm run release       # Runs pack and shows release instructions
+bun run bump:patch    # 0.1.0 → 0.1.1
+bun run bump:minor    # 0.1.0 → 0.2.0
+bun run bump:major    # 0.1.0 → 1.0.0
 ```
 
-No test suite is currently configured (package.json shows placeholder test command).
+## Tech Stack
+
+- **TypeScript** - Strict mode, compiles to `dist/`
+- **Biome** - Linting and formatting (single tool, replaces ESLint + Prettier)
+- **Bun** - Test runner with happy-dom for DOM testing
+- **Chrome Extension Manifest V3**
 
 ## Architecture
 
 The extension follows Chrome Extension Manifest V3 architecture with three main components:
 
-### 1. Service Worker (`src/background.js`)
+### 1. Service Worker (`src/background.ts`)
 - Handles extension icon clicks via `chrome.action.onClicked`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
 - Manages Chrome storage API for user settings
 - Shows notifications for success/error states
 - Opens options page on first install
 
-### 2. Content Script (`src/content.js`)
+### 2. Content Script (`src/content.ts`)
 - Injected into all web pages (`<all_urls>`)
 - Receives messages from service worker to fill email fields
 - Smart field detection with priority order:
@@ -49,37 +63,70 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
   3. General text input fields
 - Handles React/framework compatibility with native input events
 
-### 3. Options Page (`src/options.html` + `src/options.js`)
+### 3. Options Page (`src/options.html` + `src/options.ts`)
 - Settings interface for configuring user's email domain
 - Uses Chrome sync storage for cross-device settings
 
-## Key Functions
-
-- `extractMainDomain()` in src/background.js: Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
-- `fillEmailInField()` in src/content.js: Core email filling logic with field prioritization
-- `findEmailFields()` in src/content.js: Detects email input fields using multiple selectors
-- `fillInput()` in src/content.js: Handles input filling with proper event dispatching for modern frameworks
+### 4. Shared Utilities (`src/utils.ts`)
+- `extractMainDomain()` - Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
+- `isValidEmail()` - Basic email format validation
+- `createTimeout()` - Promise-based timeout for async operations
+- `debounce()` - Rate-limiting for input events
 
 ## File Structure
 
 ```
-├── manifest.json          # Extension configuration (MV3)
-├── package.json           # NPM configuration
-├── src/                   # Extension source code
-│   ├── background.js      # Service worker
-│   ├── content.js         # Content script for email filling
-│   ├── options.html       # Settings page
-│   ├── options.js         # Settings logic
+├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
+├── package.json           # NPM/Bun configuration
+├── tsconfig.json          # TypeScript configuration
+├── bunfig.toml            # Bun test configuration (DOM support)
+├── config/
+│   └── biome.json         # Biome linter/formatter config
+├── src/                   # TypeScript source (edit these)
+│   ├── background.ts      # Service worker
+│   ├── background.test.ts # Service worker tests
+│   ├── content.ts         # Content script for email filling
+│   ├── content.test.ts    # Content script tests
+│   ├── options.ts         # Options page logic
+│   ├── options.html       # Options page UI
+│   ├── utils.ts           # Shared utilities
+│   ├── utils.test.ts      # Utility tests
+│   ├── test-setup.ts      # DOM test setup (happy-dom)
+│   ├── types/
+│   │   └── index.ts       # TypeScript type definitions
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
-├── tools/                 # Build and utility scripts
-│   ├── build.js           # Validates required files
-│   ├── pack.js            # Creates distribution package
-│   ├── validate.js        # Manifest and file validation
+├── tools/                 # Build scripts
+│   ├── build.js           # Compiles TS + copies assets to dist/
+│   ├── pack.js            # Creates distribution zip
+│   ├── validate.js        # Manifest validation
 │   └── bump-version.js    # Version management
-├── docs/                  # Documentation
-└── dist/                  # Build output (gitignored)
-    ├── Clean-Autofill/    # Load in Chrome for testing
-    └── Clean-Autofill.zip # Upload to Chrome Web Store
+└── dist/                  # Build output (load this in Chrome)
+    ├── background.js      # Compiled service worker
+    ├── content.js         # Compiled content script
+    ├── options.js         # Compiled options page
+    ├── utils.js           # Compiled utilities
+    ├── options.html       # Copied from src/
+    ├── manifest.json      # Copied from root
+    ├── icons/             # Copied from src/
+    └── Clean-Autofill.zip # Distribution package
+```
+
+## Development Workflow
+
+1. Edit TypeScript files in `src/`
+2. Run `bun run build` to compile to `dist/`
+3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
+4. Run `bun test src/` to verify changes
+5. Run `bun run check` before committing
+
+## Testing
+
+Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
+
+```bash
+bun test src/              # Run all 88 tests
+bun run test:watch         # Watch mode
+bun run test:coverage      # Coverage report
 ```
 
 ## Development Notes
@@ -88,4 +135,5 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - Uses Chrome's sync storage for cross-device settings persistence
 - Domain extraction handles edge cases like localhost, IP addresses, and special TLDs
 - Content script uses multiple fallback strategies for reliable field detection
-- Build process validates all required files and manifest structure
+- TypeScript source in `src/`, compiled output in `dist/`
+- Only edit `.ts` files; `.js` files in `dist/` are auto-generated

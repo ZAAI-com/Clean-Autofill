@@ -9,8 +9,18 @@
     "bump:minor": "node tools/bump-version.js minor",
     "bump:major": "node tools/bump-version.js major",
     "release": "npm run pack && echo 'Ready for release. Tag and push to trigger GitHub Actions.'",
-    "test": "echo 'No tests configured yet'",
-    "validate": "node tools/validate.js"
+    "validate": "node tools/validate.js",
+    "lint": "biome lint --config-path config/biome.json src/",
+    "lint:fix": "biome lint --config-path config/biome.json --write src/",
+    "format": "biome format --config-path config/biome.json --write src/",
+    "format:check": "biome format --config-path config/biome.json src/",
+    "check": "biome check --config-path config/biome.json src/",
+    "check:fix": "biome check --config-path config/biome.json --write src/",
+    "test": "bun test --preload ./src/test-setup.ts src/",
+    "test:watch": "bun test --preload ./src/test-setup.ts src/ --watch",
+    "test:coverage": "bun test --preload ./src/test-setup.ts src/ --coverage",
+    "typecheck": "tsc -p config/tsconfig.json --noEmit",
+    "build:ts": "tsc -p config/tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -24,7 +34,13 @@
   ],
   "author": "Manuel Gruber",
   "license": "MIT",
-  "devDependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@happy-dom/global-registrator": "^20.4.0",
+    "@types/chrome": "^0.1.36",
+    "happy-dom": "^20.4.0",
+    "typescript": "^5.9.3"
+  },
   "engines": {
     "node": ">=14.0.0"
   }

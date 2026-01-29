@@ -10,6 +10,10 @@ dist/
 *.crx
 *.pem
 
+# Compiled JS (TypeScript outputs to dist/, but ignore any in src/)
+src/**/*.js
+src/types/**/*.js
+
 # IDE files
 .vscode/
 .idea/
