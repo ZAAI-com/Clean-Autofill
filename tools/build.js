@@ -54,6 +54,23 @@ try {
     process.exit(1);
 }
 
+// Strip ES module exports for Chrome extension compatibility
+// Chrome Manifest V3 service workers cannot use ES module syntax
+console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
+const jsFiles = ['background.js', 'content.js', 'utils.js', 'options.js'];
+for (const file of jsFiles) {
+    const filePath = path.join(DIST, file);
+    if (fs.existsSync(filePath)) {
+        let content = fs.readFileSync(filePath, 'utf8');
+        // Remove "export {};" (empty exports from files with only type imports)
+        content = content.replace(/^export \{\};?\s*$/gm, '');
+        // Remove named exports (from utils.js)
+        content = content.replace(/^export \{[^}]*\};?\s*$/gm, '');
+        fs.writeFileSync(filePath, content.trim() + '\n');
+        console.log(`  ✅ ${file}`);
+    }
+}
+
 // Copy static assets to dist
 console.log('\n📁 Copying static assets...');
 
