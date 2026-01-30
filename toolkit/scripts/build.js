@@ -54,6 +54,18 @@ try {
     process.exit(1);
 }
 
+// Bundle utils.js with dependencies using esbuild
+console.log('\n📦 Bundling utils.js with dependencies...');
+try {
+    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils.bundled.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    // Replace utils.js with bundled version
+    fs.renameSync(path.join(DIST, 'utils.bundled.js'), path.join(DIST, 'utils.js'));
+    console.log('  ✅ utils.js bundled with PSL');
+} catch (error) {
+    console.error('  ❌ Bundling failed:', error.message);
+    process.exit(1);
+}
+
 // Check if service worker uses ES modules
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 const usesESModules = manifest.background?.type === 'module';

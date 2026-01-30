@@ -1,6 +1,7 @@
 // Import shared utilities as ES module
-import { extractMainDomain, createTimeout } from './utils.js';
+
 import type { FillEmailResponse } from './types';
+import { createTimeout, extractMainDomain } from './utils.js';
 
 // Message timeout in milliseconds
 const MESSAGE_TIMEOUT = 5000;

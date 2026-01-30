@@ -1,41 +1,92 @@
 // Shared utilities for Clean-Autofill extension
+import psl from 'psl';
 import type { CleanAutofillUtils } from './types';
 
-// Special TLDs that require 3-part domain extraction
+// Kept for backwards compatibility and tests
 const SPECIAL_TLDS: readonly string[] = [
   // UK
-  'co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'me.uk', 'net.uk',
+  'co.uk',
+  'org.uk',
+  'ac.uk',
+  'gov.uk',
+  'me.uk',
+  'net.uk',
   // Australia
-  'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
+  'com.au',
+  'net.au',
+  'org.au',
+  'edu.au',
+  'gov.au',
   // New Zealand
-  'co.nz', 'net.nz', 'org.nz', 'govt.nz',
+  'co.nz',
+  'net.nz',
+  'org.nz',
+  'govt.nz',
   // Japan
-  'co.jp', 'or.jp', 'ne.jp', 'ac.jp', 'go.jp',
+  'co.jp',
+  'or.jp',
+  'ne.jp',
+  'ac.jp',
+  'go.jp',
   // China
-  'com.cn', 'net.cn', 'org.cn', 'gov.cn', 'edu.cn',
+  'com.cn',
+  'net.cn',
+  'org.cn',
+  'gov.cn',
+  'edu.cn',
   // Brazil
-  'com.br', 'net.br', 'org.br', 'gov.br',
+  'com.br',
+  'net.br',
+  'org.br',
+  'gov.br',
   // India
-  'co.in', 'net.in', 'org.in', 'gov.in', 'ac.in',
+  'co.in',
+  'net.in',
+  'org.in',
+  'gov.in',
+  'ac.in',
   // South Africa
-  'co.za', 'net.za', 'org.za', 'gov.za',
+  'co.za',
+  'net.za',
+  'org.za',
+  'gov.za',
   // Mexico
-  'com.mx', 'net.mx', 'org.mx', 'gob.mx',
+  'com.mx',
+  'net.mx',
+  'org.mx',
+  'gob.mx',
   // Korea
-  'co.kr', 'or.kr', 'ne.kr', 'go.kr',
+  'co.kr',
+  'or.kr',
+  'ne.kr',
+  'go.kr',
   // Singapore
-  'com.sg', 'net.sg', 'org.sg', 'gov.sg',
+  'com.sg',
+  'net.sg',
+  'org.sg',
+  'gov.sg',
   // Hong Kong
-  'com.hk', 'net.hk', 'org.hk', 'gov.hk',
+  'com.hk',
+  'net.hk',
+  'org.hk',
+  'gov.hk',
   // Taiwan
-  'com.tw', 'net.tw', 'org.tw', 'gov.tw',
+  'com.tw',
+  'net.tw',
+  'org.tw',
+  'gov.tw',
   // Argentina & Colombia
-  'com.ar', 'com.co',
+  'com.ar',
+  'com.co',
   // Israel
-  'co.il', 'org.il', 'net.il', 'gov.il', 'ac.il',
+  'co.il',
+  'org.il',
+  'net.il',
+  'gov.il',
+  'ac.il',
 ];
 
-// Extract main domain from hostname (remove subdomains)
+// Extract main domain from hostname using Public Suffix List
 function extractMainDomain(hostname: string): string {
   // Handle localhost
   if (hostname === 'localhost') {
@@ -55,23 +106,19 @@ function extractMainDomain(hostname: string): string {
   // Remove 'www.' prefix if present
   const domain = hostname.replace(/^www\./, '');
 
-  // Split by dots
-  const parts = domain.split('.');
-
-  // Handle special TLDs (like .co.uk, .com.au)
-  const lastTwoParts = parts.slice(-2).join('.');
-  const lastThreeParts = parts.slice(-3).join('.');
-
-  if (parts.length >= 3 && SPECIAL_TLDS.includes(lastTwoParts)) {
-    // For special TLDs like .co.uk, take last 3 parts
-    return lastThreeParts;
-  } else if (parts.length >= 2) {
-    // For regular TLDs like .com, .org, take last 2 parts
-    return lastTwoParts;
-  } else {
-    // Fallback to original domain
-    return domain;
+  // Use PSL to get the registrable domain
+  const parsed = psl.get(domain);
+  if (parsed) {
+    return parsed;
   }
+
+  // Fallback: split by dots and use heuristics
+  const parts = domain.split('.');
+  if (parts.length >= 2) {
+    return parts.slice(-2).join('.');
+  }
+
+  return domain;
 }
 
 // Validate basic email format

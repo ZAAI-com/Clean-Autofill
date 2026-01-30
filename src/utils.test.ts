@@ -294,3 +294,44 @@ describe('SPECIAL_TLDS', () => {
     }
   });
 });
+
+describe('PSL integration', () => {
+  test('handles .com.cn correctly (via PSL)', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('shop.example.com.cn')).toBe('example.com.cn');
+    expect(extractMainDomain('example.com.cn')).toBe('example.com.cn');
+  });
+
+  test('handles .org.nz correctly (via PSL)', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('shop.example.org.nz')).toBe('example.org.nz');
+  });
+
+  test('handles .or.jp correctly (via PSL)', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('shop.example.or.jp')).toBe('example.or.jp');
+  });
+
+  test('handles .go.kr correctly (via PSL)', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('shop.example.go.kr')).toBe('example.go.kr');
+  });
+
+  test('handles .govt.nz correctly (via PSL)', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('dept.example.govt.nz')).toBe('example.govt.nz');
+  });
+
+  test('handles deeply nested subdomains', () => {
+    const { extractMainDomain } = getUtils();
+    expect(extractMainDomain('a.b.c.d.example.co.uk')).toBe('example.co.uk');
+    expect(extractMainDomain('a.b.c.d.example.com')).toBe('example.com');
+  });
+
+  test('handles unusual TLDs via PSL', () => {
+    const { extractMainDomain } = getUtils();
+    // PSL knows about these
+    expect(extractMainDomain('example.tokyo')).toBe('example.tokyo');
+    expect(extractMainDomain('example.museum')).toBe('example.museum');
+  });
+});

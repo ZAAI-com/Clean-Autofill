@@ -39,11 +39,15 @@
     "@biomejs/biome": "^2.3.13",
     "@happy-dom/global-registrator": "^20.4.0",
     "@types/chrome": "^0.1.36",
+    "esbuild": "^0.27.2",
     "happy-dom": "^20.4.0",
     "husky": "^9.1.7",
     "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "psl": "^1.15.0"
   }
 }
