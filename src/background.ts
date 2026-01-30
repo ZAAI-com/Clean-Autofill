@@ -53,10 +53,21 @@ chrome.action.onClicked.addListener(async (tab) => {
     }
     // If no response, no frame found a field - silently do nothing
   } catch (error) {
-    // Check if this is a timeout (no frame responded = no field found)
     const errorMessage = error instanceof Error ? error.message : 'Failed to fill email';
+
+    // Handle "Receiving end does not exist" - content script not loaded
+    if (errorMessage.includes('Receiving end does not exist')) {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Clean-Autofill',
+        message: 'Please refresh the page and try again.',
+      });
+      return;
+    }
+
+    // Handle timeout (no frame responded = no field found)
     if (errorMessage.includes('Content script did not respond')) {
-      // No frame found an input field - silently ignore
       console.log('Clean-Autofill: No input field found on this page');
       return;
     }
