@@ -213,15 +213,18 @@
         <label for="emailDomain">Your Email Domain</label>
         <div class="input-wrapper">
           <span class="at-symbol">@</span>
-          <input 
-            type="text" 
-            id="emailDomain" 
-            name="emailDomain" 
+          <input
+            type="text"
+            id="emailDomain"
+            name="emailDomain"
             placeholder="yourdomain.com"
             autocomplete="off"
+            aria-label="Your email domain"
+            aria-describedby="emailDomain-help"
+            maxlength="253"
           >
         </div>
-        <p class="help-text">Enter your email domain without the @ symbol</p>
+        <p class="help-text" id="emailDomain-help">Enter your email domain without the @ symbol</p>
         
         <div class="example">
           <div class="example-title">How it works:</div>
@@ -241,7 +244,7 @@
         <button type="button" class="button-secondary" id="clearButton">Clear</button>
       </div>
       
-      <div id="status" class="status"></div>
+      <div id="status" class="status" role="alert" aria-live="polite"></div>
     </form>
     
     <div class="preview-section">

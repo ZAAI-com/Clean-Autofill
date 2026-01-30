@@ -69,6 +69,17 @@ try {
     process.exit(1);
 }
 
+// Also update package.json
+const packagePath = path.join(__dirname, '../..', 'package.json');
+try {
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    pkg.version = newVersion;
+    fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`   File: package.json`);
+} catch (error) {
+    console.warn('⚠️  Could not update package.json:', error.message);
+}
+
 // Output new version for use in scripts
 console.log(`\n📦 New version: ${newVersion}`);
 console.log(`\nNext steps:`);

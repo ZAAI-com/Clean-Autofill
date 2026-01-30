@@ -3,24 +3,36 @@ import type { CleanAutofillUtils } from './types';
 
 // Special TLDs that require 3-part domain extraction
 const SPECIAL_TLDS: readonly string[] = [
-  'co.uk',
-  'com.au',
-  'com.br',
-  'co.jp',
-  'org.uk',
-  'net.au',
-  'co.in',
-  'com.tw',
-  'ac.uk',
-  'gov.uk',
-  'co.nz',
-  'com.mx',
-  'co.za',
-  'com.sg',
-  'com.hk',
-  'co.kr',
-  'com.ar',
-  'com.co',
+  // UK
+  'co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'me.uk', 'net.uk',
+  // Australia
+  'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
+  // New Zealand
+  'co.nz', 'net.nz', 'org.nz', 'govt.nz',
+  // Japan
+  'co.jp', 'or.jp', 'ne.jp', 'ac.jp', 'go.jp',
+  // China
+  'com.cn', 'net.cn', 'org.cn', 'gov.cn', 'edu.cn',
+  // Brazil
+  'com.br', 'net.br', 'org.br', 'gov.br',
+  // India
+  'co.in', 'net.in', 'org.in', 'gov.in', 'ac.in',
+  // South Africa
+  'co.za', 'net.za', 'org.za', 'gov.za',
+  // Mexico
+  'com.mx', 'net.mx', 'org.mx', 'gob.mx',
+  // Korea
+  'co.kr', 'or.kr', 'ne.kr', 'go.kr',
+  // Singapore
+  'com.sg', 'net.sg', 'org.sg', 'gov.sg',
+  // Hong Kong
+  'com.hk', 'net.hk', 'org.hk', 'gov.hk',
+  // Taiwan
+  'com.tw', 'net.tw', 'org.tw', 'gov.tw',
+  // Argentina & Colombia
+  'com.ar', 'com.co',
+  // Israel
+  'co.il', 'org.il', 'net.il', 'gov.il', 'ac.il',
 ];
 
 // Extract main domain from hostname (remove subdomains)
