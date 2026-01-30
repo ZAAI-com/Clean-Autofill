@@ -85,7 +85,8 @@ if (usesESModules) {
         if (fs.existsSync(filePath)) {
             let content = fs.readFileSync(filePath, 'utf8');
             // Remove "export {};" (empty exports from files with only type imports)
-            content = content.replace(/^export \{\};?\s*$/gm, '');
+            // Handles both spaced "export {};" and minified "export{}"
+            content = content.replace(/(^|[;\n])\s*export\s*\{\s*\};?/g, '$1');
             fs.writeFileSync(filePath, content.trim() + '\n');
             console.log(`  ✅ ${file} (stripped empty exports)`);
         }
@@ -100,9 +101,10 @@ if (usesESModules) {
         if (fs.existsSync(filePath)) {
             let content = fs.readFileSync(filePath, 'utf8');
             // Remove "export {};" (empty exports from files with only type imports)
-            content = content.replace(/^export \{\};?\s*$/gm, '');
+            // Handles both spaced "export {};" and minified "export{}"
+            content = content.replace(/(^|[;\n])\s*export\s*\{\s*\};?/g, '$1');
             // Remove named exports (from utils.js)
-            content = content.replace(/^export \{[^}]*\};?\s*$/gm, '');
+            content = content.replace(/(^|[;\n])\s*export\s*\{[^}]*\};?/g, '$1');
             fs.writeFileSync(filePath, content.trim() + '\n');
             console.log(`  ✅ ${file}`);
         }
@@ -177,7 +179,7 @@ if (!hasErrors) {
     console.log('\n✅ Build complete! Extension ready at: dist/');
     console.log('\n📦 Next steps:');
     console.log('   • Load dist/ folder in Chrome (chrome://extensions)');
-    console.log('   • Run "npm run pack" to create zip for distribution');
+    console.log('   • Run "bun run pack" to create zip for distribution');
 } else {
     console.error('\n❌ Build failed. Please fix the errors above.');
     process.exit(1);

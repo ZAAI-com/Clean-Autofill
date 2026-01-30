@@ -58,3 +58,6 @@ icons/designs/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Workspace files
+.context/

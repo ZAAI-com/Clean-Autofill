@@ -106,7 +106,10 @@ function fillEmailInField(email: string): string | null {
   return null;
 }
 
-function isInputField(element: Element | null): boolean {
+/**
+ * Check if an element is an input field that can accept text input
+ */
+export function isInputField(element: Element | null): boolean {
   if (!element) return false;
 
   const tagName = element.tagName?.toLowerCase();
@@ -140,7 +143,10 @@ function getAllDocuments(): Document[] {
   return docs;
 }
 
-function findEmailFields(): HTMLInputElement[] {
+/**
+ * Find all email input fields in the document and same-origin iframes
+ */
+export function findEmailFields(): HTMLInputElement[] {
   const fieldsSet = new Set<HTMLInputElement>();
   const docs = getAllDocuments();
 
@@ -172,7 +178,10 @@ function findEmailFields(): HTMLInputElement[] {
   return Array.from(fieldsSet);
 }
 
-function findTextFields(): HTMLInputElement[] {
+/**
+ * Find all text input fields in the document and same-origin iframes
+ */
+export function findTextFields(): HTMLInputElement[] {
   const fields: HTMLInputElement[] = [];
   const docs = getAllDocuments();
 
@@ -194,12 +203,18 @@ function findTextFields(): HTMLInputElement[] {
   return fields;
 }
 
-function isElementVisible(element: Element | null): boolean {
+/**
+ * Check if an element is visible on the page
+ * Uses the element's own document/window for iframe support
+ */
+export function isElementVisible(element: Element | null): boolean {
   if (!element) return false;
 
   const htmlElement = element as HTMLElement;
+  // Use the element's own document view for iframe support
+  const view = htmlElement.ownerDocument?.defaultView ?? window;
   const rect = htmlElement.getBoundingClientRect();
-  const style = window.getComputedStyle(htmlElement);
+  const style = view.getComputedStyle(htmlElement);
 
   // Check element's own visibility
   const isSelfVisible =
@@ -213,17 +228,15 @@ function isElementVisible(element: Element | null): boolean {
 
   // Check if element is within viewport (not off-screen)
   const isInViewport =
-    rect.top < window.innerHeight &&
-    rect.bottom > 0 &&
-    rect.left < window.innerWidth &&
-    rect.right > 0;
+    rect.top < view.innerHeight && rect.bottom > 0 && rect.left < view.innerWidth && rect.right > 0;
 
   if (!isInViewport) return false;
 
   // Check parent visibility (walk up the DOM tree)
   let parent = htmlElement.parentElement;
-  while (parent && parent !== document.body) {
-    const parentStyle = window.getComputedStyle(parent);
+  const docBody = htmlElement.ownerDocument?.body ?? document.body;
+  while (parent && parent !== docBody) {
+    const parentStyle = view.getComputedStyle(parent);
     if (
       parentStyle.display === 'none' ||
       parentStyle.visibility === 'hidden' ||

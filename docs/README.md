@@ -52,17 +52,19 @@ The extension will:
 Clean-Autofill/
 ├── manifest.json          # Extension configuration
 ├── package.json           # NPM configuration
-├── src/                   # Extension source code
-│   ├── background.js      # Service worker for handling icon clicks
-│   ├── content.js         # Content script for filling emails
+├── src/                   # Extension source code (TypeScript)
+│   ├── background.ts      # Service worker for handling icon clicks
+│   ├── content.ts         # Content script for filling emails
 │   ├── options.html       # Settings page HTML
-│   ├── options.js         # Settings page logic
+│   ├── options.ts         # Settings page logic
+│   ├── utils.ts           # Shared utilities
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
-├── tools/                 # Build and utility scripts
-│   ├── build.js           # Validates required files
-│   ├── pack.js            # Creates distribution package
-│   ├── validate.js        # Manifest and file validation
-│   └── bump-version.js    # Version management
+├── toolkit/               # Build and utility scripts
+│   └── scripts/
+│       ├── build.js       # Compiles TS + copies assets to dist/
+│       ├── pack.js        # Creates distribution package
+│       ├── validate.js    # Manifest and file validation
+│       └── bump-version.js # Version management
 ├── docs/                  # Documentation
 └── dist/                  # Build output (gitignored)
     ├── Clean-Autofill/    # Unpacked extension folder

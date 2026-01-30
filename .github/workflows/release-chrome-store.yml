@@ -78,25 +78,19 @@ jobs:
         NEW_VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
         echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
     
-    - name: Create extension package
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Build and package extension
       run: |
-        echo "Creating extension package..."
-        mkdir -p dist/Clean-Autofill/src/icons
-
-        # Copy all necessary files
-        cp manifest.json dist/Clean-Autofill/
-        cp src/background.js dist/Clean-Autofill/src/
-        cp src/content.js dist/Clean-Autofill/src/
-        cp src/options.html dist/Clean-Autofill/src/
-        cp src/options.js dist/Clean-Autofill/src/
-        cp -r src/icons/* dist/Clean-Autofill/src/icons/
-
-        # Create zip file
-        cd dist/Clean-Autofill
-        zip -r ../Clean-Autofill.zip . -x "*.DS_Store" "*__MACOSX*"
-        cd ../..
-
-        echo "✅ Extension package created"
+        echo "Building and packaging extension..."
+        bun run pack
+        echo "✅ Extension package created at dist/Clean-Autofill.zip"
     
     - name: Upload to Chrome Web Store
       id: upload

@@ -30,8 +30,11 @@ try {
 
     // Use native zip command from dist directory
     process.chdir(distPath);
-    execSync(`zip -r ${zipFileName} . -x "*.DS_Store" "*__MACOSX*" "types/*"`, { stdio: 'pipe' });
-    process.chdir(rootPath);
+    try {
+        execSync(`zip -r ${zipFileName} . -x "*.DS_Store" "*__MACOSX*" "types/*"`, { stdio: 'pipe' });
+    } finally {
+        process.chdir(rootPath);
+    }
 
     // Get file size
     const stats = fs.statSync(zipPath);

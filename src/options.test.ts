@@ -64,7 +64,7 @@ describe('domain validation', () => {
     });
 
     test('accepts domain with multiple subdomains', () => {
-      // Regex requires 2+ chars per label after the first
+      // Multiple subdomains work correctly
       expect(isValidDomain('sub.mail.example.com')).toBe(true);
     });
 

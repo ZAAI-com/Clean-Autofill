@@ -1,12 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
 
-// Load utils first (content.ts depends on it)
-beforeAll(async () => {
-  await import('./utils.js');
-});
-
-// Mock chrome API
-const _mockSendResponse = mock(() => {});
+// Mock chrome API before importing content module
 const mockChrome = {
   runtime: {
     onMessage: {
@@ -18,101 +12,23 @@ const mockChrome = {
 // Set up globals before importing content module
 (globalThis as Record<string, unknown>).chrome = mockChrome;
 
-// Since content.ts has side effects (addListener), we need to test the functions
-// by extracting them. For now, we'll test the DOM utility functions by recreating them.
+// Dynamic imports to ensure mocks are set up first
+let isInputField: (element: Element | null) => boolean;
+let findEmailFields: () => HTMLInputElement[];
+let findTextFields: () => HTMLInputElement[];
+let isElementVisible: (element: Element | null) => boolean;
 
-// Recreate pure functions from content.ts for testing
-function isInputField(element: Element | null): boolean {
-  if (!element) return false;
-  const tagName = element.tagName?.toLowerCase();
-  if (tagName === 'input') {
-    const inputElement = element as HTMLInputElement;
-    const type = inputElement.type?.toLowerCase() || 'text';
-    return ['text', 'email', 'url', 'search', 'tel'].includes(type);
-  }
-  return tagName === 'textarea' || (element as HTMLElement).isContentEditable;
-}
+beforeAll(async () => {
+  // Load utils first (content.ts depends on it)
+  await import('./utils.js');
 
-function isElementVisible(element: Element | null): boolean {
-  if (!element) return false;
-  const htmlElement = element as HTMLElement;
-  const rect = htmlElement.getBoundingClientRect();
-  const style = window.getComputedStyle(htmlElement);
-
-  const isSelfVisible =
-    rect.width > 0 &&
-    rect.height > 0 &&
-    style.visibility !== 'hidden' &&
-    style.display !== 'none' &&
-    parseFloat(style.opacity) > 0;
-
-  if (!isSelfVisible) return false;
-
-  const isInViewport =
-    rect.top < window.innerHeight &&
-    rect.bottom > 0 &&
-    rect.left < window.innerWidth &&
-    rect.right > 0;
-
-  if (!isInViewport) return false;
-
-  let parent = htmlElement.parentElement;
-  while (parent && parent !== document.body) {
-    const parentStyle = window.getComputedStyle(parent);
-    if (
-      parentStyle.display === 'none' ||
-      parentStyle.visibility === 'hidden' ||
-      parseFloat(parentStyle.opacity) === 0
-    ) {
-      return false;
-    }
-    parent = parent.parentElement;
-  }
-
-  return true;
-}
-
-function findEmailFields(): HTMLInputElement[] {
-  const fieldsSet = new Set<HTMLInputElement>();
-
-  document.querySelectorAll<HTMLInputElement>('input[type="email"]').forEach((el) => {
-    if (isInputField(el)) fieldsSet.add(el);
-  });
-
-  const emailPatterns = [
-    'input[name*="email" i]',
-    'input[id*="email" i]',
-    'input[placeholder*="email" i]',
-    'input[autocomplete="email"]',
-    'input[aria-label*="email" i]',
-  ];
-
-  emailPatterns.forEach((pattern) => {
-    document.querySelectorAll<HTMLInputElement>(pattern).forEach((input) => {
-      if (isInputField(input)) {
-        fieldsSet.add(input);
-      }
-    });
-  });
-
-  return Array.from(fieldsSet);
-}
-
-function findTextFields(): HTMLInputElement[] {
-  const fields: HTMLInputElement[] = [];
-  const selector =
-    'input[type="text"]:not([readonly]):not([disabled]), ' +
-    'input:not([type]):not([readonly]):not([disabled]), ' +
-    'textarea:not([readonly]):not([disabled])';
-
-  document.querySelectorAll<HTMLInputElement>(selector).forEach((input) => {
-    if (isInputField(input)) {
-      fields.push(input);
-    }
-  });
-
-  return fields;
-}
+  // Now import the exported pure functions from production code
+  const content = await import('./content.js');
+  isInputField = content.isInputField;
+  findEmailFields = content.findEmailFields;
+  findTextFields = content.findTextFields;
+  isElementVisible = content.isElementVisible;
+});
 
 describe('isInputField', () => {
   beforeEach(() => {

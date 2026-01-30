@@ -84,11 +84,18 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ├── .github/
 │   └── workflows/
 │       └── ci.yml         # GitHub Actions CI pipeline
-├── config/
-│   ├── biome.json         # Biome linter/formatter config
-│   ├── tsconfig.json      # TypeScript configuration
-│   └── husky/
-│       └── pre-commit     # Pre-commit hook (typecheck, lint, test)
+├── toolkit/
+│   ├── biome/
+│   │   └── biome.json     # Biome linter/formatter config
+│   ├── typescript/
+│   │   └── tsconfig.json  # TypeScript configuration
+│   ├── husky/
+│   │   └── pre-commit     # Pre-commit hook (typecheck, lint, test)
+│   └── scripts/           # Build scripts
+│       ├── build.js       # Compiles TS + copies assets to dist/
+│       ├── pack.js        # Creates distribution zip
+│       ├── validate.js    # Manifest validation
+│       └── bump-version.js # Version management
 ├── src/                   # TypeScript source (edit these)
 │   ├── background.ts      # Service worker
 │   ├── background.test.ts # Service worker tests
@@ -103,11 +110,6 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   ├── types/
 │   │   └── index.ts       # TypeScript type definitions
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
-├── tools/                 # Build scripts
-│   ├── build.js           # Compiles TS + copies assets to dist/
-│   ├── pack.js            # Creates distribution zip
-│   ├── validate.js        # Manifest validation
-│   └── bump-version.js    # Version management
 └── dist/                  # Build output (load this in Chrome)
     ├── background.js      # Compiled service worker
     ├── content.js         # Compiled content script

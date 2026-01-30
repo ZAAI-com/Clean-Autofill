@@ -14,5 +14,7 @@ declare module 'psl' {
   function isValid(domain: string): boolean;
 
   export { parse, get, isValid, ParsedDomain };
-  export default { parse, get, isValid };
+
+  const psl: { parse: typeof parse; get: typeof get; isValid: typeof isValid };
+  export default psl;
 }

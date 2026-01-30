@@ -111,34 +111,34 @@ Testing: [Validation criteria]
 
 ### Development Scripts
 
-#### 1. Version Management (`tools/bump-version.js`)
+#### 1. Version Management (`toolkit/scripts/bump-version.js`)
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
-npm run bump:patch
+bun run bump:patch
 
 # Bump minor version (1.0.0 → 1.1.0)
-npm run bump:minor
+bun run bump:minor
 
 # Bump major version (1.0.0 → 2.0.0)
-npm run bump:major
+bun run bump:major
 ```
 
-#### 2. Extension Packaging (`tools/pack.js`)
+#### 2. Extension Packaging (`toolkit/scripts/pack.js`)
 ```bash
 # Validate and package extension
-npm run pack
+bun run pack
 ```
 
-#### 3. Comprehensive Validation (`tools/validate.js`)
+#### 3. Comprehensive Validation (`toolkit/scripts/validate.js`)
 ```bash
 # Run full validation suite
-npm run validate
+bun run validate
 ```
 
-#### 4. Build Validation (`tools/build.js`)
+#### 4. Build Validation (`toolkit/scripts/build.js`)
 ```bash
 # Check project structure and dependencies
-npm run build
+bun run build
 ```
 
 ## 📋 Project Structure & Standards
@@ -147,18 +147,22 @@ npm run build
 ```
 Clean-Autofill/
 ├── 📁 .github/workflows/     # CI/CD automation
-├── 📁 src/                  # Extension source code
-│   ├── 📄 background.js     # Service worker logic
-│   ├── 📄 content.js        # Content script
-│   ├── 📄 options.js        # Settings page logic
+├── 📁 src/                  # Extension source code (TypeScript)
+│   ├── 📄 background.ts     # Service worker logic
+│   ├── 📄 content.ts        # Content script
+│   ├── 📄 options.ts        # Settings page logic
 │   ├── 📄 options.html      # Settings page UI
+│   ├── 📄 utils.ts          # Shared utilities
 │   └── 📁 icons/            # Extension icons (all sizes)
-├── 📁 tools/                # Development utilities
+├── 📁 toolkit/              # Development utilities
+│   ├── 📁 scripts/          # Build scripts
+│   ├── 📁 biome/            # Biome linter config
+│   ├── 📁 typescript/       # TypeScript config
+│   └── 📁 husky/            # Pre-commit hooks
 ├── 📁 docs/                 # Documentation
 ├── 📄 manifest.json         # Extension configuration
-├── 📄 package.json          # NPM configuration
+├── 📄 package.json          # Bun/NPM configuration
 └── 📁 dist/                 # Build output (gitignored)
-    ├── 📁 Clean-Autofill/   # Unpacked extension
     └── 📄 Clean-Autofill.zip # Chrome Web Store package
 ```
 
@@ -240,13 +244,13 @@ Clean-Autofill/
 ### Debug Commands
 ```bash
 # Validate extension
-npm run validate
+bun run validate
 
 # Check build status
-npm run build
+bun run build
 
 # View detailed logs
-npm run pack --verbose
+bun run pack
 ```
 
 ## 📈 Performance Monitoring

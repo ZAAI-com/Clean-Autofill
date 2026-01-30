@@ -5,20 +5,43 @@ const { extractMainDomain, debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const form = document.getElementById('settingsForm') as HTMLFormElement;
-  const emailDomainInput = document.getElementById('emailDomain') as HTMLInputElement;
-  const statusDiv = document.getElementById('status') as HTMLDivElement;
-  const clearButton = document.getElementById('clearButton') as HTMLButtonElement;
-  const previewBox = document.getElementById('previewBox') as HTMLDivElement;
-  const exampleEmail = document.getElementById('exampleEmail') as HTMLSpanElement;
-  const exampleEmail2 = document.getElementById('exampleEmail2') as HTMLSpanElement;
+  const form = document.getElementById('settingsForm');
+  const emailDomainInput = document.getElementById('emailDomain');
+  const statusDiv = document.getElementById('status');
+  const clearButton = document.getElementById('clearButton');
+  const previewBox = document.getElementById('previewBox');
+  const exampleEmail = document.getElementById('exampleEmail');
+  const exampleEmail2 = document.getElementById('exampleEmail2');
+
+  // Verify all required DOM elements exist
+  if (
+    !form ||
+    !emailDomainInput ||
+    !statusDiv ||
+    !clearButton ||
+    !previewBox ||
+    !exampleEmail ||
+    !exampleEmail2
+  ) {
+    console.error('Required DOM elements not found');
+    return;
+  }
+
+  // Type-safe references after null check
+  const formEl = form as HTMLFormElement;
+  const emailInput = emailDomainInput as HTMLInputElement;
+  const statusEl = statusDiv as HTMLDivElement;
+  const clearBtn = clearButton as HTMLButtonElement;
+  const previewEl = previewBox as HTMLDivElement;
+  const example1 = exampleEmail as HTMLSpanElement;
+  const example2 = exampleEmail2 as HTMLSpanElement;
 
   // Load saved settings
   async function loadSettings(): Promise<void> {
     try {
       const result = await chrome.storage.sync.get(['emailDomain']);
       if (result.emailDomain) {
-        emailDomainInput.value = result.emailDomain as string;
+        emailInput.value = result.emailDomain as string;
         await updatePreview();
         updateExamples();
       }
@@ -32,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function saveSettings(e: Event): Promise<void> {
     e.preventDefault();
 
-    const domain = emailDomainInput.value.trim();
+    const domain = emailInput.value.trim();
 
     // Validate domain
     if (!domain) {
@@ -52,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       await chrome.storage.sync.set({ emailDomain: cleanDomain });
-      emailDomainInput.value = cleanDomain;
+      emailInput.value = cleanDomain;
       showStatus('Settings saved successfully!', 'success');
       await updatePreview();
       updateExamples();
@@ -69,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (confirm('Are you sure you want to clear your email domain?')) {
       try {
         await chrome.storage.sync.remove(['emailDomain']);
-        emailDomainInput.value = '';
+        emailInput.value = '';
         showStatus('Settings cleared', 'success');
         await updatePreview();
         updateExamples();
@@ -84,20 +107,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Show status message
   function showStatus(message: string, type: 'success' | 'error'): void {
-    statusDiv.textContent = message;
-    statusDiv.className = `status ${type}`;
+    statusEl.textContent = message;
+    statusEl.className = `status ${type}`;
 
     // Hide status after 3 seconds
     setTimeout(() => {
-      statusDiv.className = 'status';
+      statusEl.className = 'status';
     }, 3000);
   }
 
   // Update preview (async version)
   async function updatePreview(): Promise<void> {
-    const domain = emailDomainInput.value.trim();
+    const domain = emailInput.value.trim();
     if (!domain) {
-      previewBox.textContent = 'No domain set';
+      previewEl.textContent = 'No domain set';
       return;
     }
 
@@ -109,24 +132,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           const currentDomain = extractMainDomain
             ? extractMainDomain(url.hostname)
             : url.hostname.replace(/^www\./, '');
-          previewBox.textContent = `${currentDomain}@${domain}`;
+          previewEl.textContent = `${currentDomain}@${domain}`;
         } catch {
-          previewBox.textContent = `example.com@${domain}`;
+          previewEl.textContent = `example.com@${domain}`;
         }
       } else {
-        previewBox.textContent = `example.com@${domain}`;
+        previewEl.textContent = `example.com@${domain}`;
       }
     } catch {
-      previewBox.textContent = `example.com@${domain}`;
+      previewEl.textContent = `example.com@${domain}`;
     }
   }
 
   // Update examples
   function updateExamples(): void {
-    const domain = emailDomainInput.value.trim() || 'yourdomain.com';
+    const domain = emailInput.value.trim() || 'yourdomain.com';
     // Show examples with main domains only (no subdomains)
-    exampleEmail.textContent = `google.com@${domain}`;
-    exampleEmail2.textContent = `github.com@${domain}`;
+    example1.textContent = `google.com@${domain}`;
+    example2.textContent = `github.com@${domain}`;
   }
 
   // Debounced preview update for input events
@@ -141,9 +164,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
   // Event listeners
-  form.addEventListener('submit', saveSettings);
-  clearButton.addEventListener('click', clearSettings);
-  emailDomainInput.addEventListener('input', debouncedUpdatePreview);
+  formEl.addEventListener('submit', saveSettings);
+  clearBtn.addEventListener('click', clearSettings);
+  emailInput.addEventListener('input', debouncedUpdatePreview);
 
   // Initialize
   await loadSettings();

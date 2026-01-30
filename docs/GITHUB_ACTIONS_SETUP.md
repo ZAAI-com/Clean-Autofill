@@ -82,7 +82,7 @@ Add these secrets:
 
 1. **Bump version locally**:
    ```bash
-   node tools/bump-version.js patch  # or minor/major
+   node toolkit/scripts/bump-version.js patch  # or minor/major
    ```
 
 2. **Commit and tag**:
@@ -153,12 +153,12 @@ For any push or PR:
 Test the package locally:
 ```bash
 # Create package
-npm run pack
+bun run pack
 
 # Load in Chrome
 1. Open chrome://extensions/
 2. Enable Developer Mode
-3. Load unpacked → select dist/Clean-Autofill/ folder
+3. Load unpacked → select dist/ folder
 ```
 
 ## 📊 Version Management
@@ -171,13 +171,13 @@ npm run pack
 ### Version Bump Script
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
-npm run bump:patch
+bun run bump:patch
 
 # Bump minor version (1.0.0 → 1.1.0)
-npm run bump:minor
+bun run bump:minor
 
 # Bump major version (1.0.0 → 2.0.0)
-npm run bump:major
+bun run bump:major
 ```
 
 ## 🔐 Security Best Practices
