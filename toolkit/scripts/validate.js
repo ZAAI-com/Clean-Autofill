@@ -70,13 +70,13 @@ try {
     errors++;
 }
 
-// Check file sizes
+// Check file sizes (compiled files in dist/)
 console.log('\n📏 Checking file sizes:');
 const files = [
-    { path: 'src/background.js', maxSize: 1024 * 100 }, // 100KB
-    { path: 'src/content.js', maxSize: 1024 * 100 },    // 100KB
-    { path: 'src/options.js', maxSize: 1024 * 50 },     // 50KB
-    { path: 'src/options.html', maxSize: 1024 * 50 },   // 50KB
+    { path: 'dist/background.js', maxSize: 1024 * 200 }, // 200KB (bundled)
+    { path: 'dist/content.js', maxSize: 1024 * 200 },    // 200KB (bundled)
+    { path: 'dist/options.js', maxSize: 1024 * 100 },    // 100KB
+    { path: 'src/options.html', maxSize: 1024 * 50 },    // 50KB
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {
@@ -114,9 +114,9 @@ iconSizes.forEach(size => {
 // Check for common issues
 console.log('\n🔎 Checking for common issues:');
 
-// Check for console.log in production code
-const jsFiles = ['src/background.js', 'src/content.js', 'src/options.js'];
-jsFiles.forEach(file => {
+// Check for console.log in production code (check TypeScript source files)
+const tsFiles = ['src/background.ts', 'src/content.ts', 'src/options.ts'];
+tsFiles.forEach(file => {
     const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
@@ -129,7 +129,7 @@ jsFiles.forEach(file => {
 });
 
 // Check for TODO comments
-jsFiles.forEach(file => {
+tsFiles.forEach(file => {
     const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');

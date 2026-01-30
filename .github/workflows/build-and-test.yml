@@ -38,15 +38,16 @@ jobs:
             sys.exit(1)
         "
     
-    - name: Check required files
+    - name: Check required source files
       run: |
-        echo "Checking required files..."
+        echo "Checking required source files..."
         required_files=(
           "manifest.json"
-          "src/background.js"
-          "src/content.js"
+          "src/background.ts"
+          "src/content.ts"
           "src/options.html"
-          "src/options.js"
+          "src/options.ts"
+          "src/utils.ts"
           "src/icons/icon16.png"
           "src/icons/icon32.png"
           "src/icons/icon48.png"
@@ -62,24 +63,24 @@ jobs:
           fi
         done
 
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Build extension
+      run: bun run build
+
     - name: Create extension package
       run: |
         echo "Creating extension package..."
-        # Create a clean directory for the extension
-        mkdir -p dist/Clean-Autofill/src/icons
-
-        # Copy all necessary files
-        cp manifest.json dist/Clean-Autofill/
-        cp src/background.js dist/Clean-Autofill/src/
-        cp src/content.js dist/Clean-Autofill/src/
-        cp src/options.html dist/Clean-Autofill/src/
-        cp src/options.js dist/Clean-Autofill/src/
-        cp -r src/icons/* dist/Clean-Autofill/src/icons/
-
-        # Create zip file
-        cd dist/Clean-Autofill
-        zip -r ../Clean-Autofill.zip . -x "*.DS_Store" "*__MACOSX*"
-        cd ../..
+        # Create zip from the built dist directory
+        cd dist
+        zip -r Clean-Autofill.zip . -x "*.DS_Store" "*__MACOSX*" "*.map"
+        cd ..
 
         echo "✅ Extension package created: dist/Clean-Autofill.zip"
         echo "📦 Package size: $(du -h dist/Clean-Autofill.zip | cut -f1)"
