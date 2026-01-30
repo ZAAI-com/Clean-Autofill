@@ -120,36 +120,61 @@ function isInputField(element: Element | null): boolean {
   return tagName === 'textarea' || (element as HTMLElement).isContentEditable;
 }
 
+// Get all accessible documents (main document + same-origin iframes)
+function getAllDocuments(): Document[] {
+  const docs: Document[] = [document];
+
+  // Find all iframes and try to access their documents
+  document.querySelectorAll('iframe').forEach((iframe) => {
+    try {
+      // This will throw if cross-origin
+      const iframeDoc = iframe.contentDocument;
+      if (iframeDoc) {
+        docs.push(iframeDoc);
+      }
+    } catch {
+      // Cross-origin iframe, skip
+    }
+  });
+
+  return docs;
+}
+
 function findEmailFields(): HTMLInputElement[] {
   const fieldsSet = new Set<HTMLInputElement>();
+  const docs = getAllDocuments();
 
-  // Find inputs with type="email"
-  document.querySelectorAll<HTMLInputElement>('input[type="email"]').forEach((el) => {
-    if (isInputField(el)) fieldsSet.add(el);
-  });
-
-  // Find inputs with email-related attributes
-  const emailPatterns = [
-    'input[name*="email" i]',
-    'input[id*="email" i]',
-    'input[placeholder*="email" i]',
-    'input[autocomplete="email"]',
-    'input[aria-label*="email" i]',
-  ];
-
-  emailPatterns.forEach((pattern) => {
-    document.querySelectorAll<HTMLInputElement>(pattern).forEach((input) => {
-      if (isInputField(input)) {
-        fieldsSet.add(input);
-      }
+  // Search in all accessible documents (main + same-origin iframes)
+  for (const doc of docs) {
+    // Find inputs with type="email"
+    doc.querySelectorAll<HTMLInputElement>('input[type="email"]').forEach((el) => {
+      if (isInputField(el)) fieldsSet.add(el);
     });
-  });
+
+    // Find inputs with email-related attributes
+    const emailPatterns = [
+      'input[name*="email" i]',
+      'input[id*="email" i]',
+      'input[placeholder*="email" i]',
+      'input[autocomplete="email"]',
+      'input[aria-label*="email" i]',
+    ];
+
+    emailPatterns.forEach((pattern) => {
+      doc.querySelectorAll<HTMLInputElement>(pattern).forEach((input) => {
+        if (isInputField(input)) {
+          fieldsSet.add(input);
+        }
+      });
+    });
+  }
 
   return Array.from(fieldsSet);
 }
 
 function findTextFields(): HTMLInputElement[] {
   const fields: HTMLInputElement[] = [];
+  const docs = getAllDocuments();
 
   // Find all text inputs that aren't readonly or disabled
   const selector =
@@ -157,11 +182,14 @@ function findTextFields(): HTMLInputElement[] {
     'input:not([type]):not([readonly]):not([disabled]), ' +
     'textarea:not([readonly]):not([disabled])';
 
-  document.querySelectorAll<HTMLInputElement>(selector).forEach((input) => {
-    if (isInputField(input)) {
-      fields.push(input);
-    }
-  });
+  // Search in all accessible documents (main + same-origin iframes)
+  for (const doc of docs) {
+    doc.querySelectorAll<HTMLInputElement>(selector).forEach((input) => {
+      if (isInputField(input)) {
+        fields.push(input);
+      }
+    });
+  }
 
   return fields;
 }
