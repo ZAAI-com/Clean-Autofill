@@ -40,6 +40,12 @@ chrome.action.onClicked.addListener(async (tab) => {
     ])) as FillEmailResponse;
 
     if (response?.success) {
+      // No input field found - just log, don't show notification
+      if (response.message === 'No input field found') {
+        console.log('Clean-Autofill: No input field found on this page');
+        return;
+      }
+
       // Show success notification
       chrome.notifications.create({
         type: 'basic',

@@ -5,6 +5,24 @@ import type { CleanAutofillUtils, FillEmailRequest, FillEmailResponse } from './
 const cleanAutofillUtils = (globalThis as { CleanAutofillUtils?: CleanAutofillUtils })
   .CleanAutofillUtils;
 
+// Track the last focused input field (needed because clicking the extension icon steals focus)
+let lastFocusedInput: HTMLElement | null = null;
+
+// Listen for focus events to track the last focused input
+// Guard for browser environment (not during tests/SSR)
+if (typeof document !== 'undefined') {
+  document.addEventListener(
+    'focusin',
+    (event) => {
+      const target = event.target as Element;
+      if (isInputField(target)) {
+        lastFocusedInput = target as HTMLElement;
+      }
+    },
+    true,
+  );
+}
+
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(
   (
@@ -21,7 +39,8 @@ chrome.runtime.onMessage.addListener(
 
       try {
         const result = fillEmailInField(request.email);
-        sendResponse({ success: true, message: result });
+        // null means no field found - still success, just nothing to do
+        sendResponse({ success: true, message: result ?? 'No input field found' });
       } catch (error) {
         sendResponse({
           success: false,
@@ -33,13 +52,19 @@ chrome.runtime.onMessage.addListener(
   },
 );
 
-function fillEmailInField(email: string): string {
+function fillEmailInField(email: string): string | null {
   // First priority: Currently focused element
   const activeElement = document.activeElement;
 
   if (activeElement && isInputField(activeElement)) {
     fillInput(activeElement as HTMLElement, email);
     return 'Filled in active field';
+  }
+
+  // Use last focused input if available and still valid
+  if (lastFocusedInput && document.contains(lastFocusedInput) && isInputField(lastFocusedInput)) {
+    fillInput(lastFocusedInput, email);
+    return 'Filled in last focused field';
   }
 
   // Second priority: Find email input fields
@@ -72,7 +97,8 @@ function fillEmailInField(email: string): string {
     }
   }
 
-  throw new Error('No suitable input field found');
+  // No input field found - return null (not an error, just nothing to fill)
+  return null;
 }
 
 function isInputField(element: Element | null): boolean {
