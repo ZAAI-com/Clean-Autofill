@@ -11,7 +11,7 @@ let warnings = 0;
 // Validate manifest.json
 console.log('📋 Checking manifest.json:');
 try {
-    const manifestPath = path.join(__dirname, '..', 'manifest.json');
+    const manifestPath = path.join(__dirname, '../..', 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     
     // Required fields
@@ -80,7 +80,7 @@ const files = [
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {
-    const fullPath = path.join(__dirname, '..', filePath);
+    const fullPath = path.join(__dirname, '../..', filePath);
     if (fs.existsSync(fullPath)) {
         const stats = fs.statSync(fullPath);
         const sizeKB = (stats.size / 1024).toFixed(2);
@@ -100,7 +100,7 @@ files.forEach(({ path: filePath, maxSize }) => {
 console.log('\n🎨 Checking icons:');
 const iconSizes = [16, 32, 48, 128];
 iconSizes.forEach(size => {
-    const iconPath = path.join(__dirname, '..', 'src', 'icons', `icon${size}.png`);
+    const iconPath = path.join(__dirname, '../..', 'src', 'icons', `icon${size}.png`);
     if (fs.existsSync(iconPath)) {
         const stats = fs.statSync(iconPath);
         const sizeKB = (stats.size / 1024).toFixed(2);
@@ -117,7 +117,7 @@ console.log('\n🔎 Checking for common issues:');
 // Check for console.log in production code
 const jsFiles = ['src/background.js', 'src/content.js', 'src/options.js'];
 jsFiles.forEach(file => {
-    const filePath = path.join(__dirname, '..', file);
+    const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         const consoleLogs = (content.match(/console\.(log|debug|info)/g) || []).length;
@@ -130,7 +130,7 @@ jsFiles.forEach(file => {
 
 // Check for TODO comments
 jsFiles.forEach(file => {
-    const filePath = path.join(__dirname, '..', file);
+    const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         const todos = (content.match(/TODO|FIXME|XXX/g) || []).length;

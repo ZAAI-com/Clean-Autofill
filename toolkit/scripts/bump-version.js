@@ -14,7 +14,7 @@ if (!['patch', 'minor', 'major'].includes(bumpType)) {
 }
 
 // Read manifest.json
-const manifestPath = path.join(__dirname, '..', 'manifest.json');
+const manifestPath = path.join(__dirname, '../..', 'manifest.json');
 let manifest;
 
 try {
