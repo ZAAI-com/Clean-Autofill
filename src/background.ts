@@ -41,12 +41,6 @@ chrome.action.onClicked.addListener(async (tab) => {
     ])) as FillEmailResponse;
 
     if (response?.success) {
-      // No input field found - just log, don't show notification
-      if (response.message === 'No input field found') {
-        console.log('Clean-Autofill: No input field found on this page');
-        return;
-      }
-
       // Show success notification
       chrome.notifications.create({
         type: 'basic',
@@ -54,18 +48,27 @@ chrome.action.onClicked.addListener(async (tab) => {
         title: 'Clean-Autofill',
         message: `Email filled: ${email}`,
       });
-    } else {
-      throw new Error(response?.error || 'Failed to fill email');
+    } else if (response?.error) {
+      throw new Error(response.error);
     }
+    // If no response, no frame found a field - silently do nothing
   } catch (error) {
+    // Check if this is a timeout (no frame responded = no field found)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fill email';
+    if (errorMessage.includes('Content script did not respond')) {
+      // No frame found an input field - silently ignore
+      console.log('Clean-Autofill: No input field found on this page');
+      return;
+    }
+
     console.error('Clean-Autofill error:', error);
 
-    // Show error notification
+    // Show error notification for actual errors
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon48.png',
       title: 'Clean-Autofill Error',
-      message: error instanceof Error ? error.message : 'Failed to fill email',
+      message: errorMessage,
     });
   }
 });

@@ -39,9 +39,14 @@ chrome.runtime.onMessage.addListener(
 
       try {
         const result = fillEmailInField(request.email);
-        // null means no field found - still success, just nothing to do
-        sendResponse({ success: true, message: result ?? 'No input field found' });
+        // Only respond if we found and filled a field
+        // This allows other frames (iframes) to respond if they have the field
+        if (result) {
+          sendResponse({ success: true, message: result });
+        }
+        // If no field found, don't respond - let other frames try
       } catch (error) {
+        // Only send error responses for actual errors, not "field not found"
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

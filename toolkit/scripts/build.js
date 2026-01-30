@@ -55,12 +55,17 @@ try {
 }
 
 // Bundle utils.js with dependencies using esbuild
+// Create two versions: ESM for background.js, IIFE for content scripts
 console.log('\n📦 Bundling utils.js with dependencies...');
 try {
-    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils.bundled.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
-    // Replace utils.js with bundled version
-    fs.renameSync(path.join(DIST, 'utils.bundled.js'), path.join(DIST, 'utils.js'));
-    console.log('  ✅ utils.js bundled with PSL');
+    // ESM bundle for background.js (service worker)
+    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    // IIFE bundle for content scripts (sets globalThis.CleanAutofillUtils)
+    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    // Replace utils.js with ESM version for background.js imports
+    fs.renameSync(path.join(DIST, 'utils.esm.js'), path.join(DIST, 'utils.js'));
+    console.log('  ✅ utils.js (ESM for background.js)');
+    console.log('  ✅ utils-content.js (IIFE for content scripts)');
 } catch (error) {
     console.error('  ❌ Bundling failed:', error.message);
     process.exit(1);
@@ -73,23 +78,7 @@ const usesESModules = manifest.background?.type === 'module';
 if (usesESModules) {
     console.log('\n🔧 ES modules enabled - processing scripts...');
 
-    // utils.js is used by both:
-    // - background.js (ES module) - needs exports
-    // - content scripts (classic scripts) - can't have exports
-    // Solution: Create utils-content.js (no exports) for content scripts
-    const utilsPath = path.join(DIST, 'utils.js');
-    const utilsContentPath = path.join(DIST, 'utils-content.js');
-    if (fs.existsSync(utilsPath)) {
-        let utilsContent = fs.readFileSync(utilsPath, 'utf8');
-        // Strip exports for content script version
-        utilsContent = utilsContent.replace(/^export \{\};?\s*$/gm, '');
-        utilsContent = utilsContent.replace(/^export \{[^}]*\};?\s*$/gm, '');
-        fs.writeFileSync(utilsContentPath, utilsContent.trim() + '\n');
-        console.log(`  ✅ utils-content.js (created for content scripts)`);
-        console.log(`  ✅ utils.js (ES module preserved for background.js)`);
-    }
-
-    // Strip exports from other content script files
+    // Strip exports from content script files (they use globalThis pattern)
     const contentScriptFiles = ['content.js', 'options.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
