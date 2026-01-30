@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clean-Autofill",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Automatically fill email addresses based on the current website domain",
   "permissions": [
     "activeTab",
