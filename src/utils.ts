@@ -2,7 +2,10 @@
 import psl from 'psl';
 import type { CleanAutofillUtils } from './types';
 
-// Kept for backwards compatibility and tests
+/**
+ * List of special multi-part TLDs (e.g., co.uk, com.au) used for domain extraction.
+ * Kept for backwards compatibility and tests - PSL library handles most cases.
+ */
 const SPECIAL_TLDS: readonly string[] = [
   // UK
   'co.uk',
@@ -86,7 +89,12 @@ const SPECIAL_TLDS: readonly string[] = [
   'ac.il',
 ];
 
-// Extract main domain from hostname using Public Suffix List
+/**
+ * Extract the main registrable domain from a hostname using the Public Suffix List.
+ * Handles special cases: localhost, IPv4/IPv6 addresses, and www prefixes.
+ * @param hostname - The hostname to extract the domain from
+ * @returns The main registrable domain (e.g., 'google.com' from 'mail.google.com')
+ */
 function extractMainDomain(hostname: string): string {
   // Handle localhost
   if (hostname === 'localhost') {
@@ -121,7 +129,12 @@ function extractMainDomain(hostname: string): string {
   return domain;
 }
 
-// Validate basic email format
+/**
+ * Validate basic email format.
+ * Checks for non-empty string with @ symbol and reasonable length.
+ * @param email - The value to validate
+ * @returns True if the value is a valid email format
+ */
 function isValidEmail(email: unknown): boolean {
   return (
     typeof email === 'string' &&
@@ -131,12 +144,24 @@ function isValidEmail(email: unknown): boolean {
   );
 }
 
-// Create a timeout promise for async operations
+/**
+ * Create a timeout promise that rejects after the specified duration.
+ * Useful for racing against async operations to implement timeouts.
+ * @param ms - Timeout duration in milliseconds
+ * @param message - Error message when timeout occurs
+ * @returns A promise that rejects with an Error after the timeout
+ */
 function createTimeout(ms: number, message = 'Operation timed out'): Promise<never> {
   return new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 }
 
-// Debounce function for rate-limiting calls
+/**
+ * Create a debounced version of a function that delays execution until after
+ * the specified wait time has elapsed since the last invocation.
+ * @param func - The function to debounce
+ * @param wait - The debounce delay in milliseconds
+ * @returns A debounced version of the function
+ */
 function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number): T {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   return function executedFunction(this: unknown, ...args: unknown[]) {

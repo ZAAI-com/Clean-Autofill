@@ -84,7 +84,13 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
-// Generate email based on current tab and user settings
+/**
+ * Generate an email address based on the current tab's domain and user settings.
+ * Combines the site's main domain with the user's configured email domain.
+ * @param tab - The Chrome tab to generate the email for
+ * @returns The generated email address, or null if no domain is configured
+ * @throws Error if unable to read settings or parse the tab URL
+ */
 async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<string | null> {
   // Get user's email domain from storage with error handling
   let userDomain: string | undefined;

@@ -36,7 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const example1 = exampleEmail as HTMLSpanElement;
   const example2 = exampleEmail2 as HTMLSpanElement;
 
-  // Load saved settings
+  /**
+   * Load saved settings from Chrome sync storage and update the UI.
+   */
   async function loadSettings(): Promise<void> {
     try {
       const result = await chrome.storage.sync.get(['emailDomain']);
@@ -51,7 +53,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Save settings
+  /**
+   * Validate and save settings to Chrome sync storage.
+   * @param e - The form submit event
+   */
   async function saveSettings(e: Event): Promise<void> {
     e.preventDefault();
 
@@ -87,7 +92,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Clear settings
+  /**
+   * Clear saved settings from Chrome sync storage after user confirmation.
+   */
   async function clearSettings(): Promise<void> {
     if (confirm('Are you sure you want to clear your email domain?')) {
       try {
@@ -105,7 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Show status message
+  /**
+   * Display a status message to the user that auto-hides after 3 seconds.
+   * @param message - The message to display
+   * @param type - The message type ('success' or 'error')
+   */
   function showStatus(message: string, type: 'success' | 'error'): void {
     statusEl.textContent = message;
     statusEl.className = `status ${type}`;
@@ -116,7 +127,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 3000);
   }
 
-  // Update preview (async version)
+  /**
+   * Update the email preview based on the current tab's domain and user's configured domain.
+   */
   async function updatePreview(): Promise<void> {
     const domain = emailInput.value.trim();
     if (!domain) {
@@ -144,7 +157,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Update examples
+  /**
+   * Update the example email displays with the current domain setting.
+   */
   function updateExamples(): void {
     const domain = emailInput.value.trim() || 'yourdomain.com';
     // Show examples with main domains only (no subdomains)
@@ -152,7 +167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     example2.textContent = `github.com@${domain}`;
   }
 
-  // Debounced preview update for input events
+  /**
+   * Debounced version of preview update to avoid excessive updates during typing.
+   */
   const debouncedUpdatePreview = debounce
     ? debounce(async () => {
         await updatePreview();

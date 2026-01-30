@@ -57,6 +57,12 @@ chrome.runtime.onMessage.addListener(
   },
 );
 
+/**
+ * Find and fill an appropriate input field with the given email address.
+ * Priority: active element > last focused > email fields > text fields.
+ * @param email - The email address to fill
+ * @returns A success message describing which field was filled, or null if no field found
+ */
 function fillEmailInField(email: string): string | null {
   // First priority: Currently focused element
   const activeElement = document.activeElement;
@@ -123,7 +129,11 @@ export function isInputField(element: Element | null): boolean {
   return tagName === 'textarea' || (element as HTMLElement).isContentEditable;
 }
 
-// Get all accessible documents (main document + same-origin iframes)
+/**
+ * Get all accessible documents including the main document and same-origin iframes.
+ * Cross-origin iframes are silently skipped due to security restrictions.
+ * @returns Array of accessible Document objects
+ */
 function getAllDocuments(): Document[] {
   const docs: Document[] = [document];
 
@@ -250,6 +260,12 @@ export function isElementVisible(element: Element | null): boolean {
   return true;
 }
 
+/**
+ * Fill a value into an input element with framework compatibility.
+ * Handles contenteditable elements and React/Vue controlled inputs.
+ * @param element - The input element to fill
+ * @param value - The value to set
+ */
 function fillInput(element: HTMLElement, value: string): void {
   // Focus the element first
   element.focus();
