@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "MailFiller",
-  "version": "0.2.0",
+  "name": "Clean-Autofill",
+  "version": "0.5.0",
   "description": "Automatically fill email addresses based on the current website domain",
   "permissions": [
     "activeTab",
@@ -17,7 +17,8 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -26,14 +27,19 @@
     "128": "icons/icon128.png"
   },
   "options_page": "options.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
   "content_scripts": [
     {
       "matches": [
         "<all_urls>"
       ],
       "js": [
+        "utils-content.js",
         "content.js"
-      ]
+      ],
+      "all_frames": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 # GitHub Actions Setup for Chrome Extension Deployment
 
-This guide explains how to set up automated deployment of the MailFiller Chrome Extension to the Chrome Web Store using GitHub Actions.
+This guide explains how to set up automated deployment of the Clean-Autofill Chrome Extension to the Chrome Web Store using GitHub Actions.
 
 ## 📋 Prerequisites
 
@@ -82,7 +82,7 @@ Add these secrets:
 
 1. **Bump version locally**:
    ```bash
-   node scripts/bump-version.js patch  # or minor/major
+   node toolkit/scripts/bump-version.js patch  # or minor/major
    ```
 
 2. **Commit and tag**:
@@ -153,12 +153,12 @@ For any push or PR:
 Test the package locally:
 ```bash
 # Create package
-zip -r extension.zip manifest.json *.js *.html icons/
+bun run pack
 
 # Load in Chrome
 1. Open chrome://extensions/
 2. Enable Developer Mode
-3. Load unpacked → select extracted folder
+3. Load unpacked → select dist/ folder
 ```
 
 ## 📊 Version Management
@@ -171,13 +171,13 @@ zip -r extension.zip manifest.json *.js *.html icons/
 ### Version Bump Script
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
-node scripts/bump-version.js patch
+bun run bump:patch
 
 # Bump minor version (1.0.0 → 1.1.0)
-node scripts/bump-version.js minor
+bun run bump:minor
 
 # Bump major version (1.0.0 → 2.0.0)
-node scripts/bump-version.js major
+bun run bump:major
 ```
 
 ## 🔐 Security Best Practices
@@ -225,5 +225,5 @@ For issues with:
 
 ---
 
-Last updated: 2024
-MailFiller Chrome Extension
+Last updated: January 2026
+Clean-Autofill Chrome Extension

@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "run": "./toolkit/Conductor/run.sh"
+  },
+  "runScriptMode": "nonconcurrent"
+}

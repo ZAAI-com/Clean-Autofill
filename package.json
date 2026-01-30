@@ -1,20 +1,31 @@
 {
-  "name": "mailfiller-chrome-extension",
-  "version": "1.0.0",
+  "name": "clean-autofill",
+  "version": "0.5.0",
   "description": "Chrome extension that automatically fills email addresses based on the current website domain",
   "scripts": {
-    "build": "node scripts/build.js",
-    "pack": "node scripts/pack.js",
-    "bump:patch": "node scripts/bump-version.js patch",
-    "bump:minor": "node scripts/bump-version.js minor",
-    "bump:major": "node scripts/bump-version.js major",
+    "prepare": "husky toolkit/husky",
+    "build": "node toolkit/scripts/build.js",
+    "pack": "node toolkit/scripts/pack.js",
+    "bump:patch": "node toolkit/scripts/bump-version.js patch",
+    "bump:minor": "node toolkit/scripts/bump-version.js minor",
+    "bump:major": "node toolkit/scripts/bump-version.js major",
     "release": "npm run pack && echo 'Ready for release. Tag and push to trigger GitHub Actions.'",
-    "test": "echo 'No tests configured yet'",
-    "validate": "node scripts/validate.js"
+    "validate": "node toolkit/scripts/validate.js",
+    "lint": "biome lint --config-path toolkit/biome/biome.json src/",
+    "lint:fix": "biome lint --config-path toolkit/biome/biome.json --write src/",
+    "format": "biome format --config-path toolkit/biome/biome.json --write src/",
+    "format:check": "biome format --config-path toolkit/biome/biome.json src/",
+    "check": "biome check --config-path toolkit/biome/biome.json src/",
+    "check:fix": "biome check --config-path toolkit/biome/biome.json --write src/",
+    "test": "bun test --preload ./src/test-setup.ts src/",
+    "test:watch": "bun test --preload ./src/test-setup.ts src/ --watch",
+    "test:coverage": "bun test --preload ./src/test-setup.ts src/ --coverage",
+    "typecheck": "tsc -p toolkit/typescript/tsconfig.json --noEmit",
+    "build:ts": "tsc -p toolkit/typescript/tsconfig.json"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ZAAI-com/MailFiller.git"
+    "url": "https://github.com/ZAAI-com/Clean-Autofill.git"
   },
   "keywords": [
     "chrome-extension",
@@ -22,10 +33,21 @@
     "autofill",
     "productivity"
   ],
-  "author": "ZAAI",
+  "author": "Manuel Gruber",
   "license": "MIT",
-  "devDependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@happy-dom/global-registrator": "^20.4.0",
+    "@types/chrome": "^0.1.36",
+    "esbuild": "^0.27.2",
+    "happy-dom": "^20.4.0",
+    "husky": "^9.1.7",
+    "typescript": "^5.9.3"
+  },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "psl": "^1.15.0"
   }
 }

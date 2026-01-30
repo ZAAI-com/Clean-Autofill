@@ -14,7 +14,7 @@ if (!['patch', 'minor', 'major'].includes(bumpType)) {
 }
 
 // Read manifest.json
-const manifestPath = path.join(__dirname, '..', 'manifest.json');
+const manifestPath = path.join(__dirname, '../..', 'manifest.json');
 let manifest;
 
 try {
@@ -67,6 +67,17 @@ try {
 } catch (error) {
     console.error('❌ Failed to write manifest.json:', error.message);
     process.exit(1);
+}
+
+// Also update package.json
+const packagePath = path.join(__dirname, '../..', 'package.json');
+try {
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    pkg.version = newVersion;
+    fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`   File: package.json`);
+} catch (error) {
+    console.warn('⚠️  Could not update package.json:', error.message);
 }
 
 // Output new version for use in scripts

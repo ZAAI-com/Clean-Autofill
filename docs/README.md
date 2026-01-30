@@ -1,4 +1,4 @@
-# MailFiller Chrome Extension
+# Clean-Autofill Chrome Extension
 
 A Chrome extension that automatically generates and fills email addresses based on the current website's domain.
 
@@ -11,7 +11,7 @@ A Chrome extension that automatically generates and fills email addresses based 
 
 ## How It Works
 
-When you visit a website, MailFiller creates an email address by combining:
+When you visit a website, Clean-Autofill creates an email address by combining:
 - The current website's main domain (subdomains are removed, e.g., `subdomain.example.com` becomes `example.com`)
 - Your configured email domain (e.g., `mg1.de`)
 - Result: `example.com@mg1.de`
@@ -23,7 +23,7 @@ When you visit a website, MailFiller creates an email address by combining:
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" in the top right corner
 3. Click "Load unpacked"
-4. Select the MailFiller directory
+4. Select the Clean-Autofill directory
 5. The extension will appear in your extensions bar
 
 ### First-Time Setup
@@ -37,7 +37,7 @@ When you visit a website, MailFiller creates an email address by combining:
 
 1. **Navigate to any website**
 2. **Click on a text field** where you want to enter an email (or let the extension find email fields automatically)
-3. **Click the MailFiller icon** in your extensions bar - the email will be filled immediately!
+3. **Click the Clean-Autofill icon** in your extensions bar - the email will be filled immediately!
 
 The extension will:
 - First try to fill the currently focused field
@@ -49,18 +49,26 @@ The extension will:
 ## File Structure
 
 ```
-MailFiller/
+Clean-Autofill/
 ├── manifest.json          # Extension configuration
-├── background.js          # Service worker for handling icon clicks
-├── content.js             # Content script for filling emails
-├── options.html           # Settings page HTML
-├── options.js             # Settings page logic
-├── icons/                 # Extension icons
-│   ├── icon16.png
-│   ├── icon32.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md              # This file
+├── package.json           # NPM configuration
+├── src/                   # Extension source code (TypeScript)
+│   ├── background.ts      # Service worker for handling icon clicks
+│   ├── content.ts         # Content script for filling emails
+│   ├── options.html       # Settings page HTML
+│   ├── options.ts         # Settings page logic
+│   ├── utils.ts           # Shared utilities
+│   └── icons/             # Extension icons (16, 32, 48, 128px)
+├── toolkit/               # Build and utility scripts
+│   └── scripts/
+│       ├── build.js       # Compiles TS + copies assets to dist/
+│       ├── pack.js        # Creates distribution package
+│       ├── validate.js    # Manifest and file validation
+│       └── bump-version.js # Version management
+├── docs/                  # Documentation
+└── dist/                  # Build output (gitignored)
+    ├── Clean-Autofill/    # Unpacked extension folder
+    └── Clean-Autofill.zip # Chrome Web Store package
 ```
 
 ## Permissions

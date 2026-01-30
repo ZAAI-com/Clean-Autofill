@@ -1,4 +1,4 @@
-# MailFiller
+# Clean-Autofill
 
 I need a Chrome extension. When the user clicks on the icon, the Chrome extension fills in the email address of the user.
 

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔍 Validating MailFiller Chrome Extension...\n');
+console.log('🔍 Validating Clean-Autofill Chrome Extension...\n');
 
 let errors = 0;
 let warnings = 0;
@@ -11,7 +11,7 @@ let warnings = 0;
 // Validate manifest.json
 console.log('📋 Checking manifest.json:');
 try {
-    const manifestPath = path.join(__dirname, '..', 'manifest.json');
+    const manifestPath = path.join(__dirname, '../..', 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     
     // Required fields
@@ -70,17 +70,17 @@ try {
     errors++;
 }
 
-// Check file sizes
+// Check file sizes (compiled files in dist/)
 console.log('\n📏 Checking file sizes:');
 const files = [
-    { path: 'background.js', maxSize: 1024 * 100 }, // 100KB
-    { path: 'content.js', maxSize: 1024 * 100 },    // 100KB
-    { path: 'options.js', maxSize: 1024 * 50 },     // 50KB
-    { path: 'options.html', maxSize: 1024 * 50 },   // 50KB
+    { path: 'dist/background.js', maxSize: 1024 * 200 }, // 200KB (bundled)
+    { path: 'dist/content.js', maxSize: 1024 * 200 },    // 200KB (bundled)
+    { path: 'dist/options.js', maxSize: 1024 * 100 },    // 100KB
+    { path: 'src/options.html', maxSize: 1024 * 50 },    // 50KB
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {
-    const fullPath = path.join(__dirname, '..', filePath);
+    const fullPath = path.join(__dirname, '../..', filePath);
     if (fs.existsSync(fullPath)) {
         const stats = fs.statSync(fullPath);
         const sizeKB = (stats.size / 1024).toFixed(2);
@@ -100,7 +100,7 @@ files.forEach(({ path: filePath, maxSize }) => {
 console.log('\n🎨 Checking icons:');
 const iconSizes = [16, 32, 48, 128];
 iconSizes.forEach(size => {
-    const iconPath = path.join(__dirname, '..', 'icons', `icon${size}.png`);
+    const iconPath = path.join(__dirname, '../..', 'src', 'icons', `icon${size}.png`);
     if (fs.existsSync(iconPath)) {
         const stats = fs.statSync(iconPath);
         const sizeKB = (stats.size / 1024).toFixed(2);
@@ -114,10 +114,10 @@ iconSizes.forEach(size => {
 // Check for common issues
 console.log('\n🔎 Checking for common issues:');
 
-// Check for console.log in production code
-const jsFiles = ['background.js', 'content.js', 'options.js'];
-jsFiles.forEach(file => {
-    const filePath = path.join(__dirname, '..', file);
+// Check for console.log in production code (check TypeScript source files)
+const tsFiles = ['src/background.ts', 'src/content.ts', 'src/options.ts'];
+tsFiles.forEach(file => {
+    const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         const consoleLogs = (content.match(/console\.(log|debug|info)/g) || []).length;
@@ -129,8 +129,8 @@ jsFiles.forEach(file => {
 });
 
 // Check for TODO comments
-jsFiles.forEach(file => {
-    const filePath = path.join(__dirname, '..', file);
+tsFiles.forEach(file => {
+    const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         const todos = (content.match(/TODO|FIXME|XXX/g) || []).length;

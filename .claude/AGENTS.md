@@ -1,10 +1,10 @@
 # 🤖 AI Agents Documentation
 
-This document outlines the AI agents and automation tools used in the development of the MailFiller Chrome extension. It serves as a guide for developers working with AI-assisted development workflows.
+This document outlines the AI agents and automation tools used in the development of the Clean-Autofill Chrome extension. It serves as a guide for developers working with AI-assisted development workflows.
 
 ## 🎯 Overview
 
-The MailFiller project leverages AI agents to streamline development, automate repetitive tasks, and maintain high code quality. This document provides guidelines for working with AI assistants and maintaining consistent development practices.
+The Clean-Autofill project leverages AI agents to streamline development, automate repetitive tasks, and maintain high code quality. This document provides guidelines for working with AI assistants and maintaining consistent development practices.
 
 ## 🤖 Primary AI Agent: Claude
 
@@ -111,51 +111,59 @@ Testing: [Validation criteria]
 
 ### Development Scripts
 
-#### 1. Version Management (`scripts/bump-version.js`)
+#### 1. Version Management (`toolkit/scripts/bump-version.js`)
 ```bash
 # Bump patch version (1.0.0 → 1.0.1)
-npm run bump:patch
+bun run bump:patch
 
 # Bump minor version (1.0.0 → 1.1.0)
-npm run bump:minor
+bun run bump:minor
 
 # Bump major version (1.0.0 → 2.0.0)
-npm run bump:major
+bun run bump:major
 ```
 
-#### 2. Extension Packaging (`scripts/pack.js`)
+#### 2. Extension Packaging (`toolkit/scripts/pack.js`)
 ```bash
 # Validate and package extension
-npm run pack
+bun run pack
 ```
 
-#### 3. Comprehensive Validation (`scripts/validate.js`)
+#### 3. Comprehensive Validation (`toolkit/scripts/validate.js`)
 ```bash
 # Run full validation suite
-npm run validate
+bun run validate
 ```
 
-#### 4. Build Validation (`scripts/build.js`)
+#### 4. Build Validation (`toolkit/scripts/build.js`)
 ```bash
 # Check project structure and dependencies
-npm run build
+bun run build
 ```
 
 ## 📋 Project Structure & Standards
 
 ### Directory Organization
 ```
-MailFiller/
+Clean-Autofill/
 ├── 📁 .github/workflows/     # CI/CD automation
-├── 📁 scripts/              # Development utilities
-├── 📁 icons/                # Extension icons (all sizes)
+├── 📁 src/                  # Extension source code (TypeScript)
+│   ├── 📄 background.ts     # Service worker logic
+│   ├── 📄 content.ts        # Content script
+│   ├── 📄 options.ts        # Settings page logic
+│   ├── 📄 options.html      # Settings page UI
+│   ├── 📄 utils.ts          # Shared utilities
+│   └── 📁 icons/            # Extension icons (all sizes)
+├── 📁 toolkit/              # Development utilities
+│   ├── 📁 scripts/          # Build scripts
+│   ├── 📁 biome/            # Biome linter config
+│   ├── 📁 typescript/       # TypeScript config
+│   └── 📁 husky/            # Pre-commit hooks
 ├── 📁 docs/                 # Documentation
 ├── 📄 manifest.json         # Extension configuration
-├── 📄 background.js         # Service worker logic
-├── 📄 content.js            # Content script
-├── 📄 options.js            # Settings page logic
-├── 📄 options.html          # Settings page UI
-└── 📄 package.json          # NPM configuration
+├── 📄 package.json          # Bun/NPM configuration
+└── 📁 dist/                 # Build output (gitignored)
+    └── 📄 Clean-Autofill.zip # Chrome Web Store package
 ```
 
 ### Coding Standards
@@ -236,13 +244,13 @@ MailFiller/
 ### Debug Commands
 ```bash
 # Validate extension
-npm run validate
+bun run validate
 
 # Check build status
-npm run build
+bun run build
 
 # View detailed logs
-npm run pack --verbose
+bun run pack
 ```
 
 ## 📈 Performance Monitoring
@@ -314,6 +322,6 @@ For questions about AI agent workflows or development processes:
 
 ---
 
-**Last Updated**: December 2024
+**Last Updated**: January 2026
 **Version**: 0.2.0
-**Maintained by**: ZAAI Development Team
+**Maintained by**: Manuel Gruber
