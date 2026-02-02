@@ -4,6 +4,8 @@
 
 Clean-Autofill is a Chrome extension for users with catch-all email domains who want unique, trackable email addresses for every website—without the hassle of typing them manually.
 
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf)**
+
 ![Clean-Autofill in action](Screenshots/Clean-Autofill-Screenshot-1.png)
 
 ## Why Clean-Autofill?
@@ -106,6 +108,10 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - `debounce()` - Rate-limiting for input events
 
 ## Installation
+
+### Chrome Web Store (Recommended)
+
+Install directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf).
 
 ### Developer Mode Installation (For Testing)
 
