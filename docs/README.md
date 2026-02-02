@@ -1,21 +1,21 @@
-# Clean-Autofill Chrome Extension
+# Clean Autofill Chrome Extension
 
 **Stop typing email addresses. One click, done.**
 
-Clean-Autofill is a Chrome extension for users with catch-all email domains who want unique, trackable email addresses for every website—without the hassle of typing them manually.
+Clean Autofill is a Chrome extension for users with catch-all email domains who want unique, trackable email addresses for every website—without the hassle of typing them manually.
 
 **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf)**
 
 ![Clean-Autofill in action](Screenshots/Clean-Autofill-Screenshot-1.png)
 
-## Why Clean-Autofill?
+## Why Clean Autofill?
 
 If you use a catch-all email domain (like `@yourdomain.com`), you know the benefits:
 - **Track who sells your data** — instantly know which company leaked your email
 - **Easy filtering** — create rules based on the sender address
 - **Spam control** — disable a single address without affecting others
 
-But typing `sitename@yourdomain.com` on every signup form gets old fast. **Clean-Autofill does it for you in one click.**
+But typing `sitename@yourdomain.com` on every signup form gets old fast. **Clean Autofill does it for you in one click.**
 
 ## Features
 
@@ -31,7 +31,7 @@ But typing `sitename@yourdomain.com` on every signup form gets old fast. **Clean
 
 1. **Configure once** — Enter your catch-all email domain in settings (e.g., `manuelgruber.net`)
 2. **Visit any website** — Navigate to a signup or login page
-3. **Click the icon** — Clean-Autofill generates and fills `sitedomain@yourdomain.com`
+3. **Click the icon** — Clean Autofill generates and fills `sitedomain@yourdomain.com`
 
 The extension extracts the main domain (removing subdomains like `www.` or `app.`) and combines it with your configured email domain:
 - `linear.app/signup` → `linear.app@yourdomain.com`
@@ -118,7 +118,7 @@ Install directly from the [Chrome Web Store](https://chromewebstore.google.com/d
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" in the top right corner
 3. Click "Load unpacked"
-4. Select the Clean-Autofill directory
+4. Select the Clean Autofill directory
 5. The extension will appear in your extensions bar
 
 ### First-Time Setup
@@ -132,7 +132,7 @@ Install directly from the [Chrome Web Store](https://chromewebstore.google.com/d
 
 1. **Navigate to any website**
 2. **Click on a text field** where you want to enter an email (or let the extension find email fields automatically)
-3. **Click the Clean-Autofill icon** in your extensions bar - the email will be filled immediately!
+3. **Click the Clean Autofill icon** in your extensions bar - the email will be filled immediately!
 
 The extension will:
 - First try to fill the currently focused field

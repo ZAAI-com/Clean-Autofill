@@ -50,4 +50,4 @@ If this privacy policy changes, the updated version will be posted here with a n
 
 ## Contact
 
-If you have questions about this privacy policy, please visit https://github.com/ZAAI-com/Clean-Autofill/issues.
+If you have questions about this privacy policy, please visit the [GitHub Issues page](https://github.com/ZAAI-com/Clean-Autofill/issues).
