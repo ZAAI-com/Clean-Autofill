@@ -87,8 +87,10 @@ if (usesESModules) {
             // Remove "export {};" (empty exports from files with only type imports)
             // Handles both spaced "export {};" and minified "export{}"
             content = content.replace(/(^|[;\n])\s*export\s*\{\s*\};?/g, '$1');
+            // Remove inline export declarations (e.g., "export function" → "function")
+            content = content.replace(/\bexport\s+(function|const|let|var|class)\b/g, '$1');
             fs.writeFileSync(filePath, content.trim() + '\n');
-            console.log(`  ✅ ${file} (stripped empty exports)`);
+            console.log(`  ✅ ${file} (stripped exports)`);
         }
     }
     console.log(`  ✅ background.js (ES module preserved)`);
