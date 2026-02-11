@@ -6,7 +6,7 @@ on:
       publish:
         description: 'Publish to Chrome Web Store after upload'
         required: true
-        default: true
+        default: false
         type: boolean
 
 concurrency:
@@ -145,7 +145,6 @@ jobs:
 
           if [ "$UPLOAD_STATE" = "SUCCESS" ]; then
             echo "Upload successful"
-            echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
           else
             echo "::error::Upload failed with state: $UPLOAD_STATE"
             echo "$UPLOAD_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$UPLOAD_RESPONSE"
@@ -155,8 +154,29 @@ jobs:
       - name: Publish to Chrome Web Store
         if: github.event.inputs.publish == 'true'
         env:
-          ACCESS_TOKEN: ${{ steps.upload.outputs.access_token }}
+          CHROME_WEB_STORE_CLIENT_ID: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          CHROME_WEB_STORE_CLIENT_SECRET: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          CHROME_WEB_STORE_REFRESH_TOKEN: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
         run: |
+          echo "Obtaining OAuth access token..."
+          TOKEN_RESPONSE=$(curl -s -X POST \
+            -d "client_id=$CHROME_WEB_STORE_CLIENT_ID" \
+            -d "client_secret=$CHROME_WEB_STORE_CLIENT_SECRET" \
+            -d "refresh_token=$CHROME_WEB_STORE_REFRESH_TOKEN" \
+            -d "grant_type=refresh_token" \
+            https://oauth2.googleapis.com/token)
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          if 'access_token' not in data:
+              print('Token error: ' + json.dumps(data), file=sys.stderr)
+              sys.exit(1)
+          print(data['access_token'])
+          ")
+
+          echo "::add-mask::$ACCESS_TOKEN"
+
           EXTENSION_ID="${{ steps.config.outputs.extension_id }}"
 
           echo "Publishing extension..."
@@ -182,6 +202,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        if: github.event.inputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
