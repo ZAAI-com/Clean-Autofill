@@ -198,7 +198,8 @@ jobs:
           elif [ "$STATUS" = "PUBLISHED_WITH_FRICTION_WARNING" ]; then
             echo "::warning::Extension published with friction warnings. Check the developer dashboard."
           else
-            echo "::warning::Publish status: $STATUS. Check the Chrome Web Store developer dashboard."
+            echo "::error::Publish failed with status: $STATUS. Check the Chrome Web Store developer dashboard."
+            exit 1
           fi
 
       - name: Create GitHub Release
