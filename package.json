@@ -49,5 +49,8 @@
   },
   "dependencies": {
     "psl": "^1.15.0"
+  },
+  "chromeWebStore": {
+    "extensionId": "klbbkndjohchnidkbnjijdbggfadpppf"
   }
 }
