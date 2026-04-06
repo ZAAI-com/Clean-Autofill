@@ -4,11 +4,20 @@ import type { CleanAutofillUtils } from './types';
 const { extractMainDomain, debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
 
+export function extractDomainFromEmail(email: string): string | null {
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
+  return trimmed.substring(atIndex + 1);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settingsForm');
   const emailDomainInput = document.getElementById('emailDomain');
   const statusDiv = document.getElementById('status');
   const clearButton = document.getElementById('clearButton');
+  const importChromeButton = document.getElementById('importChromeButton');
   const previewBox = document.getElementById('previewBox');
   const exampleEmail = document.getElementById('exampleEmail');
   const exampleEmail2 = document.getElementById('exampleEmail2');
@@ -19,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     !emailDomainInput ||
     !statusDiv ||
     !clearButton ||
+    !importChromeButton ||
     !previewBox ||
     !exampleEmail ||
     !exampleEmail2
@@ -32,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const emailInput = emailDomainInput as HTMLInputElement;
   const statusEl = statusDiv as HTMLDivElement;
   const clearBtn = clearButton as HTMLButtonElement;
+  const importBtn = importChromeButton as HTMLButtonElement;
   const previewEl = previewBox as HTMLDivElement;
   const example1 = exampleEmail as HTMLSpanElement;
   const example2 = exampleEmail2 as HTMLSpanElement;
@@ -112,6 +123,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  async function importFromChrome(): Promise<void> {
+    try {
+      importBtn.disabled = true;
+      const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+
+      if (!userInfo.email) {
+        showStatus('No Google account found in this Chrome profile', 'error');
+        return;
+      }
+
+      const domain = extractDomainFromEmail(userInfo.email);
+      if (!domain) {
+        showStatus('Could not extract domain from profile email', 'error');
+        return;
+      }
+
+      emailInput.value = domain;
+      await updatePreview();
+      updateExamples();
+      showStatus('Domain imported — click Save to keep it', 'success');
+    } catch (error) {
+      showStatus(
+        `Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'error',
+      );
+    } finally {
+      importBtn.disabled = false;
+    }
+  }
+
   /**
    * Display a status message to the user that auto-hides after 3 seconds.
    * @param message - The message to display
@@ -183,6 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Event listeners
   formEl.addEventListener('submit', saveSettings);
   clearBtn.addEventListener('click', clearSettings);
+  importBtn.addEventListener('click', importFromChrome);
   emailInput.addEventListener('input', debouncedUpdatePreview);
 
   // Initialize

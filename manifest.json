@@ -6,7 +6,9 @@
   "permissions": [
     "activeTab",
     "storage",
-    "notifications"
+    "notifications",
+    "identity",
+    "identity.email"
   ],
   "action": {
     "default_icon": {

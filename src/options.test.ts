@@ -32,6 +32,12 @@ const mockChrome = {
   tabs: {
     query: mock(async () => [{ url: 'https://example.com/page' }]),
   },
+  identity: {
+    getProfileUserInfo: mock(async (_details?: { accountStatus?: string }) => ({
+      email: 'user@example.com',
+      id: '12345',
+    })),
+  },
 };
 
 (globalThis as Record<string, unknown>).chrome = mockChrome;
@@ -194,6 +200,91 @@ describe('chrome storage mock', () => {
     await mockChrome.storage.sync.remove(['emailDomain']);
     const result = await mockChrome.storage.sync.get(['emailDomain']);
     expect(result).toEqual({});
+  });
+});
+
+// Domain extraction from email - mirrors extractDomainFromEmail in options.ts
+function extractDomainFromEmail(email: string): string | null {
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
+  return trimmed.substring(atIndex + 1);
+}
+
+describe('extractDomainFromEmail', () => {
+  test('extracts domain from standard email', () => {
+    expect(extractDomainFromEmail('user@example.com')).toBe('example.com');
+  });
+
+  test('extracts domain from email with subdomain', () => {
+    expect(extractDomainFromEmail('user@mail.example.com')).toBe('mail.example.com');
+  });
+
+  test('extracts domain from email with plus addressing', () => {
+    expect(extractDomainFromEmail('user+tag@example.com')).toBe('example.com');
+  });
+
+  test('returns null for empty string', () => {
+    expect(extractDomainFromEmail('')).toBeNull();
+  });
+
+  test('returns null for whitespace-only string', () => {
+    expect(extractDomainFromEmail('   ')).toBeNull();
+  });
+
+  test('returns null for string without @', () => {
+    expect(extractDomainFromEmail('no-at-symbol')).toBeNull();
+  });
+
+  test('returns null for string ending with @', () => {
+    expect(extractDomainFromEmail('user@')).toBeNull();
+  });
+
+  test('returns null for string starting with @', () => {
+    expect(extractDomainFromEmail('@domain.com')).toBeNull();
+  });
+
+  test('handles email with multiple @ by using last one', () => {
+    expect(extractDomainFromEmail('weird@local@domain.com')).toBe('domain.com');
+  });
+
+  test('trims whitespace from input', () => {
+    expect(extractDomainFromEmail('  user@example.com  ')).toBe('example.com');
+  });
+});
+
+describe('chrome profile import', () => {
+  beforeEach(() => {
+    mockChrome.identity.getProfileUserInfo = mock(async () => ({
+      email: 'user@example.com',
+      id: '12345',
+    }));
+  });
+
+  test('extracts domain from chrome profile email', async () => {
+    const userInfo = await mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+    const domain = extractDomainFromEmail(userInfo.email);
+    expect(domain).toBe('example.com');
+  });
+
+  test('handles empty email (not signed in)', async () => {
+    mockChrome.identity.getProfileUserInfo = mock(async () => ({
+      email: '',
+      id: '',
+    }));
+    const userInfo = await mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+    const domain = extractDomainFromEmail(userInfo.email);
+    expect(domain).toBeNull();
+  });
+
+  test('handles API error gracefully', () => {
+    mockChrome.identity.getProfileUserInfo = mock(async () => {
+      throw new Error('API unavailable');
+    });
+    expect(mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' })).rejects.toThrow(
+      'API unavailable',
+    );
   });
 });
 

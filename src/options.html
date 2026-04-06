@@ -153,6 +153,31 @@
       background-color: #eeeeee;
       border-color: #d0d0d0;
     }
+
+    .import-row {
+      margin-top: 8px;
+    }
+
+    .button-import {
+      background-color: transparent;
+      color: #4CAF50;
+      border: none;
+      padding: 4px 0;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-right: 0;
+    }
+
+    .button-import:hover {
+      text-decoration: underline;
+    }
+
+    .button-import:disabled {
+      color: #ccc;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
     
     .status {
       margin-top: 16px;
@@ -223,6 +248,11 @@
             aria-describedby="emailDomain-help"
             maxlength="253"
           >
+        </div>
+        <div class="import-row">
+          <button type="button" class="button-import" id="importChromeButton">
+            Import from Chrome profile
+          </button>
         </div>
         <p class="help-text" id="emailDomain-help">Enter your email domain without the @ symbol</p>
         
