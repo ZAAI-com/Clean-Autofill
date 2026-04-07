@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusDiv = document.getElementById('status');
   const clearButton = document.getElementById('clearButton');
   const importChromeButton = document.getElementById('importChromeButton');
+  const chromeProfileEmail = document.getElementById('chromeProfileEmail');
   const previewBox = document.getElementById('previewBox');
   const exampleEmail = document.getElementById('exampleEmail');
   const exampleEmail2 = document.getElementById('exampleEmail2');
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     !statusDiv ||
     !clearButton ||
     !importChromeButton ||
+    !chromeProfileEmail ||
     !previewBox ||
     !exampleEmail ||
     !exampleEmail2
@@ -43,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusEl = statusDiv as HTMLDivElement;
   const clearBtn = clearButton as HTMLButtonElement;
   const importBtn = importChromeButton as HTMLButtonElement;
+  const profileEmailEl = chromeProfileEmail as HTMLSpanElement;
   const previewEl = previewBox as HTMLDivElement;
   const example1 = exampleEmail as HTMLSpanElement;
   const example2 = exampleEmail2 as HTMLSpanElement;
@@ -123,6 +126,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  async function loadChromeProfileEmail(): Promise<string | null> {
+    try {
+      const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+      if (userInfo.email) {
+        profileEmailEl.textContent = `(${userInfo.email})`;
+        return userInfo.email;
+      }
+    } catch {
+      // Silently fail — the button still works, just without the email hint
+    }
+    return null;
+  }
+
   async function importFromChrome(): Promise<void> {
     try {
       importBtn.disabled = true;
@@ -132,6 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         showStatus('No Google account found in this Chrome profile', 'error');
         return;
       }
+
+      profileEmailEl.textContent = `(${userInfo.email})`;
 
       const domain = extractDomainFromEmail(userInfo.email);
       if (!domain) {
@@ -229,4 +247,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize
   await loadSettings();
+  loadChromeProfileEmail();
 });
