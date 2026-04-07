@@ -4,12 +4,36 @@ import {
   extractLocalPart,
   getProviderStatus,
 } from '../providers.js';
-import type { CleanAutofillUtils, EmailMode } from '../types';
+import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode } from '../types';
 
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Sidebar Navigation ──
+  const navItems = document.querySelectorAll<HTMLElement>('.nav-item[data-page]');
+  const pages = document.querySelectorAll<HTMLElement>('.page');
+
+  function switchPage(pageId: string): void {
+    navItems.forEach((nav) => {
+      nav.classList.toggle('active', nav.dataset.page === pageId);
+    });
+    pages.forEach((page) => {
+      page.classList.toggle('active', page.id === `page-${pageId}`);
+    });
+    if (pageId === 'history') {
+      loadHistory();
+    }
+  }
+
+  navItems.forEach((nav) => {
+    nav.addEventListener('click', () => {
+      const pageId = nav.dataset.page;
+      if (pageId) switchPage(pageId);
+    });
+  });
+
+  // ── Settings Page Elements ──
   const form = document.getElementById('settingsForm');
   const emailInput = document.getElementById('emailInput');
   const statusDiv = document.getElementById('status');
@@ -61,6 +85,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllFeedbackEl = catchAllFeedback as HTMLDivElement;
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
+
+  // ── Settings Logic (unchanged) ──
 
   function getMode(): EmailMode {
     return radioPlus.checked ? 'plusAddressing' : 'catchAll';
@@ -356,7 +382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateExamples();
       };
 
-  // Event listeners
+  // Settings event listeners
   formEl.addEventListener('submit', saveSettings);
   clearBtn.addEventListener('click', clearSettings);
   importBtn.addEventListener('click', importFromChrome);
@@ -365,7 +391,109 @@ document.addEventListener('DOMContentLoaded', async () => {
   colPlus.addEventListener('click', () => setMode('plusAddressing'));
   colCatch.addEventListener('click', () => setMode('catchAll'));
 
-  // Initialize
+  // ── History Page ──
+  const historyBody = document.getElementById('historyBody') as HTMLTableSectionElement;
+  const historyTable = document.getElementById('historyTable') as HTMLTableElement;
+  const historyEmpty = document.getElementById('historyEmpty') as HTMLDivElement;
+  const historySearch = document.getElementById('historySearch') as HTMLInputElement;
+  const clearHistoryButton = document.getElementById('clearHistoryButton') as HTMLButtonElement;
+
+  function formatDate(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function renderHistory(entries: EmailHistoryEntry[]): void {
+    historyBody.innerHTML = '';
+
+    if (entries.length === 0) {
+      historyTable.style.display = 'none';
+      historyEmpty.style.display = 'block';
+      return;
+    }
+
+    historyTable.style.display = '';
+    historyEmpty.style.display = 'none';
+
+    for (const entry of entries) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="col-domain">${escapeHtml(entry.domain)}</td>
+        <td class="col-email">${escapeHtml(entry.email)}</td>
+        <td class="col-date">${formatDate(entry.createdAt)}</td>
+        <td class="col-actions">
+          <button class="btn-copy" data-email="${escapeAttr(entry.email)}" title="Copy email">Copy</button>
+          <button class="btn-delete" data-id="${escapeAttr(entry.id)}" title="Delete entry">&times;</button>
+        </td>
+      `;
+      historyBody.appendChild(tr);
+    }
+  }
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function escapeAttr(str: string): string {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
+
+  async function loadHistory(): Promise<void> {
+    const { emailHistory = [] } = await chrome.storage.local.get('emailHistory');
+    let entries = emailHistory as EmailHistoryEntry[];
+
+    const searchTerm = historySearch.value.trim().toLowerCase();
+    if (searchTerm) {
+      entries = entries.filter(
+        (e) =>
+          e.domain.toLowerCase().includes(searchTerm) || e.email.toLowerCase().includes(searchTerm),
+      );
+    }
+
+    renderHistory(entries);
+  }
+
+  historyBody.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+
+    if (target.classList.contains('btn-copy')) {
+      const email = target.dataset.email;
+      if (email) {
+        await navigator.clipboard.writeText(email);
+        target.textContent = 'Copied!';
+        setTimeout(() => {
+          target.textContent = 'Copy';
+        }, 1500);
+      }
+    }
+
+    if (target.classList.contains('btn-delete')) {
+      const id = target.dataset.id;
+      if (id) {
+        const { emailHistory = [] } = await chrome.storage.local.get('emailHistory');
+        const updated = (emailHistory as EmailHistoryEntry[]).filter((e) => e.id !== id);
+        await chrome.storage.local.set({ emailHistory: updated });
+        await loadHistory();
+      }
+    }
+  });
+
+  clearHistoryButton.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to clear all history?')) {
+      await chrome.storage.local.remove('emailHistory');
+      await loadHistory();
+    }
+  });
+
+  const debouncedHistorySearch = debounce
+    ? debounce(() => loadHistory(), 300)
+    : () => loadHistory();
+
+  historySearch.addEventListener('input', debouncedHistorySearch);
+
+  // ── Initialize ──
   const profileEmail = await loadChromeProfileEmail();
   await loadSettings(profileEmail);
 });

@@ -1,5 +1,6 @@
 // Import shared utilities as ES module
 
+import { addEntry } from './history.js';
 import type { EmailMode, FillEmailResponse, GenerateAndFillResponse } from './types';
 import { createTimeout, extractMainDomain } from './utils.js';
 
@@ -22,11 +23,23 @@ async function handleGenerateAndFill(): Promise<GenerateAndFillResponse> {
       return { success: false, error: 'No active tab found' };
     }
 
-    const email = await generateEmailForTab(tab);
+    const result = await generateEmailForTab(tab);
 
-    if (!email) {
+    if (!result) {
       return { success: false, needsConfig: true };
     }
+
+    const { email } = result;
+
+    // Save to history
+    addEntry({
+      email,
+      domain: result.domain,
+      pageUrl: tab.url ?? '',
+      pageTitle: tab.title ?? '',
+      createdAt: new Date().toISOString(),
+      mode: result.mode,
+    }).catch((err) => console.error('Failed to save history:', err));
 
     if (tab.id === undefined) {
       return { success: true, email, message: 'Email generated (no tab to fill)' };
@@ -68,14 +81,20 @@ async function handleGenerateAndFill(): Promise<GenerateAndFillResponse> {
   }
 }
 
+interface GenerateResult {
+  email: string;
+  domain: string;
+  mode: EmailMode;
+}
+
 /**
  * Generate an email address based on the current tab's domain and user settings.
  * Combines the site's main domain with the user's configured email domain.
  * @param tab - The Chrome tab to generate the email for
- * @returns The generated email address, or null if no domain is configured
+ * @returns The generated email and metadata, or null if no domain is configured
  * @throws Error if unable to read settings or parse the tab URL
  */
-async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<string | null> {
+async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<GenerateResult | null> {
   // Get user settings from storage
   let mode: EmailMode;
   let userDomain: string | undefined;
@@ -115,10 +134,10 @@ async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<string | null>
       const atIndex = (baseEmail as string).lastIndexOf('@');
       const localPart = (baseEmail as string).substring(0, atIndex);
       const emailDomain = (baseEmail as string).substring(atIndex + 1);
-      return `${localPart}+${siteDomain}@${emailDomain}`;
+      return { email: `${localPart}+${siteDomain}@${emailDomain}`, domain: siteDomain, mode };
     }
 
-    return `${siteDomain}@${userDomain}`;
+    return { email: `${siteDomain}@${userDomain}`, domain: siteDomain, mode };
   } catch {
     throw new Error('Unable to parse current website URL');
   }

@@ -491,13 +491,9 @@ describe('getProviderStatus', () => {
       'pobox.com',
       'sent.com',
       'mailbox.org',
-      'hey.com',
       'yandex.com',
       'yandex.ru',
       'ya.ru',
-      'mail.ru',
-      'inbox.ru',
-      'bk.ru',
     ];
 
     for (const domain of supported) {
@@ -535,6 +531,10 @@ describe('getProviderStatus', () => {
       'libero.it',
       'laposte.net',
       'rediffmail.com',
+      'hey.com',
+      'mail.ru',
+      'inbox.ru',
+      'bk.ru',
     ];
 
     for (const domain of unsupported) {

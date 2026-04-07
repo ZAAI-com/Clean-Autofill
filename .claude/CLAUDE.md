@@ -50,10 +50,10 @@ bun run bump:major    # 0.1.0 → 1.0.0
 The extension follows Chrome Extension Manifest V3 architecture with three main components:
 
 ### 1. Service Worker (`src/background.ts`)
-- Handles extension icon clicks via `chrome.action.onClicked`
+- Handles messages from popup via `chrome.runtime.onMessage`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
+- Sends fill requests to content script and returns results to popup
 - Manages Chrome storage API for user settings
-- Shows notifications for success/error states
 - Opens options page on first install
 
 ### 2. Content Script (`src/content.ts`)
@@ -65,11 +65,17 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
   3. General text input fields
 - Handles React/framework compatibility with native input events
 
-### 3. Options Page (`src/options.html` + `src/options.ts`)
+### 3. Popup (`src/ui/popup.html` + `src/ui/popup.ts`)
+- Opens on extension icon click
+- Triggers email generation and autofill via message to background
+- Displays the generated email with a Copy button
+- Shows config prompt if email domain not set
+
+### 4. Options Page (`src/ui/options.html` + `src/ui/options.ts`)
 - Settings interface for configuring user's email domain
 - Uses Chrome sync storage for cross-device settings
 
-### 4. Shared Utilities (`src/utils.ts`)
+### 5. Shared Utilities (`src/utils.ts`)
 - `extractMainDomain()` - Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
 - `isValidEmail()` - Basic email format validation
 - `createTimeout()` - Promise-based timeout for async operations
@@ -102,22 +108,29 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   ├── background.test.ts # Service worker tests
 │   ├── content.ts         # Content script for email filling
 │   ├── content.test.ts    # Content script tests
-│   ├── options.ts         # Options page logic
-│   ├── options.test.ts    # Options page tests
-│   ├── options.html       # Options page UI
 │   ├── utils.ts           # Shared utilities
 │   ├── utils.test.ts      # Utility tests
 │   ├── test-setup.ts      # DOM test setup (happy-dom)
 │   ├── types/
 │   │   └── index.ts       # TypeScript type definitions
+│   ├── ui/                # UI pages (popup + options)
+│   │   ├── popup.html     # Popup UI
+│   │   ├── popup.ts       # Popup logic
+│   │   ├── popup.test.ts  # Popup tests
+│   │   ├── options.html   # Options page UI
+│   │   ├── options.ts     # Options page logic
+│   │   └── options.test.ts # Options page tests
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 └── dist/                  # Build output (load this in Chrome)
     ├── background.js      # Compiled service worker
     ├── content.js         # Compiled content script
-    ├── options.js         # Compiled options page
     ├── utils.js           # Compiled utilities
-    ├── options.html       # Copied from src/
     ├── manifest.json      # Copied from root
+    ├── ui/                # Compiled UI pages
+    │   ├── popup.html
+    │   ├── popup.js
+    │   ├── options.html
+    │   └── options.js
     ├── icons/             # Copied from src/
     └── Clean-Autofill.zip # Distribution package
 ```

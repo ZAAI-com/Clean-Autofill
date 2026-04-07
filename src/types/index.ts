@@ -1,6 +1,19 @@
 export type EmailMode = 'catchAll' | 'plusAddressing';
 
 /**
+ * A single history entry representing one email generation event.
+ */
+export interface EmailHistoryEntry {
+  id: string;
+  email: string;
+  domain: string;
+  pageUrl: string;
+  pageTitle: string;
+  createdAt: string;
+  mode: EmailMode;
+}
+
+/**
  * Interface for shared utility functions exposed globally for use across extension contexts.
  */
 export interface CleanAutofillUtils {
