@@ -38,6 +38,31 @@ The extension extracts the main domain (removing subdomains like `www.` or `app.
 - `account.apple.com` → `apple.com@yourdomain.com`
 - `mail.google.com` → `google.com@yourdomain.com`
 
+## Email Provider Compatibility
+
+Clean Autofill supports two modes. Provider compatibility determines which mode you can use:
+
+| Provider | Plus Addressing | Catch-All Prefix |
+|----------|:-:|:-:|
+| Gmail / Google Workspace | ✅ | — |
+| Outlook / Hotmail / Live | ✅ | — |
+| ProtonMail | ✅ | — |
+| iCloud | ✅ | — |
+| Fastmail | ✅ | — |
+| Zoho Mail | ✅ | — |
+| mailbox.org | ✅ | — |
+| Hey | ✅ | — |
+| Yahoo / Ymail | ❌ | — |
+| GMX | ❌ | — |
+| web.de | ❌ | — |
+| T-Online | ❌ | — |
+| Tuta (Tutanota) | ❌ | — |
+| Custom domain | ✅* | ✅ |
+
+\*If your email host supports plus addressing.
+
+See [Email Provider Details](Email-Provider.md) for the full decision table and provider notes.
+
 ## Tech Stack
 
 - **TypeScript** - Strict mode, compiles to `dist/`

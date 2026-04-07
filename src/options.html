@@ -162,6 +162,38 @@
       box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
     }
 
+    .mode-column.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .mode-column.disabled:hover {
+      opacity: 0.4;
+      border-color: #e0e0e0;
+    }
+
+    .mode-feedback {
+      padding: 8px 16px;
+      font-size: 12px;
+      text-align: center;
+      min-height: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .mode-feedback:empty {
+      display: none;
+    }
+
+    .mode-feedback.feedback-disabled {
+      color: #999;
+    }
+
+    .mode-feedback.feedback-warning {
+      color: #e65100;
+      background-color: #fff3e0;
+      border-top: 1px solid #ffe0b2;
+    }
+
     .mode-header {
       font-size: 17px;
       font-weight: 600;
@@ -393,6 +425,7 @@
               <div class="row-label">Catch-All</div>
               <div class="row-value">Not needed</div>
             </div>
+            <div class="mode-feedback" id="plusFeedback"></div>
           </div>
           <div class="mode-column" id="colCatchAll" data-mode="catchAll">
             <div class="mode-header">Catch-All Prefix</div>
@@ -408,6 +441,7 @@
               <div class="row-label">Catch-All</div>
               <div class="row-value">Required</div>
             </div>
+            <div class="mode-feedback" id="catchAllFeedback"></div>
           </div>
         </div>
         <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">

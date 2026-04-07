@@ -487,3 +487,121 @@ describe('status message types', () => {
     expect(getStatusClass('error')).toBe('status error');
   });
 });
+
+// Provider status detection - mirrors getProviderStatus in options.ts
+type ProviderStatus = 'plus-supported' | 'plus-unsupported' | 'custom';
+
+const PLUS_SUPPORTED_DOMAINS = new Set([
+  'gmail.com',
+  'googlemail.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'protonmail.com',
+  'proton.me',
+  'pm.me',
+  'fastmail.com',
+  'icloud.com',
+  'me.com',
+  'zoho.com',
+  'mailbox.org',
+  'hey.com',
+]);
+
+const PLUS_UNSUPPORTED_DOMAINS = new Set([
+  'yahoo.com',
+  'ymail.com',
+  'gmx.com',
+  'gmx.de',
+  'gmx.net',
+  'web.de',
+  'mail.com',
+  't-online.de',
+  'tuta.com',
+  'tutanota.com',
+]);
+
+function getProviderStatus(domain: string): ProviderStatus {
+  const lower = domain.toLowerCase();
+  if (PLUS_SUPPORTED_DOMAINS.has(lower)) return 'plus-supported';
+  if (PLUS_UNSUPPORTED_DOMAINS.has(lower)) return 'plus-unsupported';
+  return 'custom';
+}
+
+describe('getProviderStatus', () => {
+  describe('plus-supported providers', () => {
+    const supported = [
+      'gmail.com',
+      'googlemail.com',
+      'outlook.com',
+      'hotmail.com',
+      'live.com',
+      'protonmail.com',
+      'proton.me',
+      'pm.me',
+      'fastmail.com',
+      'icloud.com',
+      'me.com',
+      'zoho.com',
+      'mailbox.org',
+      'hey.com',
+    ];
+
+    for (const domain of supported) {
+      test(`${domain} is plus-supported`, () => {
+        expect(getProviderStatus(domain)).toBe('plus-supported');
+      });
+    }
+
+    test('is case-insensitive', () => {
+      expect(getProviderStatus('Gmail.com')).toBe('plus-supported');
+      expect(getProviderStatus('OUTLOOK.COM')).toBe('plus-supported');
+    });
+  });
+
+  describe('plus-unsupported providers', () => {
+    const unsupported = [
+      'yahoo.com',
+      'ymail.com',
+      'gmx.com',
+      'gmx.de',
+      'gmx.net',
+      'web.de',
+      'mail.com',
+      't-online.de',
+      'tuta.com',
+      'tutanota.com',
+    ];
+
+    for (const domain of unsupported) {
+      test(`${domain} is plus-unsupported`, () => {
+        expect(getProviderStatus(domain)).toBe('plus-unsupported');
+      });
+    }
+  });
+
+  describe('custom domains', () => {
+    test('unknown domain returns custom', () => {
+      expect(getProviderStatus('company.com')).toBe('custom');
+    });
+
+    test('personal domain returns custom', () => {
+      expect(getProviderStatus('manuelgruber.com')).toBe('custom');
+    });
+
+    test('subdomain of known provider returns custom', () => {
+      expect(getProviderStatus('mail.gmail.com')).toBe('custom');
+    });
+  });
+
+  describe('provider lists are disjoint', () => {
+    test('no domain appears in both supported and unsupported lists', () => {
+      for (const domain of PLUS_SUPPORTED_DOMAINS) {
+        expect(PLUS_UNSUPPORTED_DOMAINS.has(domain)).toBe(false);
+      }
+      for (const domain of PLUS_UNSUPPORTED_DOMAINS) {
+        expect(PLUS_SUPPORTED_DOMAINS.has(domain)).toBe(false);
+      }
+    });
+  });
+});
