@@ -131,6 +131,8 @@ fs.copyFileSync(path.join(SRC, 'ui', 'options.html'), path.join(uiDir, 'options.
 console.log('  ✅ ui/options.html');
 fs.copyFileSync(path.join(SRC, 'ui', 'popup.html'), path.join(uiDir, 'popup.html'));
 console.log('  ✅ ui/popup.html');
+fs.copyFileSync(path.join(SRC, 'ui', 'options.css'), path.join(uiDir, 'options.css'));
+console.log('  ✅ ui/options.css');
 
 // Copy icons
 const iconsDir = path.join(DIST, 'icons');
@@ -154,6 +156,7 @@ const requiredCompiledFiles = [
     'manifest.json',
     'ui/options.js',
     'ui/options.html',
+    'ui/options.css',
     'ui/popup.js',
     'ui/popup.html',
     'icons/icon16.png',
