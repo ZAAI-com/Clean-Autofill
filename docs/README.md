@@ -47,19 +47,19 @@ Clean Autofill supports two modes. Provider compatibility determines which mode 
 | Gmail / Google Workspace | ✅ | — |
 | Outlook / Hotmail / Live | ✅ | — |
 | ProtonMail | ✅ | — |
-| iCloud | ✅ | — |
 | Fastmail | ✅ | — |
-| Zoho Mail | ✅ | — |
 | mailbox.org | ✅ | — |
 | Hey | ✅ | — |
 | Yahoo / Ymail | ❌ | — |
 | GMX | ❌ | — |
+| iCloud | ❌ | — |
+| mail.com | ❌ | — |
 | web.de | ❌ | — |
 | T-Online | ❌ | — |
 | Tuta (Tutanota) | ❌ | — |
 | Custom domain | ✅* | ✅ |
 
-\*If your email host supports plus addressing.
+\*If your email host supports plus addressing. Outlook.com consumer accounts commonly work with `+tag` but Microsoft's official plus-addressing docs are for Exchange Online. Zoho Mail is unverified.
 
 See [Email Provider Details](Email-Provider.md) for the full decision table and provider notes.
 
