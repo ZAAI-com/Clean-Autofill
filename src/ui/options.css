@@ -253,6 +253,38 @@ input[type="text"]:focus {
   margin-top: 8px;
 }
 
+/* Provider Detection */
+.provider-detected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.provider-detected.loading {
+  color: #888;
+  background-color: #f8f9fa;
+}
+
+.provider-detected.detected-supported {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+.provider-detected.detected-unsupported {
+  color: #e65100;
+  background-color: #fff3e0;
+}
+
+.provider-detected.detected-custom {
+  color: #666;
+  background-color: #f8f9fa;
+}
+
 /* Mode Table */
 .mode-table {
   display: flex;

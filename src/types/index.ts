@@ -1,4 +1,35 @@
+import type { ProviderStatus } from '../providers.js';
+
 export type EmailMode = 'catchAll' | 'plusAddressing';
+
+export interface MxRecord {
+  exchange: string;
+  priority: number;
+}
+
+export type DetectedProvider =
+  | 'google-workspace'
+  | 'microsoft-365'
+  | 'fastmail'
+  | 'protonmail'
+  | 'zoho'
+  | 'icloud'
+  | 'mimecast'
+  | 'barracuda';
+
+export interface ProviderInfo {
+  name: string;
+  plusAddressingSupported: boolean;
+}
+
+export interface MxLookupResult {
+  domain: string;
+  provider: DetectedProvider | null;
+  mxRecords: MxRecord[];
+  status: ProviderStatus;
+  timestamp: number;
+  ttl: number;
+}
 
 /**
  * A single history entry representing one email generation event.

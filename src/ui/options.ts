@@ -1,10 +1,13 @@
+import { getProviderInfo } from '../mx-lookup.js';
+import type { ProviderStatus } from '../providers.js';
 import {
   domainRegex,
   extractDomainFromEmail,
   extractLocalPart,
   getProviderStatus,
+  getProviderStatusWithMx,
 } from '../providers.js';
-import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode } from '../types';
+import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode, MxLookupResult } from '../types';
 
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
@@ -48,6 +51,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllFormat = document.getElementById('catchAllFormat');
   const plusFeedback = document.getElementById('plusFeedback');
   const catchAllFeedback = document.getElementById('catchAllFeedback');
+  const providerDetected = document.getElementById('providerDetected');
+  const providerText = document.getElementById('providerText');
 
   if (
     !form ||
@@ -63,7 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     !plusFormat ||
     !catchAllFormat ||
     !plusFeedback ||
-    !catchAllFeedback
+    !catchAllFeedback ||
+    !providerDetected ||
+    !providerText
   ) {
     console.error('Required DOM elements not found');
     return;
@@ -83,6 +90,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllFormatEl = catchAllFormat as HTMLElement;
   const plusFeedbackEl = plusFeedback as HTMLDivElement;
   const catchAllFeedbackEl = catchAllFeedback as HTMLDivElement;
+  const providerDetectedEl = providerDetected as HTMLDivElement;
+  const providerTextEl = providerText as HTMLSpanElement;
+
+  let currentLookupDomain: string | null = null;
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
 
@@ -132,37 +143,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function updateModeAvailability(): void {
-    const value = input.value.trim();
-    const domain = extractDomainFromEmail(value);
-    const isFullEmail = value.includes('@') && domain != null;
-
-    if (!value) {
-      setColumnState(colPlus, plusFeedbackEl, 'disabled', 'Enter your email or domain above');
-      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', 'Enter your email or domain above');
-      return;
-    }
-
-    if (!isFullEmail) {
-      // Just a domain entered — only catch-all works
-      setColumnState(
-        colPlus,
-        plusFeedbackEl,
-        'disabled',
-        'Enter a full email to use Plus Addressing',
-      );
-      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
-      if (getMode() === 'plusAddressing') setMode('catchAll');
-      return;
-    }
-
-    // Full email entered — check provider
-    const status = getProviderStatus(domain as string);
-
+  function applyProviderStatus(
+    domain: string,
+    status: ProviderStatus,
+    mxResult: MxLookupResult | null,
+  ): void {
     // Plus Addressing column
-    if (status === 'plus-supported') {
-      setColumnState(colPlus, plusFeedbackEl, 'available', '');
-    } else if (status === 'plus-unsupported') {
+    if (status === 'plus-unsupported') {
       setColumnState(
         colPlus,
         plusFeedbackEl,
@@ -179,6 +166,80 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (getMode() === 'catchAll') setMode('plusAddressing');
     } else {
       setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
+    }
+
+    // Provider detection display
+    if (mxResult?.provider) {
+      const info = getProviderInfo(mxResult.provider);
+      showProviderDetection(info.name, status);
+    } else if (mxResult) {
+      hideProviderDetection();
+    }
+  }
+
+  function showProviderLoading(): void {
+    providerDetectedEl.style.display = 'flex';
+    providerDetectedEl.className = 'provider-detected loading';
+    providerTextEl.textContent = 'Checking email provider...';
+  }
+
+  function showProviderDetection(providerName: string, status: ProviderStatus): void {
+    providerDetectedEl.style.display = 'flex';
+    if (status === 'plus-supported') {
+      providerDetectedEl.className = 'provider-detected detected-supported';
+      providerTextEl.textContent = `Detected: ${providerName} — plus addressing supported`;
+    } else if (status === 'plus-unsupported') {
+      providerDetectedEl.className = 'provider-detected detected-unsupported';
+      providerTextEl.textContent = `Detected: ${providerName} — plus addressing may not be supported`;
+    } else {
+      providerDetectedEl.className = 'provider-detected detected-custom';
+      providerTextEl.textContent = `Detected: ${providerName}`;
+    }
+  }
+
+  function hideProviderDetection(): void {
+    providerDetectedEl.style.display = 'none';
+    currentLookupDomain = null;
+  }
+
+  function updateModeAvailability(): void {
+    const value = input.value.trim();
+    const domain = extractDomainFromEmail(value);
+    const isFullEmail = value.includes('@') && domain != null;
+
+    hideProviderDetection();
+
+    if (!value) {
+      setColumnState(colPlus, plusFeedbackEl, 'disabled', 'Enter your email or domain above');
+      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', 'Enter your email or domain above');
+      return;
+    }
+
+    if (!isFullEmail) {
+      setColumnState(
+        colPlus,
+        plusFeedbackEl,
+        'disabled',
+        'Enter a full email to use Plus Addressing',
+      );
+      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
+      if (getMode() === 'plusAddressing') setMode('catchAll');
+      return;
+    }
+
+    // Synchronous check first
+    const status = getProviderStatus(domain as string);
+    applyProviderStatus(domain as string, status, null);
+
+    // If custom domain, try MX lookup
+    if (status === 'custom') {
+      currentLookupDomain = domain as string;
+      showProviderLoading();
+      getProviderStatusWithMx(domain as string).then(({ status: mxStatus, mxResult }) => {
+        if (currentLookupDomain === domain) {
+          applyProviderStatus(domain as string, mxStatus, mxResult);
+        }
+      });
     }
   }
 
@@ -202,20 +263,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const value = input.value.trim();
     const mode = getMode();
 
-    for (let i = 0; i < exampleEls.length; i++) {
-      const el = exampleEls[i];
-      const site = el.dataset.site;
-      if (!site) continue;
-
-      if (mode === 'plusAddressing') {
-        const localPart = extractLocalPart(value) || 'name';
-        const domain = extractDomainFromEmail(value) || 'gmail.com';
-        el.textContent = `${localPart}+${site}@${domain}`;
-      } else {
-        const domain = value.includes('@')
-          ? extractDomainFromEmail(value) || value
-          : value || 'yourdomain.com';
-        el.textContent = `${site}@${domain}`;
+    if (mode === 'plusAddressing') {
+      const localPart = extractLocalPart(value) || 'name';
+      const domain = extractDomainFromEmail(value) || 'gmail.com';
+      for (let i = 0; i < exampleEls.length; i++) {
+        const site = exampleEls[i].dataset.site;
+        if (site) exampleEls[i].textContent = `${localPart}+${site}@${domain}`;
+      }
+    } else {
+      const domain = value.includes('@')
+        ? extractDomainFromEmail(value) || value
+        : value || 'yourdomain.com';
+      for (let i = 0; i < exampleEls.length; i++) {
+        const site = exampleEls[i].dataset.site;
+        if (site) exampleEls[i].textContent = `${site}@${domain}`;
       }
     }
   }
