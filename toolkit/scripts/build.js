@@ -15,6 +15,7 @@ const requiredSourceFiles = [
     'src/background.ts',
     'src/content.ts',
     'src/options.ts',
+    'src/popup.ts',
     'src/provider-domains.ts',
     'src/providers.ts',
     'src/utils.ts',
@@ -81,7 +82,7 @@ if (usesESModules) {
     console.log('\n🔧 ES modules enabled - processing scripts...');
 
     // Strip exports from content script files (they use globalThis pattern)
-    const contentScriptFiles = ['content.js', 'options.js'];
+    const contentScriptFiles = ['content.js', 'options.js', 'popup.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -126,6 +127,10 @@ console.log('  ✅ manifest.json');
 fs.copyFileSync(path.join(SRC, 'options.html'), path.join(DIST, 'options.html'));
 console.log('  ✅ options.html');
 
+// Copy popup.html
+fs.copyFileSync(path.join(SRC, 'popup.html'), path.join(DIST, 'popup.html'));
+console.log('  ✅ popup.html');
+
 // Copy icons
 const iconsDir = path.join(DIST, 'icons');
 fs.mkdirSync(iconsDir, { recursive: true });
@@ -141,12 +146,14 @@ const requiredCompiledFiles = [
     'background.js',
     'content.js',
     'options.js',
+    'popup.js',
     'provider-domains.js',
     'providers.js',
     'utils.js',
     'utils-content.js',
     'manifest.json',
     'options.html',
+    'popup.html',
     'icons/icon16.png',
     'icons/icon32.png',
     'icons/icon48.png',

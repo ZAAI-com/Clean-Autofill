@@ -28,6 +28,24 @@ export interface FillEmailResponse {
   error?: string;
 }
 
+/**
+ * Message from popup requesting email generation and fill.
+ */
+export interface GenerateAndFillRequest {
+  action: 'generateAndFill';
+}
+
+/**
+ * Response from background to popup after generating and filling email.
+ */
+export interface GenerateAndFillResponse {
+  success: boolean;
+  email?: string;
+  message?: string;
+  error?: string;
+  needsConfig?: boolean;
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var CleanAutofillUtils: CleanAutofillUtils;

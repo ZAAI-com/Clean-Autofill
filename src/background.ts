@@ -1,88 +1,72 @@
 // Import shared utilities as ES module
 
-import type { EmailMode, FillEmailResponse } from './types';
+import type { EmailMode, FillEmailResponse, GenerateAndFillResponse } from './types';
 import { createTimeout, extractMainDomain } from './utils.js';
 
 // Message timeout in milliseconds
 const MESSAGE_TIMEOUT = 5000;
 
-// Handle extension icon clicks
-chrome.action.onClicked.addListener(async (tab) => {
+// Handle messages from popup
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.action === 'generateAndFill') {
+    handleGenerateAndFill().then(sendResponse);
+    return true; // keep message channel open for async response
+  }
+});
+
+async function handleGenerateAndFill(): Promise<GenerateAndFillResponse> {
   try {
-    // Generate email for current tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab) {
+      return { success: false, error: 'No active tab found' };
+    }
+
     const email = await generateEmailForTab(tab);
 
     if (!email) {
-      // Show notification if no email domain is set
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: 'Clean-Autofill',
-        message: 'Please configure your email in extension options first.',
-      });
-
-      // Open options page
-      chrome.runtime.openOptionsPage();
-      return;
+      return { success: false, needsConfig: true };
     }
 
-    // Guard against undefined tab.id
     if (tab.id === undefined) {
-      throw new Error('Unable to get tab ID');
+      return { success: true, email, message: 'Email generated (no tab to fill)' };
     }
 
-    // Send message to content script with timeout
-    const response = (await Promise.race([
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'fillEmail',
-        email: email,
-      }),
-      createTimeout(MESSAGE_TIMEOUT, 'Content script did not respond. Please refresh the page.'),
-    ])) as FillEmailResponse;
+    // Try to fill the email field
+    try {
+      const response = (await Promise.race([
+        chrome.tabs.sendMessage(tab.id, { action: 'fillEmail', email }),
+        createTimeout(MESSAGE_TIMEOUT, 'Content script did not respond'),
+      ])) as FillEmailResponse;
 
-    if (response?.success) {
-      // Show success notification
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: 'Clean-Autofill',
-        message: `Email filled: ${email}`,
-      });
-    } else if (response?.error) {
-      throw new Error(response.error);
+      if (response?.success) {
+        return { success: true, email, message: response.message };
+      }
+      if (response?.error) {
+        return { success: true, email, message: `Email generated (${response.error})` };
+      }
+      // No response — no field found, but email still generated
+      return { success: true, email, message: 'Email generated (no field found to fill)' };
+    } catch (fillError) {
+      const msg = fillError instanceof Error ? fillError.message : 'Fill failed';
+
+      if (msg.includes('Receiving end does not exist')) {
+        return {
+          success: true,
+          email,
+          message: 'Email generated (please refresh the page to autofill)',
+        };
+      }
+      if (msg.includes('Content script did not respond')) {
+        return { success: true, email, message: 'Email generated (no field found to fill)' };
+      }
+      return { success: true, email, message: `Email generated (${msg})` };
     }
-    // If no response, no frame found a field - silently do nothing
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fill email';
-
-    // Handle "Receiving end does not exist" - content script not loaded
-    if (errorMessage.includes('Receiving end does not exist')) {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: 'Clean-Autofill',
-        message: 'Please refresh the page and try again.',
-      });
-      return;
-    }
-
-    // Handle timeout (no frame responded = no field found)
-    if (errorMessage.includes('Content script did not respond')) {
-      console.log('Clean-Autofill: No input field found on this page');
-      return;
-    }
-
-    console.error('Clean-Autofill error:', error);
-
-    // Show error notification for actual errors
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icons/icon48.png',
-      title: 'Clean-Autofill Error',
-      message: errorMessage,
-    });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate email';
+    return { success: false, error: errorMessage };
   }
-});
+}
 
 /**
  * Generate an email address based on the current tab's domain and user settings.

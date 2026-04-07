@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Autofill</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-width: 280px;
+      background: #fff;
+      color: #333;
+      padding: 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .header img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    #loading {
+      color: #888;
+      font-size: 13px;
+      padding: 8px 0;
+    }
+
+    #result {
+      display: none;
+    }
+
+    .email-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+
+    #emailDisplay {
+      flex: 1;
+      font-family: monospace;
+      font-size: 13px;
+      color: #333;
+      word-break: break-all;
+    }
+
+    #copyButton {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    #copyButton:hover {
+      background: #43A047;
+    }
+
+    #copyButton.copied {
+      background: #333;
+    }
+
+    #statusMessage {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+    }
+
+    #error {
+      display: none;
+      font-size: 13px;
+      color: #c62828;
+      background: #ffebee;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    #configPrompt {
+      display: none;
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    #configPrompt a {
+      color: #4CAF50;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    #configPrompt a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon32.png" alt="">
+    <h1>Clean Autofill</h1>
+  </div>
+
+  <div id="loading">Generating email...</div>
+
+  <div id="result">
+    <div class="email-row">
+      <span id="emailDisplay"></span>
+      <button id="copyButton">Copy</button>
+    </div>
+    <div id="statusMessage"></div>
+  </div>
+
+  <div id="error"></div>
+
+  <div id="configPrompt">
+    Please <a id="configLink" href="#">configure your email</a> first.
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
