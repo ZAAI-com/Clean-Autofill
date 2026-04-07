@@ -79,7 +79,7 @@ See [Email Provider Details](Email-Provider.md) for the full decision table and 
 bun run build
 
 # Run tests (119 tests with DOM support)
-bun test src/
+bun run test
 
 # Run tests in watch mode
 bun run test:watch
@@ -172,7 +172,6 @@ The extension will:
 Clean-Autofill/
 ├── manifest.json          # Extension configuration (MV3)
 ├── package.json           # NPM/Bun configuration
-├── bunfig.toml            # Bun test configuration (DOM support)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml         # GitHub Actions CI pipeline
@@ -240,7 +239,7 @@ The extension requires minimal permissions:
 1. Edit TypeScript files in `src/`
 2. Run `bun run build` to compile to `dist/`
 3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
-4. Run `bun test src/` to verify changes
+4. Run `bun run test` to verify changes
 5. Run `bun run check` before committing
 
 Pre-commit hooks automatically run type checking, linting, and tests.
@@ -250,7 +249,7 @@ Pre-commit hooks automatically run type checking, linting, and tests.
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun test src/              # Run all 119 tests
+bun run test              # Run all 119 tests
 bun run test:watch         # Watch mode
 bun run test:coverage      # Coverage report (98%+ line coverage)
 ```

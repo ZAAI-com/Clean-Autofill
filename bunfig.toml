@@ -1,3 +1,0 @@
-[test]
-# Enable DOM support for content script tests
-preload = ["./src/test-setup.ts"]

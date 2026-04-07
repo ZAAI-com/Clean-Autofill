@@ -13,7 +13,7 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 bun run build
 
 # Run tests (119 tests with DOM support)
-bun test src/
+bun run test
 
 # Run tests in watch mode
 bun run test:watch
@@ -80,13 +80,14 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ```
 ├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
-├── bunfig.toml            # Bun test configuration (DOM support)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml         # GitHub Actions CI pipeline
 ├── toolkit/
 │   ├── biome/
 │   │   └── biome.json     # Biome linter/formatter config
+│   ├── bun/
+│   │   └── bunfig.toml    # Bun test configuration (DOM support)
 │   ├── typescript/
 │   │   └── tsconfig.json  # TypeScript configuration
 │   ├── husky/
@@ -126,7 +127,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 1. Edit TypeScript files in `src/`
 2. Run `bun run build` to compile to `dist/`
 3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
-4. Run `bun test src/` to verify changes
+4. Run `bun run test` to verify changes
 5. Run `bun run check` before committing
 
 ## Testing
@@ -134,7 +135,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun test src/              # Run all 119 tests
+bun run test              # Run all 119 tests
 bun run test:watch         # Watch mode
 bun run test:coverage      # Coverage report (98%+ line coverage)
 ```

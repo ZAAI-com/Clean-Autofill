@@ -17,9 +17,9 @@
     "format:check": "biome format --config-path toolkit/biome/biome.json src/",
     "check": "biome check --config-path toolkit/biome/biome.json src/",
     "check:fix": "biome check --config-path toolkit/biome/biome.json --write src/",
-    "test": "bun test --preload ./src/test-setup.ts src/",
-    "test:watch": "bun test --preload ./src/test-setup.ts src/ --watch",
-    "test:coverage": "bun test --preload ./src/test-setup.ts src/ --coverage",
+    "test": "bun --config=toolkit/bun/bunfig.toml test src/",
+    "test:watch": "bun --config=toolkit/bun/bunfig.toml test src/ --watch",
+    "test:coverage": "bun --config=toolkit/bun/bunfig.toml test src/ --coverage",
     "typecheck": "tsc -p toolkit/typescript/tsconfig.json --noEmit",
     "build:ts": "tsc -p toolkit/typescript/tsconfig.json"
   },
