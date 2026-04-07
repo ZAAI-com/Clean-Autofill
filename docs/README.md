@@ -44,24 +44,18 @@ Clean Autofill supports two modes. Provider compatibility determines which mode 
 
 | Provider | Plus Addressing | Catch-All Prefix |
 |----------|:-:|:-:|
-| Gmail / Google Workspace | ✅ | — |
+| Custom domain | ✅* | ✅ |
+| Google Workspace | ✅* | ✅ |
+| Gmail | ✅ | — |
 | Outlook / Hotmail / Live | ✅ | — |
+| Apple iCloud | ❌ | — |
+| Yahoo / Ymail | ❌ | — |
 | ProtonMail | ✅ | — |
+| GMX / web.de | ❌ | — |
+| mail.com | ❌ | — |
+| T-Online | ❌ | — |
 | Fastmail | ✅ | — |
 | mailbox.org | ✅ | — |
-| Hey | ✅ | — |
-| Yandex Mail | ✅ | — |
-| Mail.ru | ✅ | — |
-| Yahoo / Ymail | ❌ | — |
-| GMX | ❌ | — |
-| iCloud | ❌ | — |
-| mail.com | ❌ | — |
-| web.de | ❌ | — |
-| T-Online | ❌ | — |
-| Tuta (Tutanota) | ❌ | — |
-| NetEase (163.com) | ❌ | — |
-| QQ Mail | ❌ | — |
-| Custom domain | ✅* | ✅ |
 
 \*If your email host supports plus addressing. Outlook.com consumer accounts commonly work with `+tag` but Microsoft's official plus-addressing docs are for Exchange Online. Zoho Mail is unverified.
 

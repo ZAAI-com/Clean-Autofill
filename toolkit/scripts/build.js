@@ -14,6 +14,7 @@ console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 const requiredSourceFiles = [
     'src/background.ts',
     'src/content.ts',
+    'src/history.ts',
     'src/ui/options.ts',
     'src/ui/popup.ts',
     'src/provider-domains.ts',
@@ -145,6 +146,7 @@ console.log('\n📋 Verifying compiled files:');
 const requiredCompiledFiles = [
     'background.js',
     'content.js',
+    'history.js',
     'provider-domains.js',
     'providers.js',
     'utils.js',

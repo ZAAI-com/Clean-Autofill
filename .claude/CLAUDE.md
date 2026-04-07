@@ -12,7 +12,7 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 # Build extension (compile TypeScript + copy assets to dist/)
 bun run build
 
-# Run tests (119 tests with DOM support)
+# Run tests (251 tests with DOM support)
 bun run test
 
 # Run tests in watch mode
@@ -53,6 +53,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - Handles messages from popup via `chrome.runtime.onMessage`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
 - Sends fill requests to content script and returns results to popup
+- Saves generated emails to history via `src/history.ts`
 - Manages Chrome storage API for user settings
 - Opens options page on first install
 
@@ -72,10 +73,19 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - Shows config prompt if email domain not set
 
 ### 4. Options Page (`src/ui/options.html` + `src/ui/options.ts`)
-- Settings interface for configuring user's email domain
-- Uses Chrome sync storage for cross-device settings
+- Sidebar navigation with three pages: Home, Settings, History
+- **Home**: Extension explanation and usage examples
+- **Settings**: Email domain configuration, mode selection, Chrome profile import
+- **History**: Searchable log of all generated emails with copy/delete actions
+- Settings use Chrome sync storage; history uses Chrome local storage
 
-### 5. Shared Utilities (`src/utils.ts`)
+### 5. History Module (`src/history.ts`)
+- CRUD operations for email history entries stored in `chrome.storage.local`
+- `addEntry()` - Save new entry (prepend, enforce 10K limit)
+- `getHistory()` - Query with optional search filter and pagination
+- `deleteEntry()` / `clearHistory()` - Deletion
+
+### 6. Shared Utilities (`src/utils.ts`)
 - `extractMainDomain()` - Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
 - `isValidEmail()` - Basic email format validation
 - `createTimeout()` - Promise-based timeout for async operations
@@ -108,6 +118,8 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   ├── background.test.ts # Service worker tests
 │   ├── content.ts         # Content script for email filling
 │   ├── content.test.ts    # Content script tests
+│   ├── history.ts         # Email history storage module
+│   ├── history.test.ts    # History module tests
 │   ├── utils.ts           # Shared utilities
 │   ├── utils.test.ts      # Utility tests
 │   ├── test-setup.ts      # DOM test setup (happy-dom)
@@ -117,13 +129,14 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   ├── popup.html     # Popup UI
 │   │   ├── popup.ts       # Popup logic
 │   │   ├── popup.test.ts  # Popup tests
-│   │   ├── options.html   # Options page UI
+│   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History)
 │   │   ├── options.ts     # Options page logic
 │   │   └── options.test.ts # Options page tests
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 └── dist/                  # Build output (load this in Chrome)
     ├── background.js      # Compiled service worker
     ├── content.js         # Compiled content script
+    ├── history.js         # Compiled history module
     ├── utils.js           # Compiled utilities
     ├── manifest.json      # Copied from root
     ├── ui/                # Compiled UI pages
@@ -148,7 +161,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun run test              # Run all 119 tests
+bun run test              # Run all 251 tests
 bun run test:watch         # Watch mode
 bun run test:coverage      # Coverage report (98%+ line coverage)
 ```
@@ -172,8 +185,8 @@ GitHub Actions runs on push/PR to main:
 
 ## Development Notes
 
-- Extension requires minimal permissions: activeTab, storage, notifications
-- Uses Chrome's sync storage for cross-device settings persistence
+- Extension permissions: activeTab, storage, notifications, identity, identity.email
+- Uses Chrome's sync storage for settings, local storage for email history
 - Domain extraction handles edge cases like localhost, IP addresses, and special TLDs
 - Content script uses multiple fallback strategies for reliable field detection
 - TypeScript source in `src/`, compiled output in `dist/`

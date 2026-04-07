@@ -29,9 +29,7 @@ Uses the visited site's domain as the entire local part. Requires you to own a d
 | Proton Mail | `protonmail.com`, `proton.me`, `pm.me`, `protonmail.ch` | [Addresses and aliases](https://proton.me/support/addresses-and-aliases) | Works on Proton addresses and custom domains. |
 | Fastmail | `fastmail.com` and 100+ Fastmail-owned domains | [Plus addressing and subdomain addressing](https://www.fastmail.help/hc/en-us/articles/360060591053) | Works automatically for all aliases. Full domain list includes `fastmail.fm`, `pobox.com`, `sent.com`, and many more. |
 | mailbox.org | `mailbox.org` | [Using mail extensions](https://kb.mailbox.org/en/private/e-mail/mail-extensions/) | mailbox.org calls this "mail extensions". |
-| Hey | `hey.com` | | |
-| Yandex Mail | `yandex.com`, `yandex.ru`, `ya.ru` | | Russian provider. Supports `+` addressing. |
-| Mail.ru | `mail.ru`, `inbox.ru`, `list.ru`, `bk.ru` | | Russian provider. Supports `+` addressing. |
+| Yandex Mail | `yandex.com`, `yandex.ru`, `ya.ru` | [Registration (Special email addresses)](https://yandex.com/support/mail/reg.html) | Russian provider. Documented under "Special email addresses". |
 
 ### Does NOT Support Plus Addressing
 
@@ -41,14 +39,16 @@ Uses the visited site's domain as the entire local part. Requires you to own a d
 | GMX | `gmx.com`, `gmx.de`, `gmx.net` | Created alias addresses | [Alias Addresses](https://support.gmx.com/email/settings/aliasaddresses.html) |
 | iCloud Mail | `icloud.com`, `me.com`, `mac.com` | Email aliases and Hide My Email (random relay addresses via iCloud+) | [Email aliases](https://support.apple.com/guide/icloud/add-and-manage-email-aliases-mm6b1a490a/icloud) / [Hide My Email](https://support.apple.com/guide/icloud/what-you-can-do-with-icloud-and-hide-my-email-mme38e1602db/icloud) |
 | mail.com | `mail.com`, `email.com` and 100+ novelty domains | Up to 10 alias addresses per account | [Alias Addresses](https://support.mail.com/email/settings/aliasaddresses.html) |
-| web.de | `web.de` | Created alias addresses | |
-| T-Online | `t-online.de` | | |
+| web.de | `web.de` | Alias addresses (premium only) | [Absenderadressen](https://hilfe.web.de/email/einstellungen/absenderadressen.html) |
+| T-Online | `t-online.de` | Additional email addresses | [Zusaetzliche E-Mail-Adresse](https://www.telekom.de/hilfe/apps-dienste/e-mail/konto/weitere-adresse) |
 | Tuta (Tutanota) | `tuta.com`, `tutanota.com` | Aliases or custom-domain addresses | [How to use Tuta](https://tuta.com/support/howto) |
-| NetEase | `163.com`, `126.com`, `yeah.net` | | Chinese provider. |
-| QQ Mail | `qq.com`, `foxmail.com` | | Chinese provider (Tencent). |
-| Libero | `libero.it` | | Italian provider. |
-| La Poste | `laposte.net` | | French provider. |
-| Rediffmail | `rediffmail.com`, `rediff.com` | | Indian provider. |
+| Hey | `hey.com` | Aliases only via HEY for Domains | [Can I create email aliases?](https://help.hey.com/article/928-can-i-create-email-aliases) |
+| Mail.ru | `mail.ru`, `inbox.ru`, `list.ru`, `bk.ru` | Anonymous addresses (up to 10) | [Anonymous addresses](https://help.mail.ru/mail/account/aliases/) |
+| NetEase | `163.com`, `126.com`, `yeah.net` | | [NetEase Mail Help](https://help.mail.163.com/) |
+| QQ Mail | `qq.com`, `foxmail.com` | Alias accounts (up to 10) | [QQ Mail Aliases](https://service.mail.qq.com/detail/0/262) |
+| Libero | `libero.it` | Disposable addresses (paid, up to 15/yr) | [Indirizzi usa e getta](https://aiuto.libero.it/articolo/mail-plus/indirizzi-usa-e-getta-alternativi-mail-plus/) |
+| La Poste | `laposte.net` | Up to 6 aliases | [Gerer mes alias](https://aide.laposte.net/categories/mon-compte-et-mes-preferences/gerer-mes-alias-et-leur-signature) |
+| Rediffmail | `rediffmail.com`, `rediff.com` | | [Rediffmail Help](https://www.rediffmail.com/HELP/main_help.html) |
 
 ### Unverified
 

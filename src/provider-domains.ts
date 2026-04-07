@@ -146,17 +146,10 @@ export const PLUS_SUPPORTED_DOMAINS = new Set([
   'webname.com',
   // mailbox.org
   'mailbox.org',
-  // Hey
-  'hey.com',
   // Yandex Mail (Russia)
   'yandex.com',
   'yandex.ru',
   'ya.ru',
-  // Mail.ru (supports + addressing)
-  'mail.ru',
-  'inbox.ru',
-  'list.ru',
-  'bk.ru',
 ]);
 
 // Providers that do NOT support classic plus addressing
@@ -322,6 +315,13 @@ export const PLUS_UNSUPPORTED_DOMAINS = new Set([
   'uymail.com',
   'execs.com',
   'cheerful.com',
+  // Hey (no plus addressing, only aliases via HEY for Domains)
+  'hey.com',
+  // Mail.ru (uses anonymous addresses, not plus addressing)
+  'mail.ru',
+  'inbox.ru',
+  'list.ru',
+  'bk.ru',
   // NetEase (China)
   '163.com',
   '126.com',
