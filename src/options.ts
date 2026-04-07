@@ -1,62 +1,13 @@
+import {
+  domainRegex,
+  extractDomainFromEmail,
+  extractLocalPart,
+  getProviderStatus,
+} from './providers.js';
 import type { CleanAutofillUtils, EmailMode } from './types';
 
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
-
-export type ProviderStatus = 'plus-supported' | 'plus-unsupported' | 'custom';
-
-export const PLUS_SUPPORTED_DOMAINS = new Set([
-  'gmail.com',
-  'googlemail.com',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'protonmail.com',
-  'proton.me',
-  'pm.me',
-  'fastmail.com',
-  'icloud.com',
-  'me.com',
-  'zoho.com',
-  'mailbox.org',
-  'hey.com',
-]);
-
-export const PLUS_UNSUPPORTED_DOMAINS = new Set([
-  'yahoo.com',
-  'ymail.com',
-  'gmx.com',
-  'gmx.de',
-  'gmx.net',
-  'web.de',
-  'mail.com',
-  't-online.de',
-  'tuta.com',
-  'tutanota.com',
-]);
-
-export function getProviderStatus(domain: string): ProviderStatus {
-  const lower = domain.toLowerCase();
-  if (PLUS_SUPPORTED_DOMAINS.has(lower)) return 'plus-supported';
-  if (PLUS_UNSUPPORTED_DOMAINS.has(lower)) return 'plus-unsupported';
-  return 'custom';
-}
-
-export function extractDomainFromEmail(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return null;
-  const atIndex = trimmed.lastIndexOf('@');
-  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
-  return trimmed.substring(atIndex + 1);
-}
-
-export function extractLocalPart(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return null;
-  const atIndex = trimmed.lastIndexOf('@');
-  if (atIndex <= 0) return null;
-  return trimmed.substring(0, atIndex);
-}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settingsForm');
@@ -270,8 +221,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       showStatus('Failed to load settings', 'error');
     }
   }
-
-  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
 
   async function saveSettings(e: Event): Promise<void> {
     e.preventDefault();

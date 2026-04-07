@@ -15,6 +15,7 @@ const requiredSourceFiles = [
     'src/background.ts',
     'src/content.ts',
     'src/options.ts',
+    'src/providers.ts',
     'src/utils.ts',
     'src/types/index.ts',
 ];
@@ -139,6 +140,7 @@ const requiredCompiledFiles = [
     'background.js',
     'content.js',
     'options.js',
+    'providers.js',
     'utils.js',
     'utils-content.js',
     'manifest.json',

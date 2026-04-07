@@ -1,4 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
+import {
+  domainRegex,
+  extractDomainFromEmail,
+  extractLocalPart,
+  getProviderStatus,
+  PLUS_SUPPORTED_DOMAINS,
+  PLUS_UNSUPPORTED_DOMAINS,
+} from './providers.js';
 
 // Load utils first
 beforeAll(async () => {
@@ -42,10 +50,7 @@ const mockChrome = {
 
 (globalThis as Record<string, unknown>).chrome = mockChrome;
 
-// Extract testable logic from options.ts
-
-// Domain validation regex from options.ts
-const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+// Test-only helpers
 
 function isValidDomain(domain: string): boolean {
   return domainRegex.test(domain);
@@ -59,7 +64,6 @@ function generateExampleEmail(siteDomain: string, userDomain: string): string {
   return `${siteDomain}@${userDomain}`;
 }
 
-// Plus addressing generation - mirrors options.ts logic
 function generatePlusAddressEmail(siteDomain: string, baseEmail: string): string | null {
   const trimmed = baseEmail.trim();
   if (!trimmed) return null;
@@ -70,7 +74,6 @@ function generatePlusAddressEmail(siteDomain: string, baseEmail: string): string
   return `${localPart}+${siteDomain}@${domain}`;
 }
 
-// Base email validation - mirrors options.ts logic
 function isValidBaseEmail(email: string): boolean {
   const trimmed = email.trim();
   if (!trimmed) return false;
@@ -78,24 +81,6 @@ function isValidBaseEmail(email: string): boolean {
   if (atIndex <= 0 || atIndex === trimmed.length - 1) return false;
   const domain = trimmed.substring(atIndex + 1);
   return domainRegex.test(domain);
-}
-
-// Domain extraction from email - mirrors extractDomainFromEmail in options.ts
-function extractDomainFromEmail(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return null;
-  const atIndex = trimmed.lastIndexOf('@');
-  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
-  return trimmed.substring(atIndex + 1);
-}
-
-// Local part extraction - mirrors extractLocalPart in options.ts
-function extractLocalPart(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return null;
-  const atIndex = trimmed.lastIndexOf('@');
-  if (atIndex <= 0) return null;
-  return trimmed.substring(0, atIndex);
 }
 
 describe('domain validation', () => {
@@ -488,46 +473,6 @@ describe('status message types', () => {
   });
 });
 
-// Provider status detection - mirrors getProviderStatus in options.ts
-type ProviderStatus = 'plus-supported' | 'plus-unsupported' | 'custom';
-
-const PLUS_SUPPORTED_DOMAINS = new Set([
-  'gmail.com',
-  'googlemail.com',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'protonmail.com',
-  'proton.me',
-  'pm.me',
-  'fastmail.com',
-  'icloud.com',
-  'me.com',
-  'zoho.com',
-  'mailbox.org',
-  'hey.com',
-]);
-
-const PLUS_UNSUPPORTED_DOMAINS = new Set([
-  'yahoo.com',
-  'ymail.com',
-  'gmx.com',
-  'gmx.de',
-  'gmx.net',
-  'web.de',
-  'mail.com',
-  't-online.de',
-  'tuta.com',
-  'tutanota.com',
-]);
-
-function getProviderStatus(domain: string): ProviderStatus {
-  const lower = domain.toLowerCase();
-  if (PLUS_SUPPORTED_DOMAINS.has(lower)) return 'plus-supported';
-  if (PLUS_UNSUPPORTED_DOMAINS.has(lower)) return 'plus-unsupported';
-  return 'custom';
-}
-
 describe('getProviderStatus', () => {
   describe('plus-supported providers', () => {
     const supported = [
@@ -536,13 +481,15 @@ describe('getProviderStatus', () => {
       'outlook.com',
       'hotmail.com',
       'live.com',
+      'msn.com',
       'protonmail.com',
       'proton.me',
       'pm.me',
+      'protonmail.ch',
       'fastmail.com',
-      'icloud.com',
-      'me.com',
-      'zoho.com',
+      'fastmail.fm',
+      'pobox.com',
+      'sent.com',
       'mailbox.org',
       'hey.com',
     ];
@@ -563,14 +510,19 @@ describe('getProviderStatus', () => {
     const unsupported = [
       'yahoo.com',
       'ymail.com',
+      'rocketmail.com',
       'gmx.com',
       'gmx.de',
       'gmx.net',
       'web.de',
       'mail.com',
+      'email.com',
       't-online.de',
       'tuta.com',
       'tutanota.com',
+      'icloud.com',
+      'me.com',
+      'mac.com',
     ];
 
     for (const domain of unsupported) {
@@ -591,6 +543,10 @@ describe('getProviderStatus', () => {
 
     test('subdomain of known provider returns custom', () => {
       expect(getProviderStatus('mail.gmail.com')).toBe('custom');
+    });
+
+    test('zoho.com returns custom (unverified)', () => {
+      expect(getProviderStatus('zoho.com')).toBe('custom');
     });
   });
 
