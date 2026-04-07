@@ -1,4 +1,4 @@
-name: Release to Chrome Web Store
+name: W3 Release
 
 on:
   workflow_dispatch:
@@ -15,36 +15,14 @@ concurrency:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    uses: ./.github/workflows/W1-Test.yml
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Type check
-        run: bun run typecheck
-
-      - name: Lint and format check
-        run: bun run check
-
-      - name: Run tests
-        run: bun run test
-
-      - name: Build extension
-        run: bun run build
-
-      - name: Validate extension
-        run: bun run validate
+  build:
+    needs: ci
+    uses: ./.github/workflows/W2-Build.yml
 
   release:
-    needs: ci
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,16 +54,11 @@ jobs:
           fi
           echo "extension_id=$EXTENSION_ID" >> $GITHUB_OUTPUT
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Package extension
-        run: bun run pack
+          name: Clean-Autofill
+          path: dist
 
       - name: Upload to Chrome Web Store
         id: upload
