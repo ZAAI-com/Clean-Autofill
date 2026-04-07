@@ -492,6 +492,12 @@ describe('getProviderStatus', () => {
       'sent.com',
       'mailbox.org',
       'hey.com',
+      'yandex.com',
+      'yandex.ru',
+      'ya.ru',
+      'mail.ru',
+      'inbox.ru',
+      'bk.ru',
     ];
 
     for (const domain of supported) {
@@ -523,6 +529,12 @@ describe('getProviderStatus', () => {
       'icloud.com',
       'me.com',
       'mac.com',
+      '163.com',
+      'qq.com',
+      'foxmail.com',
+      'libero.it',
+      'laposte.net',
+      'rediffmail.com',
     ];
 
     for (const domain of unsupported) {

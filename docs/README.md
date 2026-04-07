@@ -50,6 +50,8 @@ Clean Autofill supports two modes. Provider compatibility determines which mode 
 | Fastmail | ✅ | — |
 | mailbox.org | ✅ | — |
 | Hey | ✅ | — |
+| Yandex Mail | ✅ | — |
+| Mail.ru | ✅ | — |
 | Yahoo / Ymail | ❌ | — |
 | GMX | ❌ | — |
 | iCloud | ❌ | — |
@@ -57,6 +59,8 @@ Clean Autofill supports two modes. Provider compatibility determines which mode 
 | web.de | ❌ | — |
 | T-Online | ❌ | — |
 | Tuta (Tutanota) | ❌ | — |
+| NetEase (163.com) | ❌ | — |
+| QQ Mail | ❌ | — |
 | Custom domain | ✅* | ✅ |
 
 \*If your email host supports plus addressing. Outlook.com consumer accounts commonly work with `+tag` but Microsoft's official plus-addressing docs are for Exchange Online. Zoho Mail is unverified.

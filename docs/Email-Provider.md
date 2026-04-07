@@ -30,6 +30,8 @@ Uses the visited site's domain as the entire local part. Requires you to own a d
 | Fastmail | `fastmail.com` and 100+ Fastmail-owned domains | [Plus addressing and subdomain addressing](https://www.fastmail.help/hc/en-us/articles/360060591053) | Works automatically for all aliases. Full domain list includes `fastmail.fm`, `pobox.com`, `sent.com`, and many more. |
 | mailbox.org | `mailbox.org` | [Using mail extensions](https://kb.mailbox.org/en/private/e-mail/mail-extensions/) | mailbox.org calls this "mail extensions". |
 | Hey | `hey.com` | | |
+| Yandex Mail | `yandex.com`, `yandex.ru`, `ya.ru` | | Russian provider. Supports `+` addressing. |
+| Mail.ru | `mail.ru`, `inbox.ru`, `list.ru`, `bk.ru` | | Russian provider. Supports `+` addressing. |
 
 ### Does NOT Support Plus Addressing
 
@@ -42,6 +44,11 @@ Uses the visited site's domain as the entire local part. Requires you to own a d
 | web.de | `web.de` | Created alias addresses | |
 | T-Online | `t-online.de` | | |
 | Tuta (Tutanota) | `tuta.com`, `tutanota.com` | Aliases or custom-domain addresses | [How to use Tuta](https://tuta.com/support/howto) |
+| NetEase | `163.com`, `126.com`, `yeah.net` | | Chinese provider. |
+| QQ Mail | `qq.com`, `foxmail.com` | | Chinese provider (Tencent). |
+| Libero | `libero.it` | | Italian provider. |
+| La Poste | `laposte.net` | | French provider. |
+| Rediffmail | `rediffmail.com`, `rediff.com` | | Indian provider. |
 
 ### Unverified
 
@@ -80,6 +87,22 @@ This table shows which modes are available based on what you enter in the extens
 | *(empty)* | ❌ | ❌ | Nothing configured |
 
 **Legend:** ✅ Available | ⚠️ Warning (may not work) | ❌ Not available
+
+## Known Limitations of Plus Addressing
+
+### Some websites reject the `+` character
+
+Although `+` is a valid character in email addresses per RFC 5321, some websites incorrectly reject it during signup or login. Common behaviors:
+
+- **Validation error**: The form shows "Invalid email address" when `+` is present
+- **Silent stripping**: The site accepts the email but removes everything from `+` to `@`, so `name+site@gmail.com` becomes `name@gmail.com`
+- **Blocking on login**: The account was created with `+` but the login form rejects it
+
+This is a limitation of the website, not of the email provider or this extension. There is no workaround other than contacting the website or using Catch-All Prefix mode instead.
+
+### Gmail dot trick
+
+Gmail ignores dots in the local part: `f.i.r.s.t.l.a.s.t@gmail.com` is the same as `firstlast@gmail.com`. This is a Gmail-specific behavior and is not related to plus addressing.
 
 ## How the Extension Detects Providers
 
