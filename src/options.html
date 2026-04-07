@@ -11,16 +11,16 @@
       padding: 20px;
       min-height: 100vh;
     }
-    
+
     .container {
-      max-width: 600px;
+      max-width: 680px;
       margin: 0 auto;
       background-color: white;
       border-radius: 12px;
       padding: 32px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    
+
     h1 {
       font-size: 28px;
       margin: 0 0 8px 0;
@@ -28,7 +28,7 @@
       display: flex;
       align-items: center;
     }
-    
+
     .icon {
       width: 32px;
       height: 32px;
@@ -36,42 +36,87 @@
       background-color: #4CAF50;
       border-radius: 6px;
     }
-    
+
     .subtitle {
       color: #666;
       font-size: 16px;
       margin-bottom: 32px;
     }
-    
-    .form-group {
-      margin-bottom: 24px;
+
+    /* Sections */
+    .settings-section {
+      margin-bottom: 32px;
     }
-    
+
+    .settings-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 16px 0;
+    }
+
+    /* Section 1: Email Input */
+    .chrome-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .detected-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .detected-email {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      font-family: monospace;
+    }
+
+    .button-use {
+      background-color: transparent;
+      color: #4CAF50;
+      border: none;
+      padding: 4px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .button-use:hover {
+      background-color: #e8f5e9;
+      text-decoration: underline;
+    }
+
+    .button-use:disabled {
+      color: #ccc;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    .form-group {
+      margin-bottom: 8px;
+    }
+
     label {
       display: block;
       font-weight: 500;
       margin-bottom: 8px;
       color: #333;
-      font-size: 16px;
+      font-size: 15px;
     }
-    
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    
-    .at-symbol {
-      position: absolute;
-      left: 12px;
-      color: #999;
-      font-size: 16px;
-      pointer-events: none;
-    }
-    
+
     input[type="text"] {
       width: 100%;
-      padding: 12px 12px 12px 32px;
+      padding: 12px;
       font-size: 16px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
@@ -79,45 +124,166 @@
       transition: border-color 0.2s;
       box-sizing: border-box;
     }
-    
+
     input[type="text"]:focus {
       border-color: #4CAF50;
     }
-    
+
     .help-text {
-      font-size: 14px;
-      color: #666;
+      font-size: 13px;
+      color: #888;
       margin-top: 8px;
     }
-    
-    .example {
-      background-color: #f8f9fa;
+
+    /* Section 2: Mode Table */
+    .mode-table {
+      display: flex;
+      gap: 16px;
+    }
+
+    .mode-column {
+      flex: 1;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      overflow: hidden;
+      opacity: 0.55;
+    }
+
+    .mode-column:hover {
+      opacity: 0.8;
+      border-color: #ccc;
+    }
+
+    .mode-column.selected {
+      border-color: #4CAF50;
+      opacity: 1;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
+    }
+
+    .mode-header {
+      font-size: 17px;
+      font-weight: 600;
+      text-align: center;
       padding: 16px;
-      border-radius: 8px;
-      margin-top: 16px;
-      font-size: 14px;
-    }
-    
-    .example-title {
-      font-weight: 500;
-      margin-bottom: 8px;
       color: #333;
+      background-color: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
     }
-    
-    .example-item {
-      margin: 4px 0;
-      color: #666;
-    }
-    
-    .example-email {
-      font-family: monospace;
+
+    .mode-column.selected .mode-header {
       background-color: #e8f5e9;
-      padding: 2px 6px;
-      border-radius: 4px;
       color: #2e7d32;
     }
-    
-    button {
+
+    .mode-row {
+      padding: 12px 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .mode-row:first-of-type {
+      border-top: none;
+    }
+
+    .row-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .row-value {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .row-value code {
+      font-family: monospace;
+      font-size: 13px;
+      background-color: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+
+    .mode-column.selected .row-value code {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Section 3: Examples */
+    .examples-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .example-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 48px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+    }
+
+    .example-row:last-child {
+      border-bottom: none;
+    }
+
+    .example-row:nth-child(odd) {
+      background-color: #fafafa;
+    }
+
+    .example-site {
+      font-size: 14px;
+      color: #666;
+      min-width: 120px;
+      font-weight: 500;
+    }
+
+    .example-arrow {
+      color: #ccc;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .example-email {
+      font-family: monospace;
+      font-size: 13px;
+      background-color: #e8f5e9;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #2e7d32;
+      word-break: break-all;
+      margin-left: auto;
+    }
+
+    /* Buttons */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    button[type="submit"] {
       padding: 12px 24px;
       font-size: 16px;
       font-weight: 500;
@@ -127,64 +293,34 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.2s;
-      margin-right: 12px;
     }
-    
-    button:hover {
+
+    button[type="submit"]:hover {
       background-color: #45a049;
     }
-    
-    button:active {
+
+    button[type="submit"]:active {
       background-color: #3d8b40;
     }
-    
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    
+
     .button-secondary {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
       background-color: #f5f5f5;
       color: #333;
       border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
-    
+
     .button-secondary:hover {
       background-color: #eeeeee;
       border-color: #d0d0d0;
     }
 
-    .import-row {
-      margin-top: 8px;
-    }
-
-    .button-import {
-      background-color: transparent;
-      color: #4CAF50;
-      border: none;
-      padding: 4px 0;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-right: 0;
-    }
-
-    .button-import:hover {
-      text-decoration: underline;
-    }
-
-    .button-import:disabled {
-      color: #ccc;
-      cursor: not-allowed;
-      text-decoration: none;
-    }
-
-    .chrome-email {
-      font-size: 13px;
-      color: #999;
-      margin-left: 4px;
-    }
-    
+    /* Status */
     .status {
       margin-top: 16px;
       padding: 12px;
@@ -193,41 +329,17 @@
       text-align: center;
       display: none;
     }
-    
+
     .status.success {
       background-color: #e8f5e9;
       color: #2e7d32;
       display: block;
     }
-    
+
     .status.error {
       background-color: #ffebee;
       color: #c62828;
       display: block;
-    }
-    
-    .preview-section {
-      margin-top: 32px;
-      padding-top: 32px;
-      border-top: 1px solid #e0e0e0;
-    }
-    
-    .preview-title {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 16px;
-      color: #333;
-    }
-    
-    .preview-box {
-      background-color: #f8f9fa;
-      padding: 16px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 16px;
-      text-align: center;
-      color: #666;
-      min-height: 24px;
     }
   </style>
 </head>
@@ -237,61 +349,123 @@
       <div class="icon"></div>
       Clean-Autofill Settings
     </h1>
-    <p class="subtitle">Configure your email domain for automatic email generation</p>
-    
+    <p class="subtitle">Configure your email for automatic email generation</p>
+
     <form id="settingsForm">
-      <div class="form-group">
-        <label for="emailDomain">Your Email Domain</label>
-        <div class="input-wrapper">
-          <span class="at-symbol">@</span>
+      <!-- Section 1: Provide Email Address -->
+      <section class="settings-section">
+        <h2>1. Provide Email Address</h2>
+        <div class="chrome-profile">
+          <span class="detected-label">Detected from Chrome Profile:</span>
+          <span class="detected-email" id="chromeProfileEmail">Not detected</span>
+          <button type="button" class="button-use" id="importChromeButton">Use this</button>
+        </div>
+        <div class="form-group">
+          <label for="emailInput">Your email address or domain</label>
           <input
             type="text"
-            id="emailDomain"
-            name="emailDomain"
-            placeholder="yourdomain.com"
+            id="emailInput"
+            name="emailInput"
+            placeholder="name@gmail.com or yourdomain.com"
             autocomplete="off"
-            aria-label="Your email domain"
-            aria-describedby="emailDomain-help"
-            maxlength="253"
+            aria-label="Your email address or domain"
+            maxlength="254"
           >
+          <p class="help-text">Enter a full email for <strong>Plus Addressing</strong> Mode or just a domain for <strong>Catch-All Prefix</strong> Mode.</p>
         </div>
-        <div class="import-row">
-          <button type="button" class="button-import" id="importChromeButton">
-            Import from Chrome profile
-          </button>
-          <span class="chrome-email" id="chromeProfileEmail"></span>
-        </div>
-        <p class="help-text" id="emailDomain-help">Enter your email domain without the @ symbol</p>
-        
-        <div class="example">
-          <div class="example-title">How it works:</div>
-          <div class="example-item">
-            When you visit <strong>example.com</strong>, the extension will generate:
-            <span class="example-email" id="exampleEmail">example.com@yourdomain.com</span>
+      </section>
+
+      <!-- Section 2: Select Mode -->
+      <section class="settings-section">
+        <h2>2. Select Mode</h2>
+        <div class="mode-table">
+          <div class="mode-column" id="colPlusAddressing" data-mode="plusAddressing">
+            <div class="mode-header">Plus Addressing</div>
+            <div class="mode-row">
+              <div class="row-label">Format</div>
+              <div class="row-value"><code id="plusFormat">name+site@gmail.com</code></div>
+            </div>
+            <div class="mode-row">
+              <div class="row-label">Requires</div>
+              <div class="row-value">Email provider with plus-address support</div>
+            </div>
+            <div class="mode-row">
+              <div class="row-label">Catch-All</div>
+              <div class="row-value">Not needed</div>
+            </div>
           </div>
-          <div class="example-item">
-            When you visit <strong>github.com</strong>, the extension will generate:
-            <span class="example-email" id="exampleEmail2">github.com@yourdomain.com</span>
+          <div class="mode-column" id="colCatchAll" data-mode="catchAll">
+            <div class="mode-header">Catch-All Prefix</div>
+            <div class="mode-row">
+              <div class="row-label">Format</div>
+              <div class="row-value"><code id="catchAllFormat">site@yourdomain.com</code></div>
+            </div>
+            <div class="mode-row">
+              <div class="row-label">Requires</div>
+              <div class="row-value">Own domain with email hosting</div>
+            </div>
+            <div class="mode-row">
+              <div class="row-label">Catch-All</div>
+              <div class="row-value">Required</div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div>
+        <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
+        <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
+      </section>
+
+      <!-- Section 3: Examples -->
+      <section class="settings-section">
+        <h2>3. Examples</h2>
+        <div class="examples-list">
+          <div class="example-row">
+            <span class="example-site">wikipedia.org</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="wikipedia.org"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">amazon.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="amazon.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">zalando.de</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="zalando.de"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">cloudflare.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="cloudflare.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">ui.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="ui.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">claude.ai</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="claude.ai"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">netflix.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="netflix.com"></code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Save / Clear -->
+      <div class="button-row">
         <button type="submit">Save Settings</button>
         <button type="button" class="button-secondary" id="clearButton">Clear</button>
       </div>
-      
+
       <div id="status" class="status" role="alert" aria-live="polite"></div>
     </form>
-    
-    <div class="preview-section">
-      <div class="preview-title">Current Email Preview</div>
-      <div id="previewBox" class="preview-box">
-        No domain set
-      </div>
-    </div>
   </div>
-  
+
   <script type="module" src="utils.js"></script>
   <script type="module" src="options.js"></script>
 </body>

@@ -1,6 +1,6 @@
 // Import shared utilities as ES module
 
-import type { FillEmailResponse } from './types';
+import type { EmailMode, FillEmailResponse } from './types';
 import { createTimeout, extractMainDomain } from './utils.js';
 
 // Message timeout in milliseconds
@@ -18,7 +18,7 @@ chrome.action.onClicked.addListener(async (tab) => {
         type: 'basic',
         iconUrl: 'icons/icon48.png',
         title: 'Clean-Autofill',
-        message: 'Please set your email domain in extension options first.',
+        message: 'Please configure your email in extension options first.',
       });
 
       // Open options page
@@ -92,18 +92,25 @@ chrome.action.onClicked.addListener(async (tab) => {
  * @throws Error if unable to read settings or parse the tab URL
  */
 async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<string | null> {
-  // Get user's email domain from storage with error handling
+  // Get user settings from storage
+  let mode: EmailMode;
   let userDomain: string | undefined;
+  let baseEmail: string | undefined;
   try {
-    const result = await chrome.storage.sync.get(['emailDomain']);
+    const result = await chrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    mode = (result.emailMode as EmailMode) ?? 'catchAll';
     userDomain = result.emailDomain as string | undefined;
+    baseEmail = result.baseEmail as string | undefined;
   } catch (error) {
     console.error('Failed to read storage:', error);
     throw new Error('Unable to read settings. Please try again.');
   }
 
-  if (!userDomain) {
-    return null; // No domain configured
+  // Check required config for active mode
+  if (mode === 'plusAddressing') {
+    if (!baseEmail || !baseEmail.includes('@')) return null;
+  } else {
+    if (!userDomain) return null;
   }
 
   // Extract domain from tab URL
@@ -118,11 +125,16 @@ async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<string | null>
 
   try {
     const url = new URL(tab.url);
-    // Extract only the main domain (without subdomains)
-    const domain = extractMainDomain(url.hostname);
+    const siteDomain = extractMainDomain(url.hostname);
 
-    // Generate email
-    return `${domain}@${userDomain}`;
+    if (mode === 'plusAddressing') {
+      const atIndex = (baseEmail as string).lastIndexOf('@');
+      const localPart = (baseEmail as string).substring(0, atIndex);
+      const emailDomain = (baseEmail as string).substring(atIndex + 1);
+      return `${localPart}+${siteDomain}@${emailDomain}`;
+    }
+
+    return `${siteDomain}@${userDomain}`;
   } catch {
     throw new Error('Unable to parse current website URL');
   }

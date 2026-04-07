@@ -59,6 +59,45 @@ function generateExampleEmail(siteDomain: string, userDomain: string): string {
   return `${siteDomain}@${userDomain}`;
 }
 
+// Plus addressing generation - mirrors options.ts logic
+function generatePlusAddressEmail(siteDomain: string, baseEmail: string): string | null {
+  const trimmed = baseEmail.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex <= 0 || atIndex === trimmed.length - 1) return null;
+  const localPart = trimmed.substring(0, atIndex);
+  const domain = trimmed.substring(atIndex + 1);
+  return `${localPart}+${siteDomain}@${domain}`;
+}
+
+// Base email validation - mirrors options.ts logic
+function isValidBaseEmail(email: string): boolean {
+  const trimmed = email.trim();
+  if (!trimmed) return false;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex <= 0 || atIndex === trimmed.length - 1) return false;
+  const domain = trimmed.substring(atIndex + 1);
+  return domainRegex.test(domain);
+}
+
+// Domain extraction from email - mirrors extractDomainFromEmail in options.ts
+function extractDomainFromEmail(email: string): string | null {
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
+  return trimmed.substring(atIndex + 1);
+}
+
+// Local part extraction - mirrors extractLocalPart in options.ts
+function extractLocalPart(email: string): string | null {
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex <= 0) return null;
+  return trimmed.substring(0, atIndex);
+}
+
 describe('domain validation', () => {
   describe('valid domains', () => {
     test('accepts simple domain', () => {
@@ -70,7 +109,6 @@ describe('domain validation', () => {
     });
 
     test('accepts domain with multiple subdomains', () => {
-      // Multiple subdomains work correctly
       expect(isValidDomain('sub.mail.example.com')).toBe(true);
     });
 
@@ -160,7 +198,7 @@ describe('cleanDomain', () => {
   });
 });
 
-describe('generateExampleEmail', () => {
+describe('generateExampleEmail (catch-all)', () => {
   test('generates correct email format', () => {
     expect(generateExampleEmail('google.com', 'mydomain.com')).toBe('google.com@mydomain.com');
   });
@@ -176,41 +214,97 @@ describe('generateExampleEmail', () => {
   });
 });
 
-describe('chrome storage mock', () => {
-  beforeEach(() => {
-    // Clear mock storage
-    for (const key of Object.keys(mockStorage)) {
-      delete mockStorage[key];
+describe('generatePlusAddressEmail', () => {
+  test('generates correct plus-addressed email', () => {
+    expect(generatePlusAddressEmail('zalando.de', 'name@gmail.com')).toBe(
+      'name+zalando.de@gmail.com',
+    );
+  });
+
+  test('works with company email', () => {
+    expect(generatePlusAddressEmail('salesforce.com', 'employee@company.com')).toBe(
+      'employee+salesforce.com@company.com',
+    );
+  });
+
+  test('handles local part with dots', () => {
+    expect(generatePlusAddressEmail('amazon.com', 'first.last@gmail.com')).toBe(
+      'first.last+amazon.com@gmail.com',
+    );
+  });
+
+  test('works with all 7 example sites', () => {
+    const sites = [
+      'wikipedia.org',
+      'amazon.com',
+      'zalando.de',
+      'cloudflare.com',
+      'ui.com',
+      'claude.ai',
+      'netflix.com',
+    ];
+    for (const site of sites) {
+      const result = generatePlusAddressEmail(site, 'name@gmail.com');
+      expect(result).toBe(`name+${site}@gmail.com`);
     }
   });
 
-  test('can set and get values', async () => {
-    await mockChrome.storage.sync.set({ emailDomain: 'test.com' });
-    const result = await mockChrome.storage.sync.get(['emailDomain']);
-    expect(result.emailDomain).toBe('test.com');
+  test('returns null for empty base email', () => {
+    expect(generatePlusAddressEmail('example.com', '')).toBeNull();
   });
 
-  test('returns empty object for missing keys', async () => {
-    const result = await mockChrome.storage.sync.get(['nonexistent']);
-    expect(result).toEqual({});
+  test('returns null for base email without @', () => {
+    expect(generatePlusAddressEmail('example.com', 'invalid-email')).toBeNull();
   });
 
-  test('can remove values', async () => {
-    await mockChrome.storage.sync.set({ emailDomain: 'test.com' });
-    await mockChrome.storage.sync.remove(['emailDomain']);
-    const result = await mockChrome.storage.sync.get(['emailDomain']);
-    expect(result).toEqual({});
+  test('returns null for base email starting with @', () => {
+    expect(generatePlusAddressEmail('example.com', '@gmail.com')).toBeNull();
+  });
+
+  test('returns null for base email ending with @', () => {
+    expect(generatePlusAddressEmail('example.com', 'name@')).toBeNull();
+  });
+
+  test('trims whitespace', () => {
+    expect(generatePlusAddressEmail('example.com', '  name@gmail.com  ')).toBe(
+      'name+example.com@gmail.com',
+    );
   });
 });
 
-// Domain extraction from email - mirrors extractDomainFromEmail in options.ts
-function extractDomainFromEmail(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return null;
-  const atIndex = trimmed.lastIndexOf('@');
-  if (atIndex === -1 || atIndex === 0 || atIndex === trimmed.length - 1) return null;
-  return trimmed.substring(atIndex + 1);
-}
+describe('isValidBaseEmail', () => {
+  test('accepts valid email', () => {
+    expect(isValidBaseEmail('user@example.com')).toBe(true);
+  });
+
+  test('accepts email with dots in local part', () => {
+    expect(isValidBaseEmail('first.last@example.com')).toBe(true);
+  });
+
+  test('accepts email with plus in local part', () => {
+    expect(isValidBaseEmail('user+tag@example.com')).toBe(true);
+  });
+
+  test('rejects empty string', () => {
+    expect(isValidBaseEmail('')).toBe(false);
+  });
+
+  test('rejects email without @', () => {
+    expect(isValidBaseEmail('invalid-email')).toBe(false);
+  });
+
+  test('rejects email with invalid domain', () => {
+    expect(isValidBaseEmail('user@localhost')).toBe(false);
+  });
+
+  test('rejects email with no local part', () => {
+    expect(isValidBaseEmail('@example.com')).toBe(false);
+  });
+
+  test('rejects email ending with @', () => {
+    expect(isValidBaseEmail('user@')).toBe(false);
+  });
+});
 
 describe('extractDomainFromEmail', () => {
   test('extracts domain from standard email', () => {
@@ -254,6 +348,90 @@ describe('extractDomainFromEmail', () => {
   });
 });
 
+describe('extractLocalPart', () => {
+  test('extracts local part from standard email', () => {
+    expect(extractLocalPart('user@example.com')).toBe('user');
+  });
+
+  test('extracts local part with dots', () => {
+    expect(extractLocalPart('first.last@example.com')).toBe('first.last');
+  });
+
+  test('extracts local part with plus', () => {
+    expect(extractLocalPart('user+tag@example.com')).toBe('user+tag');
+  });
+
+  test('returns null for empty string', () => {
+    expect(extractLocalPart('')).toBeNull();
+  });
+
+  test('returns null for string without @', () => {
+    expect(extractLocalPart('no-at-symbol')).toBeNull();
+  });
+
+  test('returns null for string starting with @', () => {
+    expect(extractLocalPart('@domain.com')).toBeNull();
+  });
+
+  test('handles multiple @ by using last one', () => {
+    expect(extractLocalPart('weird@local@domain.com')).toBe('weird@local');
+  });
+});
+
+describe('chrome storage mock', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(mockStorage)) {
+      delete mockStorage[key];
+    }
+  });
+
+  test('can set and get emailDomain', async () => {
+    await mockChrome.storage.sync.set({ emailDomain: 'test.com' });
+    const result = await mockChrome.storage.sync.get(['emailDomain']);
+    expect(result.emailDomain).toBe('test.com');
+  });
+
+  test('can set and get emailMode', async () => {
+    await mockChrome.storage.sync.set({ emailMode: 'plusAddressing' });
+    const result = await mockChrome.storage.sync.get(['emailMode']);
+    expect(result.emailMode).toBe('plusAddressing');
+  });
+
+  test('can set and get baseEmail', async () => {
+    await mockChrome.storage.sync.set({ baseEmail: 'name@gmail.com' });
+    const result = await mockChrome.storage.sync.get(['baseEmail']);
+    expect(result.baseEmail).toBe('name@gmail.com');
+  });
+
+  test('can get all three keys at once', async () => {
+    await mockChrome.storage.sync.set({
+      emailMode: 'plusAddressing',
+      baseEmail: 'name@gmail.com',
+      emailDomain: 'old.com',
+    });
+    const result = await mockChrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    expect(result.emailMode).toBe('plusAddressing');
+    expect(result.baseEmail).toBe('name@gmail.com');
+    expect(result.emailDomain).toBe('old.com');
+  });
+
+  test('returns empty object for missing keys', async () => {
+    const result = await mockChrome.storage.sync.get(['nonexistent']);
+    expect(result).toEqual({});
+  });
+
+  test('can remove all settings keys', async () => {
+    await mockChrome.storage.sync.set({
+      emailMode: 'plusAddressing',
+      baseEmail: 'name@gmail.com',
+      emailDomain: 'old.com',
+    });
+    await mockChrome.storage.sync.remove(['emailDomain', 'emailMode', 'baseEmail']);
+    const result = await mockChrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    expect(result).toEqual({});
+  });
+});
+
 describe('chrome profile import', () => {
   beforeEach(() => {
     mockChrome.identity.getProfileUserInfo = mock(async () => ({
@@ -266,6 +444,14 @@ describe('chrome profile import', () => {
     const userInfo = await mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
     const domain = extractDomainFromEmail(userInfo.email);
     expect(domain).toBe('example.com');
+  });
+
+  test('extracts full email for plus addressing mode', async () => {
+    const userInfo = await mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+    expect(userInfo.email).toBe('user@example.com');
+    // In plus addressing mode, the full email is used directly
+    const plusEmail = generatePlusAddressEmail('zalando.de', userInfo.email);
+    expect(plusEmail).toBe('user+zalando.de@example.com');
   });
 
   test('handles empty email (not signed in)', async () => {
@@ -289,7 +475,6 @@ describe('chrome profile import', () => {
 });
 
 describe('status message types', () => {
-  // Test the status message class logic
   function getStatusClass(type: 'success' | 'error'): string {
     return `status ${type}`;
   }

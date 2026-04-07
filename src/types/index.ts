@@ -1,3 +1,5 @@
+export type EmailMode = 'catchAll' | 'plusAddressing';
+
 /**
  * Interface for shared utility functions exposed globally for use across extension contexts.
  */

@@ -1,7 +1,6 @@
-// Access shared utilities (loaded via script tag in options.html)
-import type { CleanAutofillUtils } from './types';
+import type { CleanAutofillUtils, EmailMode } from './types';
 
-const { extractMainDomain, debounce } =
+const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
 
 export function extractDomainFromEmail(email: string): string | null {
@@ -12,111 +11,201 @@ export function extractDomainFromEmail(email: string): string | null {
   return trimmed.substring(atIndex + 1);
 }
 
+export function extractLocalPart(email: string): string | null {
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+  const atIndex = trimmed.lastIndexOf('@');
+  if (atIndex <= 0) return null;
+  return trimmed.substring(0, atIndex);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settingsForm');
-  const emailDomainInput = document.getElementById('emailDomain');
+  const emailInput = document.getElementById('emailInput');
   const statusDiv = document.getElementById('status');
   const clearButton = document.getElementById('clearButton');
   const importChromeButton = document.getElementById('importChromeButton');
   const chromeProfileEmail = document.getElementById('chromeProfileEmail');
-  const previewBox = document.getElementById('previewBox');
-  const exampleEmail = document.getElementById('exampleEmail');
-  const exampleEmail2 = document.getElementById('exampleEmail2');
+  const colPlusAddressing = document.getElementById('colPlusAddressing');
+  const colCatchAll = document.getElementById('colCatchAll');
+  const modePlusAddressing = document.getElementById('modePlusAddressing');
+  const modeCatchAll = document.getElementById('modeCatchAll');
+  const plusFormat = document.getElementById('plusFormat');
+  const catchAllFormat = document.getElementById('catchAllFormat');
 
-  // Verify all required DOM elements exist
   if (
     !form ||
-    !emailDomainInput ||
+    !emailInput ||
     !statusDiv ||
     !clearButton ||
     !importChromeButton ||
     !chromeProfileEmail ||
-    !previewBox ||
-    !exampleEmail ||
-    !exampleEmail2
+    !colPlusAddressing ||
+    !colCatchAll ||
+    !modePlusAddressing ||
+    !modeCatchAll ||
+    !plusFormat ||
+    !catchAllFormat
   ) {
     console.error('Required DOM elements not found');
     return;
   }
 
-  // Type-safe references after null check
   const formEl = form as HTMLFormElement;
-  const emailInput = emailDomainInput as HTMLInputElement;
+  const input = emailInput as HTMLInputElement;
   const statusEl = statusDiv as HTMLDivElement;
   const clearBtn = clearButton as HTMLButtonElement;
   const importBtn = importChromeButton as HTMLButtonElement;
   const profileEmailEl = chromeProfileEmail as HTMLSpanElement;
-  const previewEl = previewBox as HTMLDivElement;
-  const example1 = exampleEmail as HTMLSpanElement;
-  const example2 = exampleEmail2 as HTMLSpanElement;
+  const colPlus = colPlusAddressing as HTMLDivElement;
+  const colCatch = colCatchAll as HTMLDivElement;
+  const radioPlus = modePlusAddressing as HTMLInputElement;
+  const radioCatch = modeCatchAll as HTMLInputElement;
+  const plusFormatEl = plusFormat as HTMLElement;
+  const catchAllFormatEl = catchAllFormat as HTMLElement;
 
-  /**
-   * Load saved settings from Chrome sync storage and update the UI.
-   */
+  const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
+
+  function getMode(): EmailMode {
+    return radioPlus.checked ? 'plusAddressing' : 'catchAll';
+  }
+
+  function setMode(mode: EmailMode): void {
+    if (mode === 'plusAddressing') {
+      radioPlus.checked = true;
+      radioCatch.checked = false;
+      colPlus.classList.add('selected');
+      colCatch.classList.remove('selected');
+    } else {
+      radioCatch.checked = true;
+      radioPlus.checked = false;
+      colCatch.classList.add('selected');
+      colPlus.classList.remove('selected');
+    }
+    updateFormatDisplay();
+    updateExamples();
+  }
+
+  function updateFormatDisplay(): void {
+    const value = input.value.trim();
+    const mode = getMode();
+
+    if (mode === 'plusAddressing') {
+      const localPart = extractLocalPart(value) || 'name';
+      const domain = extractDomainFromEmail(value) || 'gmail.com';
+      plusFormatEl.textContent = `${localPart}+site@${domain}`;
+    } else {
+      const domain = value.includes('@')
+        ? extractDomainFromEmail(value) || value
+        : value || 'yourdomain.com';
+      catchAllFormatEl.textContent = `site@${domain}`;
+    }
+  }
+
+  function updateExamples(): void {
+    const value = input.value.trim();
+    const mode = getMode();
+
+    for (let i = 0; i < exampleEls.length; i++) {
+      const el = exampleEls[i];
+      const site = el.dataset.site;
+      if (!site) continue;
+
+      if (mode === 'plusAddressing') {
+        const localPart = extractLocalPart(value) || 'name';
+        const domain = extractDomainFromEmail(value) || 'gmail.com';
+        el.textContent = `${localPart}+${site}@${domain}`;
+      } else {
+        const domain = value.includes('@')
+          ? extractDomainFromEmail(value) || value
+          : value || 'yourdomain.com';
+        el.textContent = `${site}@${domain}`;
+      }
+    }
+  }
+
   async function loadSettings(): Promise<void> {
     try {
-      const result = await chrome.storage.sync.get(['emailDomain']);
-      if (result.emailDomain) {
-        emailInput.value = result.emailDomain as string;
-        await updatePreview();
-        updateExamples();
+      const result = await chrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+      const mode: EmailMode = (result.emailMode as EmailMode) ?? 'catchAll';
+
+      if (mode === 'plusAddressing' && result.baseEmail) {
+        input.value = result.baseEmail as string;
+      } else if (result.emailDomain) {
+        input.value = result.emailDomain as string;
       }
+
+      setMode(mode);
     } catch (error) {
       console.error('Failed to load settings:', error);
       showStatus('Failed to load settings', 'error');
     }
   }
 
-  /**
-   * Validate and save settings to Chrome sync storage.
-   * @param e - The form submit event
-   */
+  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+
   async function saveSettings(e: Event): Promise<void> {
     e.preventDefault();
 
-    const domain = emailInput.value.trim();
+    const value = input.value.trim();
+    const mode = getMode();
 
-    // Validate domain
-    if (!domain) {
-      showStatus('Please enter a domain', 'error');
+    if (!value) {
+      showStatus('Please enter your email address or domain', 'error');
       return;
     }
 
-    // Remove @ if user included it
-    const cleanDomain = domain.replace(/^@/, '');
+    if (mode === 'plusAddressing') {
+      const localPart = extractLocalPart(value);
+      const domain = extractDomainFromEmail(value);
 
-    // Improved domain validation - allows single-char labels
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
-    if (!domainRegex.test(cleanDomain)) {
-      showStatus('Please enter a valid domain (e.g., example.com)', 'error');
-      return;
-    }
+      if (!localPart || !domain) {
+        showStatus('Please enter a valid email address (e.g., name@gmail.com)', 'error');
+        return;
+      }
 
-    try {
-      await chrome.storage.sync.set({ emailDomain: cleanDomain });
-      emailInput.value = cleanDomain;
-      showStatus('Settings saved successfully!', 'success');
-      await updatePreview();
-      updateExamples();
-    } catch (error) {
-      showStatus(
-        `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'error',
-      );
+      if (!domainRegex.test(domain)) {
+        showStatus('The email domain is not valid', 'error');
+        return;
+      }
+
+      try {
+        await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: value });
+        showStatus('Settings saved successfully!', 'success');
+      } catch (error) {
+        showStatus(
+          `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'error',
+        );
+      }
+    } else {
+      const cleanDomain = value.replace(/^@/, '');
+
+      if (!domainRegex.test(cleanDomain)) {
+        showStatus('Please enter a valid domain (e.g., yourdomain.com)', 'error');
+        return;
+      }
+
+      try {
+        await chrome.storage.sync.set({ emailMode: 'catchAll', emailDomain: cleanDomain });
+        input.value = cleanDomain;
+        showStatus('Settings saved successfully!', 'success');
+      } catch (error) {
+        showStatus(
+          `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'error',
+        );
+      }
     }
   }
 
-  /**
-   * Clear saved settings from Chrome sync storage after user confirmation.
-   */
   async function clearSettings(): Promise<void> {
-    if (confirm('Are you sure you want to clear your email domain?')) {
+    if (confirm('Are you sure you want to clear your settings?')) {
       try {
-        await chrome.storage.sync.remove(['emailDomain']);
-        emailInput.value = '';
+        await chrome.storage.sync.remove(['emailDomain', 'emailMode', 'baseEmail']);
+        input.value = '';
+        setMode('catchAll');
         showStatus('Settings cleared', 'success');
-        await updatePreview();
-        updateExamples();
       } catch (error) {
         showStatus(
           `Error clearing settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -130,11 +219,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
       if (userInfo.email) {
-        profileEmailEl.textContent = `(${userInfo.email})`;
+        profileEmailEl.textContent = userInfo.email;
         return userInfo.email;
       }
     } catch {
-      // Silently fail — the button still works, just without the email hint
+      // Silently fail
     }
     return null;
   }
@@ -149,18 +238,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      profileEmailEl.textContent = `(${userInfo.email})`;
-
-      const domain = extractDomainFromEmail(userInfo.email);
-      if (!domain) {
-        showStatus('Could not extract domain from profile email', 'error');
-        return;
-      }
-
-      emailInput.value = domain;
-      await updatePreview();
+      profileEmailEl.textContent = userInfo.email;
+      input.value = userInfo.email;
+      updateFormatDisplay();
       updateExamples();
-      showStatus('Domain imported — click Save to keep it', 'success');
+      showStatus('Email imported — click Save to keep it', 'success');
     } catch (error) {
       showStatus(
         `Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -171,71 +253,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  /**
-   * Display a status message to the user that auto-hides after 3 seconds.
-   * @param message - The message to display
-   * @param type - The message type ('success' or 'error')
-   */
   function showStatus(message: string, type: 'success' | 'error'): void {
     statusEl.textContent = message;
     statusEl.className = `status ${type}`;
 
-    // Hide status after 3 seconds
     setTimeout(() => {
       statusEl.className = 'status';
     }, 3000);
   }
 
-  /**
-   * Update the email preview based on the current tab's domain and user's configured domain.
-   */
-  async function updatePreview(): Promise<void> {
-    const domain = emailInput.value.trim();
-    if (!domain) {
-      previewEl.textContent = 'No domain set';
-      return;
-    }
-
-    try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs[0]?.url) {
-        try {
-          const url = new URL(tabs[0].url);
-          const currentDomain = extractMainDomain
-            ? extractMainDomain(url.hostname)
-            : url.hostname.replace(/^www\./, '');
-          previewEl.textContent = `${currentDomain}@${domain}`;
-        } catch {
-          previewEl.textContent = `example.com@${domain}`;
-        }
-      } else {
-        previewEl.textContent = `example.com@${domain}`;
-      }
-    } catch {
-      previewEl.textContent = `example.com@${domain}`;
-    }
-  }
-
-  /**
-   * Update the example email displays with the current domain setting.
-   */
-  function updateExamples(): void {
-    const domain = emailInput.value.trim() || 'yourdomain.com';
-    // Show examples with main domains only (no subdomains)
-    example1.textContent = `google.com@${domain}`;
-    example2.textContent = `github.com@${domain}`;
-  }
-
-  /**
-   * Debounced version of preview update to avoid excessive updates during typing.
-   */
-  const debouncedUpdatePreview = debounce
-    ? debounce(async () => {
-        await updatePreview();
+  const debouncedUpdate = debounce
+    ? debounce(() => {
+        updateFormatDisplay();
         updateExamples();
       }, 300)
-    : async () => {
-        await updatePreview();
+    : () => {
+        updateFormatDisplay();
         updateExamples();
       };
 
@@ -243,7 +276,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   formEl.addEventListener('submit', saveSettings);
   clearBtn.addEventListener('click', clearSettings);
   importBtn.addEventListener('click', importFromChrome);
-  emailInput.addEventListener('input', debouncedUpdatePreview);
+  input.addEventListener('input', debouncedUpdate);
+
+  colPlus.addEventListener('click', () => setMode('plusAddressing'));
+  colCatch.addEventListener('click', () => setMode('catchAll'));
 
   // Initialize
   await loadSettings();
