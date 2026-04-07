@@ -172,12 +172,16 @@
       border-color: #e0e0e0;
     }
 
+    .messages-area {
+      margin-bottom: 24px;
+    }
+
     .mode-feedback {
       padding: 8px 16px;
-      font-size: 12px;
+      font-size: 13px;
       text-align: center;
-      min-height: 16px;
-      border-top: 1px solid #f0f0f0;
+      border-radius: 6px;
+      margin-top: 8px;
     }
 
     .mode-feedback:empty {
@@ -191,7 +195,6 @@
     .mode-feedback.feedback-warning {
       color: #e65100;
       background-color: #fff3e0;
-      border-top: 1px solid #ffe0b2;
     }
 
     .mode-header {
@@ -393,7 +396,6 @@
           <button type="button" class="button-use" id="importChromeButton">Use this</button>
         </div>
         <div class="form-group">
-          <label for="emailInput">Your email address or domain</label>
           <input
             type="text"
             id="emailInput"
@@ -425,7 +427,6 @@
               <div class="row-label">Catch-All</div>
               <div class="row-value">Not needed</div>
             </div>
-            <div class="mode-feedback" id="plusFeedback"></div>
           </div>
           <div class="mode-column" id="colCatchAll" data-mode="catchAll">
             <div class="mode-header">Catch-All Prefix</div>
@@ -441,12 +442,17 @@
               <div class="row-label">Catch-All</div>
               <div class="row-value">Required</div>
             </div>
-            <div class="mode-feedback" id="catchAllFeedback"></div>
           </div>
         </div>
         <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
         <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
       </section>
+
+      <div class="messages-area">
+        <div class="mode-feedback" id="plusFeedback"></div>
+        <div class="mode-feedback" id="catchAllFeedback"></div>
+        <div id="status" class="status" role="alert" aria-live="polite"></div>
+      </div>
 
       <!-- Section 3: Examples -->
       <section class="settings-section">
@@ -495,8 +501,6 @@
         <button type="submit">Save Settings</button>
         <button type="button" class="button-secondary" id="clearButton">Clear</button>
       </div>
-
-      <div id="status" class="status" role="alert" aria-live="polite"></div>
     </form>
   </div>
 

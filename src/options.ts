@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Catch-All column — disabled for known providers
     if (status === 'plus-supported' || status === 'plus-unsupported') {
-      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', `You don't own ${domain}`);
+      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', `Not available for ${domain}`);
       if (getMode() === 'catchAll') setMode('plusAddressing');
     } else {
       setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
