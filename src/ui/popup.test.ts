@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import type { GenerateAndFillResponse } from './types';
+import type { GenerateAndFillResponse } from '../types';
 
 // Mock chrome API
 let sendMessageRequest: Record<string, unknown> | null = null;

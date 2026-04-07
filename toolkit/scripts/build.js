@@ -14,8 +14,8 @@ console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 const requiredSourceFiles = [
     'src/background.ts',
     'src/content.ts',
-    'src/options.ts',
-    'src/popup.ts',
+    'src/ui/options.ts',
+    'src/ui/popup.ts',
     'src/provider-domains.ts',
     'src/providers.ts',
     'src/utils.ts',
@@ -82,7 +82,7 @@ if (usesESModules) {
     console.log('\n🔧 ES modules enabled - processing scripts...');
 
     // Strip exports from content script files (they use globalThis pattern)
-    const contentScriptFiles = ['content.js', 'options.js', 'popup.js'];
+    const contentScriptFiles = ['content.js', 'ui/options.js', 'ui/popup.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -100,7 +100,7 @@ if (usesESModules) {
 } else {
     // Strip ES module exports for classic script compatibility
     console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
-    const jsFiles = ['background.js', 'content.js', 'utils.js', 'options.js'];
+    const jsFiles = ['background.js', 'content.js', 'utils.js', 'ui/options.js'];
     for (const file of jsFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -123,13 +123,13 @@ console.log('\n📁 Copying static assets...');
 fs.copyFileSync(path.join(ROOT, 'manifest.json'), path.join(DIST, 'manifest.json'));
 console.log('  ✅ manifest.json');
 
-// Copy options.html
-fs.copyFileSync(path.join(SRC, 'options.html'), path.join(DIST, 'options.html'));
-console.log('  ✅ options.html');
-
-// Copy popup.html
-fs.copyFileSync(path.join(SRC, 'popup.html'), path.join(DIST, 'popup.html'));
-console.log('  ✅ popup.html');
+// Copy UI HTML files
+const uiDir = path.join(DIST, 'ui');
+fs.mkdirSync(uiDir, { recursive: true });
+fs.copyFileSync(path.join(SRC, 'ui', 'options.html'), path.join(uiDir, 'options.html'));
+console.log('  ✅ ui/options.html');
+fs.copyFileSync(path.join(SRC, 'ui', 'popup.html'), path.join(uiDir, 'popup.html'));
+console.log('  ✅ ui/popup.html');
 
 // Copy icons
 const iconsDir = path.join(DIST, 'icons');
@@ -145,15 +145,15 @@ console.log('\n📋 Verifying compiled files:');
 const requiredCompiledFiles = [
     'background.js',
     'content.js',
-    'options.js',
-    'popup.js',
     'provider-domains.js',
     'providers.js',
     'utils.js',
     'utils-content.js',
     'manifest.json',
-    'options.html',
-    'popup.html',
+    'ui/options.js',
+    'ui/options.html',
+    'ui/popup.js',
+    'ui/popup.html',
     'icons/icon16.png',
     'icons/icon32.png',
     'icons/icon48.png',

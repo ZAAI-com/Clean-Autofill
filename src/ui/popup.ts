@@ -1,4 +1,4 @@
-import type { GenerateAndFillResponse } from './types';
+import type { GenerateAndFillResponse } from '../types';
 
 const loading = document.getElementById('loading') as HTMLDivElement;
 const result = document.getElementById('result') as HTMLDivElement;

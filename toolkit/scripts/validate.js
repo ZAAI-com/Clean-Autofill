@@ -75,9 +75,9 @@ console.log('\n📏 Checking file sizes:');
 const files = [
     { path: 'dist/background.js', maxSize: 1024 * 200 }, // 200KB (bundled)
     { path: 'dist/content.js', maxSize: 1024 * 200 },    // 200KB (bundled)
-    { path: 'dist/options.js', maxSize: 1024 * 100 },    // 100KB
-    { path: 'dist/popup.js', maxSize: 1024 * 50 },      // 50KB
-    { path: 'src/options.html', maxSize: 1024 * 50 },    // 50KB
+    { path: 'dist/ui/options.js', maxSize: 1024 * 100 },  // 100KB
+    { path: 'dist/ui/popup.js', maxSize: 1024 * 50 },    // 50KB
+    { path: 'src/ui/options.html', maxSize: 1024 * 50 },  // 50KB
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {
@@ -116,7 +116,7 @@ iconSizes.forEach(size => {
 console.log('\n🔎 Checking for common issues:');
 
 // Check for console.log in production code (check TypeScript source files)
-const tsFiles = ['src/background.ts', 'src/content.ts', 'src/options.ts', 'src/popup.ts'];
+const tsFiles = ['src/background.ts', 'src/content.ts', 'src/ui/options.ts', 'src/ui/popup.ts'];
 tsFiles.forEach(file => {
     const filePath = path.join(__dirname, '../..', file);
     if (fs.existsSync(filePath)) {

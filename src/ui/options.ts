@@ -3,8 +3,8 @@ import {
   extractDomainFromEmail,
   extractLocalPart,
   getProviderStatus,
-} from './providers.js';
-import type { CleanAutofillUtils, EmailMode } from './types';
+} from '../providers.js';
+import type { CleanAutofillUtils, EmailMode } from '../types';
 
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};

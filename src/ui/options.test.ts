@@ -6,11 +6,11 @@ import {
   getProviderStatus,
   PLUS_SUPPORTED_DOMAINS,
   PLUS_UNSUPPORTED_DOMAINS,
-} from './providers.js';
+} from '../providers.js';
 
 // Load utils first
 beforeAll(async () => {
-  await import('./utils.js');
+  await import('../utils.js');
 });
 
 // Mock chrome API
