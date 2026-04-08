@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settingsForm');
   const emailInput = document.getElementById('emailInput');
   const statusDiv = document.getElementById('status');
-  const clearButton = document.getElementById('clearButton');
   const chromeProfileEmail = document.getElementById('chromeProfileEmail');
   const colPlusAddressing = document.getElementById('colPlusAddressing');
   const colCatchAll = document.getElementById('colCatchAll');
@@ -58,8 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modeCatchAll = document.getElementById('modeCatchAll');
   const plusFormat = document.getElementById('plusFormat');
   const catchAllFormat = document.getElementById('catchAllFormat');
-  const plusFeedback = document.getElementById('plusFeedback');
-  const catchAllFeedback = document.getElementById('catchAllFeedback');
+  const modeFeedback = document.getElementById('modeFeedback');
   const providerDetected = document.getElementById('providerDetected');
   const providerText = document.getElementById('providerText');
   const providerPlaceholder = document.getElementById('providerPlaceholder');
@@ -81,7 +79,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     !form ||
     !emailInput ||
     !statusDiv ||
-    !clearButton ||
     !chromeProfileEmail ||
     !colPlusAddressing ||
     !colCatchAll ||
@@ -89,8 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     !modeCatchAll ||
     !plusFormat ||
     !catchAllFormat ||
-    !plusFeedback ||
-    !catchAllFeedback ||
+    !modeFeedback ||
     !providerDetected ||
     !providerText ||
     !providerPlaceholder ||
@@ -115,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formEl = form as HTMLFormElement;
   const input = emailInput as HTMLInputElement;
   const statusEl = statusDiv as HTMLDivElement;
-  const clearBtn = clearButton as HTMLButtonElement;
   const profileEmailEl = chromeProfileEmail as HTMLSpanElement;
   const colPlus = colPlusAddressing as HTMLDivElement;
   const colCatch = colCatchAll as HTMLDivElement;
@@ -123,8 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const radioCatch = modeCatchAll as HTMLInputElement;
   const plusFormatEl = plusFormat as HTMLElement;
   const catchAllFormatEl = catchAllFormat as HTMLElement;
-  const plusFeedbackEl = plusFeedback as HTMLDivElement;
-  const catchAllFeedbackEl = catchAllFeedback as HTMLDivElement;
+  const modeFeedbackEl = modeFeedback as HTMLDivElement;
   const providerDetectedEl = providerDetected as HTMLDivElement;
   const providerTextEl = providerText as HTMLSpanElement;
   const providerPlaceholderEl = providerPlaceholder as HTMLSpanElement;
@@ -144,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let currentLookupDomain: string | null = null;
   let currentDetectedProvider: DetectedProvider | null = null;
+  let isLoading = true;
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
 
@@ -304,26 +299,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateFormatDisplay();
     updateExamples();
+    saveSettings();
   }
 
-  function setColumnState(
-    col: HTMLDivElement,
-    feedbackEl: HTMLDivElement,
-    state: 'available' | 'disabled' | 'warning',
-    message: string,
-  ): void {
-    col.classList.remove('disabled');
-    feedbackEl.className = 'mode-feedback';
-    feedbackEl.textContent = '';
-
-    if (state === 'disabled') {
+  function setColumnDisabled(col: HTMLDivElement, disabled: boolean): void {
+    if (disabled) {
       col.classList.add('disabled');
-      feedbackEl.classList.add('feedback-disabled');
-      feedbackEl.textContent = message;
-    } else if (state === 'warning') {
-      feedbackEl.classList.add('feedback-warning');
-      feedbackEl.textContent = message;
+    } else {
+      col.classList.remove('disabled');
     }
+  }
+
+  function setFeedback(state: 'info' | 'warning' | 'clear', message: string): void {
+    modeFeedbackEl.className = 'mode-feedback';
+    modeFeedbackEl.textContent = '';
+    if (state === 'clear') return;
+    if (state === 'warning') {
+      modeFeedbackEl.classList.add('feedback-warning');
+    }
+    modeFeedbackEl.textContent = message;
   }
 
   function setIndicator(
@@ -473,20 +467,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     status: ProviderStatus,
     mxResult: MxLookupResult | null,
   ): void {
-    // Plus Addressing column
-    if (status === 'plus-unsupported') {
-      setColumnState(
-        colPlus,
-        plusFeedbackEl,
-        'warning',
-        `${domain} may not support plus addressing`,
-      );
-    } else {
-      setColumnState(colPlus, plusFeedbackEl, 'available', '');
-    }
-
-    // Catch-All column
-    setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
+    // Both columns available
+    setColumnDisabled(colPlus, false);
+    setColumnDisabled(colCatch, false);
 
     // Provider detection display
     const syncStatus = getProviderStatus(domain);
@@ -510,6 +493,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Requirement indicators
     updateRequirementIndicators(syncStatus, mxResult?.provider != null, status, providerName);
+
+    // Feedback bar
+    if (status === 'plus-unsupported') {
+      const displayName = providerName ?? domain;
+      const verb = syncStatus !== 'custom' ? 'does not' : 'likely does not';
+      setFeedback('warning', `Email Provider ${displayName} ${verb} support plus addressing`);
+    } else {
+      setFeedback('clear', '');
+    }
   }
 
   function showProviderLogo(logoKey: string | null): void {
@@ -557,8 +549,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     resetRequirementIndicators();
 
     if (!value) {
-      setColumnState(colPlus, plusFeedbackEl, 'disabled', 'Enter your email or domain above');
-      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', 'Enter your email or domain above');
+      setColumnDisabled(colPlus, true);
+      setColumnDisabled(colCatch, true);
+      setFeedback('info', 'Enter your email or domain above');
       return;
     }
 
@@ -566,20 +559,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Domain-only input: Plus Addressing stays disabled, but provider detection still runs
       const cleanValue = value.replace(/^@/, '').toLowerCase();
 
-      setColumnState(
-        colPlus,
-        plusFeedbackEl,
-        'disabled',
-        'Enter a full email to use Plus Addressing',
-      );
+      setColumnDisabled(colPlus, true);
+      setColumnDisabled(colCatch, false);
+      setFeedback('info', 'Plus Addressing requires a full email address');
       if (getMode() === 'plusAddressing') setMode('catchAll');
 
       if (!domainRegex.test(cleanValue)) {
-        setColumnState(colCatch, catchAllFeedbackEl, 'disabled', 'Enter a valid email or domain');
+        setColumnDisabled(colCatch, true);
+        setFeedback('info', 'Enter a valid email or domain');
         return;
       }
-
-      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
 
       // Synchronous provider detection
       const syncStatus = getProviderStatus(cleanValue);
@@ -758,34 +747,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  async function saveSettings(e: Event): Promise<void> {
-    e.preventDefault();
+  async function saveSettings(): Promise<void> {
+    if (isLoading) return;
 
     const value = input.value.trim();
     const mode = getMode();
 
-    if (!value) {
-      showStatus('Please enter your email address or domain', 'error');
-      return;
-    }
+    if (!value) return;
 
     if (mode === 'plusAddressing') {
       const localPart = extractLocalPart(value);
       const domain = extractDomainFromEmail(value);
-
-      if (!localPart || !domain) {
-        showStatus('Please enter a valid email address (e.g., name@gmail.com)', 'error');
-        return;
-      }
-
-      if (!domainRegex.test(domain)) {
-        showStatus('The email domain is not valid', 'error');
-        return;
-      }
+      if (!localPart || !domain || !domainRegex.test(domain)) return;
 
       try {
         await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: value });
-        showStatus('Settings saved successfully!', 'success');
+        showStatus('Settings saved', 'success');
       } catch (error) {
         showStatus(
           `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -793,39 +770,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
       }
     } else {
-      // If user entered a full email, extract just the domain
       const cleanDomain = value.includes('@')
         ? extractDomainFromEmail(value) || value.replace(/^@/, '')
         : value.replace(/^@/, '');
 
-      if (!domainRegex.test(cleanDomain)) {
-        showStatus('Please enter a valid domain (e.g., yourdomain.com)', 'error');
-        return;
-      }
+      if (!domainRegex.test(cleanDomain)) return;
 
       try {
         await chrome.storage.sync.set({ emailMode: 'catchAll', emailDomain: cleanDomain });
         input.value = cleanDomain;
-        showStatus('Settings saved successfully!', 'success');
+        showStatus('Settings saved', 'success');
       } catch (error) {
         showStatus(
           `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          'error',
-        );
-      }
-    }
-  }
-
-  async function clearSettings(): Promise<void> {
-    if (confirm('Are you sure you want to clear your settings?')) {
-      try {
-        await chrome.storage.sync.remove(['emailDomain', 'emailMode', 'baseEmail']);
-        input.value = '';
-        updateModeAvailability();
-        showStatus('Settings cleared', 'success');
-      } catch (error) {
-        showStatus(
-          `Error clearing settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
           'error',
         );
       }
@@ -853,7 +810,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateModeAvailability();
     updateFormatDisplay();
     updateExamples();
-    showStatus('Email imported. Click Save to keep it.', 'success');
+    saveSettings();
+    showStatus('Email imported', 'success');
   }
 
   function selectRecommendedMode(): void {
@@ -878,16 +836,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateModeAvailability();
         updateFormatDisplay();
         updateExamples();
+        saveSettings();
       }, 300)
     : () => {
         updateModeAvailability();
         updateFormatDisplay();
         updateExamples();
+        saveSettings();
       };
 
   // Settings event listeners
-  formEl.addEventListener('submit', saveSettings);
-  clearBtn.addEventListener('click', clearSettings);
+  formEl.addEventListener('submit', (e) => e.preventDefault());
   profileEmailEl.addEventListener('click', importChromeEmail);
   providerDetectedEl.addEventListener('click', selectRecommendedMode);
   input.addEventListener('input', debouncedUpdate);
@@ -1004,4 +963,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Initialize ──
   const profileEmail = await loadChromeProfileEmail();
   await loadSettings(profileEmail);
+  isLoading = false;
 });

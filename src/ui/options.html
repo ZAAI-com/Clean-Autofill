@@ -125,7 +125,6 @@
           <h1 class="page-title">Settings</h1>
           <p class="page-subtitle">Configure your email for automatic email generation</p>
         </div>
-        <button type="submit" form="settingsForm">Save Settings</button>
       </div>
 
       <form id="settingsForm">
@@ -219,13 +218,13 @@
               </div>
             </div>
           </div>
+          <div class="mode-feedback" id="modeFeedback"></div>
           <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
           <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
         </section>
 
         <!-- Section 3: Examples -->
         <section class="settings-section">
-          <div class="mode-feedback" id="plusFeedback"></div>
           <h2>3. Examples</h2>
           <div class="examples-list">
             <div class="example-row">
@@ -252,15 +251,9 @@
         </section>
 
         <div class="messages-area">
-          <div class="mode-feedback" id="catchAllFeedback"></div>
           <div id="status" class="status" role="alert" aria-live="polite"></div>
         </div>
 
-        <!-- Save / Clear -->
-        <div class="button-row">
-          <button type="button" class="button-secondary" id="clearButton">Clear</button>
-          <button type="submit">Save Settings</button>
-        </div>
       </form>
     </section>
 
