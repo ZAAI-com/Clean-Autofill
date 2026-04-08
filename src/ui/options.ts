@@ -1,3 +1,4 @@
+import { getCatchAllInstructions } from '../email/catch-all-instructions.js';
 import { getProviderInfo } from '../email/mx-lookup.js';
 import type { ProviderStatus } from '../email/providers.js';
 import {
@@ -7,7 +8,13 @@ import {
   getProviderStatus,
   getProviderStatusWithMx,
 } from '../email/providers.js';
-import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode, MxLookupResult } from '../types';
+import type {
+  CleanAutofillUtils,
+  DetectedProvider,
+  EmailHistoryEntry,
+  EmailMode,
+  MxLookupResult,
+} from '../types';
 
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
@@ -64,6 +71,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllEnabledValue = document.getElementById('catchAllEnabledValue');
   const detectionChromeProfile = document.getElementById('detectionChromeProfile');
   const detectionProvider = document.getElementById('detectionProvider');
+  const catchAllHelpLink = document.getElementById('catchAllHelpLink');
+  const catchAllInstructions = document.getElementById('catchAllInstructions');
+  const catchAllSteps = document.getElementById('catchAllSteps');
+  const catchAllLinks = document.getElementById('catchAllLinks');
+  const catchAllNotes = document.getElementById('catchAllNotes');
 
   if (
     !form ||
@@ -92,7 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     !catchAllDomainValue ||
     !catchAllEnabledValue ||
     !detectionChromeProfile ||
-    !detectionProvider
+    !detectionProvider ||
+    !catchAllHelpLink ||
+    !catchAllInstructions ||
+    !catchAllSteps ||
+    !catchAllLinks ||
+    !catchAllNotes
   ) {
     console.error('Required DOM elements not found');
     return;
@@ -125,8 +142,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllEnabledValueEl = catchAllEnabledValue as HTMLSpanElement;
   const chromeDetectionBoxEl = detectionChromeProfile as HTMLDivElement;
   const providerDetectionBoxEl = detectionProvider as HTMLDivElement;
+  const catchAllHelpLinkEl = catchAllHelpLink as HTMLAnchorElement;
+  const catchAllInstructionsEl = catchAllInstructions as HTMLDivElement;
+  const catchAllStepsEl = catchAllSteps as HTMLOListElement;
+  const catchAllLinksEl = catchAllLinks as HTMLDivElement;
+  const catchAllNotesEl = catchAllNotes as HTMLParagraphElement;
 
   let currentLookupDomain: string | null = null;
+  let currentDetectedProvider: DetectedProvider | null = null;
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
 
@@ -307,9 +330,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isCustomDomain) {
       setIndicator(catchAllEnabledEl, 'possible');
       catchAllEnabledValueEl.textContent = 'Possible';
+      showCatchAllHelpLink(currentDetectedProvider);
     } else {
       setIndicator(catchAllEnabledEl, 'incompatible');
       catchAllEnabledValueEl.textContent = 'Not Available';
+      hideCatchAllInstructions();
     }
   }
 
@@ -322,6 +347,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     plusSupportValueEl.textContent = '--';
     catchAllDomainValueEl.textContent = '--';
     catchAllEnabledValueEl.textContent = '--';
+    hideCatchAllInstructions();
+  }
+
+  function showCatchAllHelpLink(provider: DetectedProvider | null): void {
+    currentDetectedProvider = provider;
+    catchAllHelpLinkEl.style.display = 'inline';
+  }
+
+  function hideCatchAllHelpLink(): void {
+    catchAllHelpLinkEl.style.display = 'none';
+  }
+
+  function toggleCatchAllInstructions(): void {
+    if (catchAllInstructionsEl.style.display === 'none') {
+      renderCatchAllInstructions(currentDetectedProvider);
+      catchAllInstructionsEl.style.display = '';
+    } else {
+      catchAllInstructionsEl.style.display = 'none';
+    }
+  }
+
+  function renderCatchAllInstructions(provider: DetectedProvider | null): void {
+    const instructions = getCatchAllInstructions(provider);
+
+    catchAllStepsEl.innerHTML = '';
+    for (const step of instructions.steps) {
+      const li = document.createElement('li');
+      li.textContent = step;
+      catchAllStepsEl.appendChild(li);
+    }
+
+    catchAllLinksEl.innerHTML = '';
+    if (instructions.adminUrl) {
+      const a = document.createElement('a');
+      a.href = instructions.adminUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = `Open ${instructions.providerName} Admin`;
+      catchAllLinksEl.appendChild(a);
+    }
+
+    catchAllNotesEl.textContent = instructions.notes ?? '';
+
+    // Use warning style for iCloud (no catch-all support)
+    if (provider === 'icloud') {
+      catchAllInstructionsEl.className = 'catch-all-instructions warning';
+    } else {
+      catchAllInstructionsEl.className = 'catch-all-instructions';
+    }
+  }
+
+  function hideCatchAllInstructions(): void {
+    catchAllInstructionsEl.style.display = 'none';
+    hideCatchAllHelpLink();
   }
 
   function showProviderPlaceholder(): void {
@@ -368,6 +447,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (mxResult) {
       hideProviderDetection();
     }
+
+    // Track detected provider for catch-all instructions
+    currentDetectedProvider = mxResult?.provider ?? null;
 
     // Requirement indicators
     updateRequirementIndicators(syncStatus, mxResult?.provider != null, status, providerName);
@@ -436,6 +518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       catchAllDomainValueEl.textContent = 'Yes';
       setIndicator(catchAllEnabledEl, 'possible');
       catchAllEnabledValueEl.textContent = 'Possible';
+      showCatchAllHelpLink(null);
       return;
     }
 
@@ -663,6 +746,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   colPlus.addEventListener('click', () => setMode('plusAddressing'));
   colCatch.addEventListener('click', () => setMode('catchAll'));
+  catchAllHelpLinkEl.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCatchAllInstructions();
+  });
 
   // ── History Page ──
   const historyBody = document.getElementById('historyBody') as HTMLTableSectionElement;

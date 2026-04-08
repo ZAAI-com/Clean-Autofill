@@ -491,6 +491,79 @@ input[type="text"]:focus {
   content: "\2717";
 }
 
+/* ── Catch-All Instructions ── */
+.req-help-link {
+  font-size: 11px;
+  color: #4CAF50;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.req-help-link:hover {
+  text-decoration: underline;
+}
+
+.catch-all-instructions {
+  margin-top: 16px;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.catch-all-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.catch-all-instructions ol li {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.catch-all-links {
+  margin-top: 12px;
+}
+
+.catch-all-links a {
+  font-size: 13px;
+  color: #4CAF50;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.catch-all-links a:hover {
+  text-decoration: underline;
+}
+
+.catch-all-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}
+
+.catch-all-note:empty {
+  display: none;
+}
+
+.catch-all-instructions.warning {
+  background-color: #fff3e0;
+  border-color: #ffcc80;
+}
+
+.catch-all-instructions.warning .catch-all-note {
+  color: #e65100;
+  font-style: normal;
+  font-weight: 500;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
