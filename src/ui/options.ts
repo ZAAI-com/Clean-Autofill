@@ -158,7 +158,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     icloud: 'icons/providers/icloud.png',
     yahoo: 'icons/providers/yahoo.png',
     gmx: 'icons/providers/gmx.png',
+    webde: 'icons/providers/webde.png',
     tutanota: 'icons/providers/tutanota.png',
+    'mailbox-org': 'icons/providers/mailbox-org.png',
+    yandex: 'icons/providers/yandex.png',
+    mailru: 'icons/providers/mailru.png',
+    't-online': 'icons/providers/t-online.png',
+    hey: 'icons/providers/hey.png',
+    qq: 'icons/providers/qq.png',
+    netease: 'icons/providers/netease.png',
+    libero: 'icons/providers/libero.png',
+    laposte: 'icons/providers/laposte.png',
+    rediffmail: 'icons/providers/rediffmail.png',
+    mailcom: 'icons/providers/mailcom.png',
   };
 
   const DOMAIN_TO_PROVIDER: Record<string, string> = {
@@ -186,6 +198,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     'gmx.net': 'gmx',
     'tuta.com': 'tutanota',
     'tutanota.com': 'tutanota',
+    'web.de': 'webde',
+    't-online.de': 't-online',
+    'mailbox.org': 'mailbox-org',
+    'yandex.com': 'yandex',
+    'yandex.ru': 'yandex',
+    'ya.ru': 'yandex',
+    'mail.ru': 'mailru',
+    'inbox.ru': 'mailru',
+    'list.ru': 'mailru',
+    'bk.ru': 'mailru',
+    'hey.com': 'hey',
+    'qq.com': 'qq',
+    'foxmail.com': 'qq',
+    '163.com': 'netease',
+    '126.com': 'netease',
+    'yeah.net': 'netease',
+    'libero.it': 'libero',
+    'laposte.net': 'laposte',
+    'rediffmail.com': 'rediffmail',
+    'rediff.com': 'rediffmail',
+    'mail.com': 'mailcom',
+    'email.com': 'mailcom',
   };
 
   const DETECTED_PROVIDER_TO_LOGO: Record<string, string> = {
@@ -225,6 +259,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     'tuta.com': 'Tuta',
     'tutanota.com': 'Tuta',
     'mailbox.org': 'Mailbox.org',
+    'yandex.com': 'Yandex Mail',
+    'yandex.ru': 'Yandex Mail',
+    'ya.ru': 'Yandex Mail',
+    'mail.ru': 'Mail.ru',
+    'inbox.ru': 'Mail.ru',
+    'list.ru': 'Mail.ru',
+    'bk.ru': 'Mail.ru',
+    'hey.com': 'Hey',
+    'qq.com': 'QQ Mail',
+    'foxmail.com': 'QQ Mail',
+    '163.com': 'NetEase',
+    '126.com': 'NetEase',
+    'yeah.net': 'NetEase',
+    'libero.it': 'Libero',
+    'laposte.net': 'La Poste',
+    'rediffmail.com': 'Rediffmail',
+    'rediff.com': 'Rediffmail',
+    'mail.com': 'mail.com',
+    'email.com': 'mail.com',
   };
 
   // ── Settings Logic ──
@@ -366,7 +419,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const header = document.createElement('div');
       header.className = `help-provider-header${isDetected ? ' detected' : ''}`;
-      header.innerHTML = `<span>${escapeHtml(instructions.providerName)}</span>${isDetected ? '<span class="detected-badge">Detected</span>' : ''}`;
+      header.innerHTML = `<span class="header-left"><span class="header-chevron"></span>${escapeHtml(instructions.providerName)}</span>${isDetected ? '<span class="detected-badge">Detected</span>' : ''}`;
       header.addEventListener('click', () => {
         card.classList.toggle('collapsed');
       });
@@ -690,10 +743,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateModeAvailability();
         setMode(mode);
       } else if (profileEmail) {
-        // No saved settings, prefill with Chrome profile email and default to Plus Addressing
+        // No saved settings, auto-configure with Chrome profile email
         input.value = profileEmail;
         updateModeAvailability();
         setMode('plusAddressing');
+        await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: profileEmail });
+        showStatus('Settings auto-configured from your Chrome profile', 'success');
       } else {
         updateModeAvailability();
       }

@@ -565,14 +565,18 @@ input[type="text"]:focus {
 }
 
 .catch-all-instructions.warning {
-  background-color: #fff3e0;
-  border-color: #ffcc80;
+  background-color: #f8f9fa;
 }
 
 .catch-all-instructions.warning .catch-all-note {
-  color: #e65100;
+  color: #555;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
+  background-color: #f0f0f0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid #bbb;
+  margin-top: 0;
 }
 
 .sr-only {
@@ -881,15 +885,25 @@ button[type="submit"]:active {
   background-color: #fafafa;
 }
 
-.help-provider-header::after {
-  content: "\25B8";
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-chevron {
+  display: inline-flex;
   font-size: 12px;
   color: #bbb;
   transition: transform 0.2s;
   flex-shrink: 0;
 }
 
-.help-provider-card:not(.collapsed) .help-provider-header::after {
+.header-chevron::before {
+  content: "\25B8";
+}
+
+.help-provider-card:not(.collapsed) .header-chevron {
   transform: rotate(90deg);
 }
 

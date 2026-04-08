@@ -249,3 +249,86 @@ describe('message timeout constant', () => {
     expect(MESSAGE_TIMEOUT).toBeLessThanOrEqual(30000);
   });
 });
+
+describe('initializeDefaultSettings', () => {
+  // Extracted logic from background.ts initializeDefaultSettings
+  async function initializeDefaultSettings(
+    getStorage: () => Promise<Record<string, unknown>>,
+    setStorage: (items: Record<string, unknown>) => Promise<void>,
+    getProfileEmail: () => Promise<{ email: string }>,
+  ): Promise<{ saved: boolean; email?: string }> {
+    try {
+      const existing = await getStorage();
+      if (existing.emailMode || existing.emailDomain || existing.baseEmail) {
+        return { saved: false };
+      }
+
+      const userInfo = await getProfileEmail();
+      if (userInfo.email?.includes('@')) {
+        await setStorage({ emailMode: 'plusAddressing', baseEmail: userInfo.email });
+        return { saved: true, email: userInfo.email };
+      }
+      return { saved: false };
+    } catch {
+      return { saved: false };
+    }
+  }
+
+  test('saves plus addressing defaults when profile email is available', async () => {
+    const stored: Record<string, unknown> = {};
+    const result = await initializeDefaultSettings(
+      async () => ({}),
+      async (items) => Object.assign(stored, items),
+      async () => ({ email: 'user@gmail.com' }),
+    );
+    expect(result.saved).toBe(true);
+    expect(result.email).toBe('user@gmail.com');
+    expect(stored.emailMode).toBe('plusAddressing');
+    expect(stored.baseEmail).toBe('user@gmail.com');
+  });
+
+  test('does not save when no profile email is available', async () => {
+    const stored: Record<string, unknown> = {};
+    const result = await initializeDefaultSettings(
+      async () => ({}),
+      async (items) => Object.assign(stored, items),
+      async () => ({ email: '' }),
+    );
+    expect(result.saved).toBe(false);
+    expect(stored.emailMode).toBeUndefined();
+  });
+
+  test('does not overwrite existing settings', async () => {
+    const stored: Record<string, unknown> = { emailMode: 'catchAll', emailDomain: 'mg.de' };
+    const result = await initializeDefaultSettings(
+      async () => ({ emailMode: 'catchAll', emailDomain: 'mg.de' }),
+      async (items) => Object.assign(stored, items),
+      async () => ({ email: 'user@gmail.com' }),
+    );
+    expect(result.saved).toBe(false);
+    expect(stored.emailMode).toBe('catchAll');
+    expect(stored.emailDomain).toBe('mg.de');
+  });
+
+  test('handles getProfileEmail error gracefully', async () => {
+    const result = await initializeDefaultSettings(
+      async () => ({}),
+      async () => {},
+      async () => {
+        throw new Error('API unavailable');
+      },
+    );
+    expect(result.saved).toBe(false);
+  });
+
+  test('rejects email without @ sign', async () => {
+    const stored: Record<string, unknown> = {};
+    const result = await initializeDefaultSettings(
+      async () => ({}),
+      async (items) => Object.assign(stored, items),
+      async () => ({ email: 'invalid-email' }),
+    );
+    expect(result.saved).toBe(false);
+    expect(stored.emailMode).toBeUndefined();
+  });
+});

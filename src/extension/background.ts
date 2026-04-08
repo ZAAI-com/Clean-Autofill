@@ -143,17 +143,44 @@ async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<GenerateResult
   }
 }
 
-// Install event - show welcome message
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
+// Auto-detect Chrome profile email and save default settings on first install
+async function initializeDefaultSettings(): Promise<void> {
+  try {
+    const existing = await chrome.storage.sync.get(['emailMode', 'emailDomain', 'baseEmail']);
+    if (existing.emailMode || existing.emailDomain || existing.baseEmail) return;
+
+    const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+    if (userInfo.email?.includes('@')) {
+      await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: userInfo.email });
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Clean-Autofill Installed',
+        message: `Ready to go! Using ${userInfo.email} for plus addressing.`,
+      });
+    } else {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Clean-Autofill Installed',
+        message: 'Click the extension icon to fill emails! Configure your email in options first.',
+      });
+    }
+  } catch {
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon48.png',
       title: 'Clean-Autofill Installed',
-      message: 'Click the extension icon to fill emails! Configure your domain in options first.',
+      message: 'Click the extension icon to fill emails! Configure your email in options first.',
     });
+  }
+}
 
-    // Open options page on first install
-    chrome.runtime.openOptionsPage();
+// Install event - initialize defaults and open options
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    initializeDefaultSettings().then(() => {
+      chrome.runtime.openOptionsPage();
+    });
   }
 });

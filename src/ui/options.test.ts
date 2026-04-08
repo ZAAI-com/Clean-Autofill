@@ -333,6 +333,63 @@ describe('domain-only provider detection', () => {
   });
 });
 
+describe('auto-save defaults on options page load', () => {
+  beforeEach(() => {
+    // Reset storage
+    for (const key of Object.keys(mockStorage)) {
+      delete mockStorage[key];
+    }
+    // Reset identity mock
+    mockChrome.identity.getProfileUserInfo = mock(async () => ({
+      email: 'user@example.com',
+      id: '12345',
+    }));
+  });
+
+  test('auto-saves when no settings exist and profile email is available', async () => {
+    const profileEmail = 'user@gmail.com';
+    // Simulate loadSettings logic: no saved settings + profile email available
+    const result = await mockChrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    const hasSavedSettings = result.emailMode || result.emailDomain || result.baseEmail;
+
+    if (!hasSavedSettings && profileEmail) {
+      await mockChrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: profileEmail });
+    }
+
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+  });
+
+  test('does not auto-save when settings already exist', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'mg.de';
+
+    const profileEmail = 'user@gmail.com';
+    const result = await mockChrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    const hasSavedSettings = result.emailMode || result.emailDomain || result.baseEmail;
+
+    if (!hasSavedSettings && profileEmail) {
+      await mockChrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: profileEmail });
+    }
+
+    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(mockStorage.emailDomain).toBe('mg.de');
+  });
+
+  test('does not auto-save when no profile email is available', async () => {
+    const profileEmail: string | null = null;
+    const result = await mockChrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
+    const hasSavedSettings = result.emailMode || result.emailDomain || result.baseEmail;
+
+    if (!hasSavedSettings && profileEmail) {
+      await mockChrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: profileEmail });
+    }
+
+    expect(mockStorage.emailMode).toBeUndefined();
+    expect(mockStorage.baseEmail).toBeUndefined();
+  });
+});
+
 describe('status message types', () => {
   function getStatusClass(type: 'success' | 'error'): string {
     return `status ${type}`;
