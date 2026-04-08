@@ -70,14 +70,14 @@
             <code class="example-email" data-site="zalando.de"></code>
           </div>
           <div class="example-row">
-            <span class="example-site">cloudflare.com</span>
-            <span class="example-arrow">&rarr;</span>
-            <code class="example-email" data-site="cloudflare.com"></code>
-          </div>
-          <div class="example-row">
             <span class="example-site">ui.com</span>
             <span class="example-arrow">&rarr;</span>
             <code class="example-email" data-site="ui.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">cloudflare.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="cloudflare.com"></code>
           </div>
           <div class="example-row">
             <span class="example-site">claude.ai</span>
@@ -162,7 +162,7 @@
               <div id="providerDetected" class="provider-detected" style="display: none;">
                 <span id="providerText" class="provider-text"></span>
               </div>
-              <span class="detection-placeholder" id="providerPlaceholder">Enter an email above to detect provider</span>
+              <span class="detection-placeholder" id="providerPlaceholder"></span>
             </div>
           </div>
           <div class="mode-table">
@@ -301,16 +301,8 @@
 
       <section class="settings-section">
         <h2>Setting Up Catch-All</h2>
-        <p class="help-intro">Catch-All mode requires your custom domain to accept emails sent to any address. Below are instructions for configuring catch-all with your email provider.</p>
-        <div class="help-provider-info" id="helpProviderInfo" style="display: none;">
-          <span class="help-provider-label">Detected Provider:</span>
-          <span class="help-provider-name" id="helpProviderName"></span>
-        </div>
-        <div class="catch-all-instructions" id="helpCatchAllInstructions">
-          <ol id="helpCatchAllSteps"></ol>
-          <div class="catch-all-links" id="helpCatchAllLinks"></div>
-          <p class="catch-all-note" id="helpCatchAllNotes"></p>
-        </div>
+        <p class="help-intro">Catch-All mode requires your custom domain to accept emails sent to any address. Below are instructions for each supported email provider.</p>
+        <div id="helpProvidersContainer"></div>
       </section>
     </section>
 

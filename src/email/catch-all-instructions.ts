@@ -113,3 +113,20 @@ const INSTRUCTIONS: Record<DetectedProvider | 'generic', CatchAllInstructions> =
 export function getCatchAllInstructions(provider: DetectedProvider | null): CatchAllInstructions {
   return INSTRUCTIONS[provider ?? 'generic'];
 }
+
+const HELP_PAGE_PROVIDERS: (DetectedProvider | 'generic')[] = [
+  'google-workspace',
+  'microsoft-365',
+  'fastmail',
+  'protonmail',
+  'zoho',
+  'icloud',
+  'generic',
+];
+
+export function getAllCatchAllInstructions(): {
+  key: string;
+  instructions: CatchAllInstructions;
+}[] {
+  return HELP_PAGE_PROVIDERS.map((key) => ({ key, instructions: INSTRUCTIONS[key] }));
+}

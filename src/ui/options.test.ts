@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
-import { domainRegex, extractDomainFromEmail } from '../email/providers.js';
+import { domainRegex, extractDomainFromEmail, getProviderStatus } from '../email/providers.js';
 
 // Load utils first
 beforeAll(async () => {
@@ -134,8 +134,8 @@ describe('generatePlusAddressEmail', () => {
       'wikipedia.org',
       'amazon.com',
       'zalando.de',
-      'cloudflare.com',
       'ui.com',
+      'cloudflare.com',
       'claude.ai',
       'netflix.com',
     ];
@@ -295,6 +295,41 @@ describe('chrome profile import', () => {
     await expect(mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' })).rejects.toThrow(
       'API unavailable',
     );
+  });
+});
+
+describe('domain-only provider detection', () => {
+  function cleanDomainInput(value: string): string {
+    return value.replace(/^@/, '').toLowerCase();
+  }
+
+  test('domainRegex accepts valid domain-only input', () => {
+    expect(domainRegex.test('manuelgruber.com')).toBe(true);
+    expect(domainRegex.test('gmail.com')).toBe(true);
+    expect(domainRegex.test('my-company.co.uk')).toBe(true);
+  });
+
+  test('domainRegex rejects incomplete domains', () => {
+    expect(domainRegex.test('gmai')).toBe(false);
+    expect(domainRegex.test('hello')).toBe(false);
+    expect(domainRegex.test('')).toBe(false);
+  });
+
+  test('cleanDomainInput strips leading @', () => {
+    expect(cleanDomainInput('@gmail.com')).toBe('gmail.com');
+    expect(cleanDomainInput('gmail.com')).toBe('gmail.com');
+    expect(cleanDomainInput('@MyDomain.COM')).toBe('mydomain.com');
+  });
+
+  test('getProviderStatus works with bare domains', () => {
+    expect(getProviderStatus('gmail.com')).toBe('plus-supported');
+    expect(getProviderStatus('yahoo.com')).toBe('plus-unsupported');
+    expect(getProviderStatus('manuelgruber.com')).toBe('custom');
+  });
+
+  test('getProviderStatus is case-insensitive', () => {
+    expect(getProviderStatus('Gmail.com')).toBe('plus-supported');
+    expect(getProviderStatus('YAHOO.COM')).toBe('plus-unsupported');
   });
 });
 

@@ -1,4 +1,4 @@
-import { getCatchAllInstructions } from '../email/catch-all-instructions.js';
+import { getAllCatchAllInstructions } from '../email/catch-all-instructions.js';
 import { getProviderInfo } from '../email/mx-lookup.js';
 import type { ProviderStatus } from '../email/providers.js';
 import {
@@ -75,11 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const detectionChromeProfile = document.getElementById('detectionChromeProfile');
   const detectionProvider = document.getElementById('detectionProvider');
   const catchAllInfoIcon = document.getElementById('catchAllInfoIcon');
-  const helpCatchAllSteps = document.getElementById('helpCatchAllSteps');
-  const helpCatchAllLinks = document.getElementById('helpCatchAllLinks');
-  const helpCatchAllNotes = document.getElementById('helpCatchAllNotes');
-  const helpProviderInfo = document.getElementById('helpProviderInfo');
-  const helpProviderName = document.getElementById('helpProviderName');
+  const helpProvidersContainer = document.getElementById('helpProvidersContainer');
 
   if (
     !form ||
@@ -110,11 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     !detectionChromeProfile ||
     !detectionProvider ||
     !catchAllInfoIcon ||
-    !helpCatchAllSteps ||
-    !helpCatchAllLinks ||
-    !helpCatchAllNotes ||
-    !helpProviderInfo ||
-    !helpProviderName
+    !helpProvidersContainer
   ) {
     console.error('Required DOM elements not found');
     return;
@@ -148,11 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const chromeDetectionBoxEl = detectionChromeProfile as HTMLDivElement;
   const providerDetectionBoxEl = detectionProvider as HTMLDivElement;
   const catchAllInfoIconEl = catchAllInfoIcon as HTMLSpanElement;
-  const helpStepsEl = helpCatchAllSteps as HTMLOListElement;
-  const helpLinksEl = helpCatchAllLinks as HTMLDivElement;
-  const helpNotesEl = helpCatchAllNotes as HTMLParagraphElement;
-  const helpProviderInfoEl = helpProviderInfo as HTMLDivElement;
-  const helpProviderNameEl = helpProviderName as HTMLSpanElement;
+  const helpContainerEl = helpProvidersContainer as HTMLDivElement;
 
   let currentLookupDomain: string | null = null;
   let currentDetectedProvider: DetectedProvider | null = null;
@@ -365,43 +353,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderHelpPage(): void {
-    const instructions = getCatchAllInstructions(currentDetectedProvider);
+    helpContainerEl.innerHTML = '';
+    const allInstructions = getAllCatchAllInstructions();
 
-    helpStepsEl.innerHTML = '';
-    for (const step of instructions.steps) {
-      const li = document.createElement('li');
-      li.textContent = step;
-      helpStepsEl.appendChild(li);
-    }
+    for (const { key, instructions } of allInstructions) {
+      const isDetected = currentDetectedProvider === key;
+      const isWarning = key === 'icloud';
+      const collapsed = !isDetected;
 
-    helpLinksEl.innerHTML = '';
-    if (instructions.adminUrl) {
-      const a = document.createElement('a');
-      a.href = instructions.adminUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = `Open ${instructions.providerName} Admin`;
-      helpLinksEl.appendChild(a);
-    }
+      const card = document.createElement('div');
+      card.className = `help-provider-card${collapsed ? ' collapsed' : ''}`;
 
-    helpNotesEl.textContent = instructions.notes ?? '';
+      const header = document.createElement('div');
+      header.className = `help-provider-header${isDetected ? ' detected' : ''}`;
+      header.innerHTML = `<span>${escapeHtml(instructions.providerName)}</span>${isDetected ? '<span class="detected-badge">Detected</span>' : ''}`;
+      header.addEventListener('click', () => {
+        card.classList.toggle('collapsed');
+      });
 
-    // Show detected provider if available
-    if (currentDetectedProvider) {
-      const info = getProviderInfo(currentDetectedProvider);
-      helpProviderNameEl.textContent = info.name;
-      helpProviderInfoEl.style.display = 'flex';
-    } else {
-      helpProviderInfoEl.style.display = 'none';
-    }
+      const body = document.createElement('div');
+      body.className = `catch-all-instructions${isWarning ? ' warning' : ''}`;
 
-    // Use warning style for iCloud (no catch-all support)
-    const instructionsEl = document.getElementById('helpCatchAllInstructions');
-    if (instructionsEl) {
-      instructionsEl.className =
-        currentDetectedProvider === 'icloud'
-          ? 'catch-all-instructions warning'
-          : 'catch-all-instructions';
+      const ol = document.createElement('ol');
+      for (const step of instructions.steps) {
+        const li = document.createElement('li');
+        li.textContent = step;
+        ol.appendChild(li);
+      }
+      body.appendChild(ol);
+
+      if (instructions.adminUrl) {
+        const linksDiv = document.createElement('div');
+        linksDiv.className = 'catch-all-links';
+        const a = document.createElement('a');
+        a.href = instructions.adminUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = `Open ${instructions.providerName} Admin`;
+        linksDiv.appendChild(a);
+        body.appendChild(linksDiv);
+      }
+
+      if (instructions.notes) {
+        const note = document.createElement('p');
+        note.className = 'catch-all-note';
+        note.textContent = instructions.notes;
+        body.appendChild(note);
+      }
+
+      card.appendChild(header);
+      card.appendChild(body);
+      helpContainerEl.appendChild(card);
     }
   }
 
@@ -508,19 +510,108 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!isFullEmail) {
+      // Domain-only input: Plus Addressing stays disabled, but provider detection still runs
+      const cleanValue = value.replace(/^@/, '').toLowerCase();
+
       setColumnState(
         colPlus,
         plusFeedbackEl,
         'disabled',
         'Enter a full email to use Plus Addressing',
       );
-      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
       if (getMode() === 'plusAddressing') setMode('catchAll');
-      setIndicator(catchAllDomainEl, 'supported');
-      catchAllDomainValueEl.textContent = 'Yes';
-      setIndicator(catchAllEnabledEl, 'possible');
-      catchAllEnabledValueEl.textContent = 'Possible';
-      showCatchAllInfoIcon();
+
+      if (!domainRegex.test(cleanValue)) {
+        setColumnState(colCatch, catchAllFeedbackEl, 'disabled', 'Enter a valid email or domain');
+        return;
+      }
+
+      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
+
+      // Synchronous provider detection
+      const syncStatus = getProviderStatus(cleanValue);
+      const isCustomDomain = syncStatus === 'custom';
+      let providerName: string | null = null;
+
+      if (!isCustomDomain) {
+        const friendlyName = DOMAIN_TO_FRIENDLY_NAME[cleanValue] ?? cleanValue;
+        const logoKey = DOMAIN_TO_PROVIDER[cleanValue] ?? null;
+        providerName = friendlyName;
+        showProviderDetection(friendlyName, logoKey);
+      }
+
+      // Plus Addressing indicators (informational, column stays disabled)
+      setIndicator(plusProviderEl, !isCustomDomain ? 'supported' : null);
+      plusProviderValueEl.textContent = !isCustomDomain ? (providerName ?? 'Detected') : '--';
+      if (syncStatus === 'plus-supported') {
+        setIndicator(plusSupportEl, 'supported');
+        plusSupportValueEl.textContent = 'Supported';
+      } else if (syncStatus === 'plus-unsupported') {
+        setIndicator(plusSupportEl, 'incompatible');
+        plusSupportValueEl.textContent = 'Not Supported';
+      } else {
+        setIndicator(plusSupportEl, null);
+        plusSupportValueEl.textContent = '--';
+      }
+
+      // Catch-All indicators
+      if (!isCustomDomain) {
+        setIndicator(catchAllDomainEl, 'incompatible');
+        catchAllDomainValueEl.textContent = 'No';
+        setIndicator(catchAllEnabledEl, 'incompatible');
+        catchAllEnabledValueEl.textContent = 'Not Available';
+        hideCatchAllInfoIcon();
+      } else {
+        setIndicator(catchAllDomainEl, 'supported');
+        catchAllDomainValueEl.textContent = 'Yes';
+        setIndicator(catchAllEnabledEl, 'possible');
+        catchAllEnabledValueEl.textContent = 'Possible';
+        showCatchAllInfoIcon();
+
+        // Async MX lookup for custom domains
+        currentLookupDomain = cleanValue;
+        showProviderLoading();
+        getProviderStatusWithMx(cleanValue)
+          .then(({ status: mxStatus, mxResult }) => {
+            if (currentLookupDomain !== cleanValue) return;
+
+            if (mxResult?.provider) {
+              const info = getProviderInfo(mxResult.provider);
+              const logoKey = DETECTED_PROVIDER_TO_LOGO[mxResult.provider] ?? null;
+              showProviderDetection(info.name, logoKey);
+
+              setIndicator(plusProviderEl, 'supported');
+              plusProviderValueEl.textContent = info.name;
+              setIndicator(catchAllDomainEl, 'supported');
+              catchAllDomainValueEl.textContent = 'Yes';
+            } else if (mxResult) {
+              hideProviderDetection();
+              setIndicator(plusProviderEl, 'incompatible');
+              plusProviderValueEl.textContent = 'Not Detected';
+              setIndicator(catchAllDomainEl, 'possible');
+              catchAllDomainValueEl.textContent = 'Possible';
+            }
+
+            if (mxStatus === 'plus-supported') {
+              setIndicator(plusSupportEl, 'supported');
+              plusSupportValueEl.textContent = 'Supported';
+            } else if (mxStatus === 'plus-unsupported') {
+              setIndicator(plusSupportEl, 'incompatible');
+              plusSupportValueEl.textContent = 'Not Supported';
+            } else {
+              setIndicator(plusSupportEl, 'possible');
+              plusSupportValueEl.textContent = 'Possible';
+            }
+
+            currentDetectedProvider = mxResult?.provider ?? null;
+            showCatchAllInfoIcon();
+          })
+          .catch(() => {
+            if (currentLookupDomain === cleanValue) {
+              hideProviderDetection();
+            }
+          });
+      }
       return;
     }
 
