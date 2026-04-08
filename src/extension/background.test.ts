@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
 
-import type { EmailMode } from './types';
+import type { EmailMode } from '../types';
 
 // Load utils first
 beforeAll(async () => {
-  await import('./utils.js');
+  await import('../email/utils.js');
 });
 
 // Get utils for testing

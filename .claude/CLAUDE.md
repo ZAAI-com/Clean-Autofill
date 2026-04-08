@@ -49,15 +49,15 @@ bun run bump:major    # 0.1.0 → 1.0.0
 
 The extension follows Chrome Extension Manifest V3 architecture with three main components:
 
-### 1. Service Worker (`src/background.ts`)
+### 1. Service Worker (`src/extension/background.ts`)
 - Handles messages from popup via `chrome.runtime.onMessage`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
 - Sends fill requests to content script and returns results to popup
-- Saves generated emails to history via `src/history.ts`
+- Saves generated emails to history via `src/ui/history.ts`
 - Manages Chrome storage API for user settings
 - Opens options page on first install
 
-### 2. Content Script (`src/content.ts`)
+### 2. Autofill Script (`src/extension/autofill.ts`)
 - Injected into all web pages (`<all_urls>`)
 - Receives messages from service worker to fill email fields
 - Smart field detection with priority order:
@@ -79,19 +79,19 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - **History**: Searchable log of all generated emails with copy/delete actions
 - Settings use Chrome sync storage; history uses Chrome local storage
 
-### 5. History Module (`src/history.ts`)
+### 5. History Module (`src/ui/history.ts`)
 - CRUD operations for email history entries stored in `chrome.storage.local`
 - `addEntry()` - Save new entry (prepend, enforce 10K limit)
 - `getHistory()` - Query with optional search filter and pagination
 - `deleteEntry()` / `clearHistory()` - Deletion
 
-### 6. Shared Utilities (`src/utils.ts`)
+### 6. Shared Utilities (`src/email/utils.ts`)
 - `extractMainDomain()` - Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
 - `isValidEmail()` - Basic email format validation
 - `createTimeout()` - Promise-based timeout for async operations
 - `debounce()` - Rate-limiting for input events
 
-### 7. Provider Detection (`src/providers/`)
+### 7. Provider Detection (`src/email/`)
 - **`providers.ts`** - `getProviderStatus()` / `getProviderStatusWithMx()` for determining plus-addressing support
 - **`provider-domains.ts`** - Static data: 500+ email domains categorized as plus-supported or unsupported
 - **`mx-lookup.ts`** - DNS MX record lookup via Google DNS API with memory + storage caching
@@ -121,44 +121,38 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │       ├── validate.js    # Manifest validation
 │       └── bump-version.js # Version management
 ├── src/                   # TypeScript source (edit these)
-│   ├── background.ts      # Service worker
-│   ├── background.test.ts # Service worker tests
-│   ├── content.ts         # Content script for email filling
-│   ├── content.test.ts    # Content script tests
-│   ├── history.ts         # Email history storage module
-│   ├── history.test.ts    # History module tests
-│   ├── utils.ts           # Shared utilities
-│   ├── utils.test.ts      # Utility tests
-│   ├── providers/         # Provider detection logic + domain data
+│   ├── extension/         # Chrome extension entry points
+│   │   ├── background.ts  # Service worker
+│   │   ├── background.test.ts
+│   │   ├── autofill.ts    # Content script for email filling
+│   │   └── autofill.test.ts
+│   ├── email/             # Email/domain logic + utilities
 │   │   ├── providers.ts   # Provider status functions
 │   │   ├── providers.test.ts
 │   │   ├── mx-lookup.ts   # MX record DNS lookup + caching
 │   │   ├── mx-lookup.test.ts
 │   │   ├── provider-domains.ts  # Static domain sets
-│   │   └── provider-domains.test.ts
+│   │   ├── provider-domains.test.ts
+│   │   ├── utils.ts       # Shared utilities (domain extraction, validation)
+│   │   └── utils.test.ts
 │   ├── types/
 │   │   └── index.ts       # TypeScript type definitions
-│   ├── ui/                # UI pages (popup + options)
+│   ├── ui/                # UI pages + data
 │   │   ├── popup.html     # Popup UI
 │   │   ├── popup.ts       # Popup logic
-│   │   ├── popup.test.ts  # Popup tests
+│   │   ├── popup.test.ts
 │   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History)
 │   │   ├── options.ts     # Options page logic
-│   │   └── options.test.ts # Options page tests
+│   │   ├── options.test.ts
+│   │   ├── history.ts     # Email history storage module
+│   │   └── history.test.ts
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 └── dist/                  # Build output (load this in Chrome)
-    ├── background.js      # Compiled service worker
-    ├── content.js         # Compiled content script
-    ├── history.js         # Compiled history module
-    ├── utils.js           # Compiled utilities
-    ├── manifest.json      # Copied from root
-    ├── providers/         # Compiled provider modules
-    ├── ui/                # Compiled UI pages
-    │   ├── popup.html
-    │   ├── popup.js
-    │   ├── options.html
-    │   └── options.js
+    ├── extension/         # Compiled extension entry points
+    ├── email/             # Compiled email/domain modules
+    ├── ui/                # Compiled UI pages + history
     ├── icons/             # Copied from src/
+    ├── manifest.json      # Copied from root
     └── Clean-Autofill.zip # Distribution package
 ```
 

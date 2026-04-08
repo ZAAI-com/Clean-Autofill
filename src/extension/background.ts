@@ -1,8 +1,8 @@
 // Import shared utilities as ES module
 
-import { addEntry } from './history.js';
-import type { EmailMode, FillEmailResponse, GenerateAndFillResponse } from './types';
-import { createTimeout, extractMainDomain } from './utils.js';
+import { createTimeout, extractMainDomain } from '../email/utils.js';
+import type { EmailMode, FillEmailResponse, GenerateAndFillResponse } from '../types';
+import { addEntry } from '../ui/history.js';
 
 // Message timeout in milliseconds
 const MESSAGE_TIMEOUT = 5000;

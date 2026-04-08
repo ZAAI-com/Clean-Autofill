@@ -12,15 +12,15 @@ console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 
 // Check TypeScript source files first
 const requiredSourceFiles = [
-    'src/background.ts',
-    'src/content.ts',
-    'src/history.ts',
+    'src/extension/background.ts',
+    'src/extension/autofill.ts',
+    'src/ui/history.ts',
+    'src/email/utils.ts',
     'src/ui/options.ts',
     'src/ui/popup.ts',
-    'src/providers/mx-lookup.ts',
-    'src/providers/provider-domains.ts',
-    'src/providers/providers.ts',
-    'src/utils.ts',
+    'src/email/mx-lookup.ts',
+    'src/email/provider-domains.ts',
+    'src/email/providers.ts',
     'src/types/index.ts',
 ];
 
@@ -64,13 +64,13 @@ try {
 console.log('\n📦 Bundling utils.js with dependencies...');
 try {
     // ESM bundle for background.js (service worker)
-    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // IIFE bundle for content scripts (sets globalThis.CleanAutofillUtils)
-    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // Replace utils.js with ESM version for background.js imports
-    fs.renameSync(path.join(DIST, 'utils.esm.js'), path.join(DIST, 'utils.js'));
-    console.log('  ✅ utils.js (ESM for background.js)');
-    console.log('  ✅ utils-content.js (IIFE for content scripts)');
+    fs.renameSync(path.join(DIST, 'email', 'utils.esm.js'), path.join(DIST, 'email', 'utils.js'));
+    console.log('  ✅ email/utils.js (ESM for background.js)');
+    console.log('  ✅ email/utils-content.js (IIFE for content scripts)');
 } catch (error) {
     console.error('  ❌ Bundling failed:', error.message);
     process.exit(1);
@@ -84,7 +84,7 @@ if (usesESModules) {
     console.log('\n🔧 ES modules enabled - processing scripts...');
 
     // Strip exports from content script files (they use globalThis pattern)
-    const contentScriptFiles = ['content.js', 'ui/options.js', 'ui/popup.js'];
+    const contentScriptFiles = ['extension/autofill.js', 'ui/options.js', 'ui/popup.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -98,11 +98,11 @@ if (usesESModules) {
             console.log(`  ✅ ${file} (stripped exports)`);
         }
     }
-    console.log(`  ✅ background.js (ES module preserved)`);
+    console.log(`  ✅ extension/background.js (ES module preserved)`);
 } else {
     // Strip ES module exports for classic script compatibility
     console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
-    const jsFiles = ['background.js', 'content.js', 'utils.js', 'ui/options.js'];
+    const jsFiles = ['extension/background.js', 'extension/autofill.js', 'email/utils.js', 'ui/options.js'];
     for (const file of jsFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -147,14 +147,14 @@ icons.forEach(icon => {
 // Verify compiled output
 console.log('\n📋 Verifying compiled files:');
 const requiredCompiledFiles = [
-    'background.js',
-    'content.js',
-    'history.js',
-    'providers/mx-lookup.js',
-    'providers/provider-domains.js',
-    'providers/providers.js',
-    'utils.js',
-    'utils-content.js',
+    'extension/background.js',
+    'extension/autofill.js',
+    'ui/history.js',
+    'email/utils.js',
+    'email/utils-content.js',
+    'email/mx-lookup.js',
+    'email/provider-domains.js',
+    'email/providers.js',
     'manifest.json',
     'ui/options.js',
     'ui/options.html',

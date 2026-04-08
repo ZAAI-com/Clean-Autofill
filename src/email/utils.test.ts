@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 // Load utils.js by executing it (it sets globalThis.CleanAutofillUtils)
 beforeAll(async () => {
   // Import the utils file to populate globalThis
-  await import('./utils.js');
+  await import('../email/utils.js');
 });
 
 // Helper to get utils after they're loaded

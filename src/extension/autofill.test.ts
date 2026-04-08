@@ -20,10 +20,10 @@ let isElementVisible: (element: Element | null) => boolean;
 
 beforeAll(async () => {
   // Load utils first (content.ts depends on it)
-  await import('./utils.js');
+  await import('../email/utils.js');
 
   // Now import the exported pure functions from production code
-  const content = await import('./content.js');
+  const content = await import('../extension/autofill.js');
   isInputField = content.isInputField;
   findEmailFields = content.findEmailFields;
   findTextFields = content.findTextFields;

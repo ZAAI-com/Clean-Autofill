@@ -1,4 +1,4 @@
-import type { EmailHistoryEntry } from './types';
+import type { EmailHistoryEntry } from '../types';
 
 const STORAGE_KEY = 'emailHistory';
 const MAX_ENTRIES = 10_000;

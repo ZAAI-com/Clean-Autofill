@@ -1,12 +1,12 @@
-import { getProviderInfo } from '../providers/mx-lookup.js';
-import type { ProviderStatus } from '../providers/providers.js';
+import { getProviderInfo } from '../email/mx-lookup.js';
+import type { ProviderStatus } from '../email/providers.js';
 import {
   domainRegex,
   extractDomainFromEmail,
   extractLocalPart,
   getProviderStatus,
   getProviderStatusWithMx,
-} from '../providers/providers.js';
+} from '../email/providers.js';
 import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode, MxLookupResult } from '../types';
 
 const { debounce } =

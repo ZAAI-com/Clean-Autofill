@@ -1,6 +1,6 @@
 // Shared utilities for Clean-Autofill extension
 import psl from 'psl';
-import type { CleanAutofillUtils } from './types';
+import type { CleanAutofillUtils } from '../types';
 
 /**
  * List of special multi-part TLDs (e.g., co.uk, com.au) used for domain extraction.

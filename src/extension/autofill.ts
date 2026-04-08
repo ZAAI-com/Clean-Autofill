@@ -1,5 +1,5 @@
 // Access shared utilities (loaded via manifest before this script)
-import type { CleanAutofillUtils, FillEmailRequest, FillEmailResponse } from './types';
+import type { CleanAutofillUtils, FillEmailRequest, FillEmailResponse } from '../types';
 
 // Get utils object reference (use different name to avoid conflict with 'utils' declared in utils-content.js)
 const cleanAutofillUtils = (globalThis as { CleanAutofillUtils?: CleanAutofillUtils })

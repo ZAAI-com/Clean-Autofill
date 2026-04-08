@@ -1,4 +1,4 @@
-import type { ProviderStatus } from '../providers/providers.js';
+import type { ProviderStatus } from '../email/providers.js';
 
 export type EmailMode = 'catchAll' | 'plusAddressing';
 

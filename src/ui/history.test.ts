@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import type { EmailHistoryEntry } from './types';
+import type { EmailHistoryEntry } from '../types';
 
 // Mock chrome.storage.local
 let store: Record<string, unknown> = {};
@@ -29,7 +29,7 @@ let uuidCounter = 0;
 };
 
 // Import after mocks are in place
-const { addEntry, getHistory, deleteEntry, clearHistory } = await import('./history.js');
+const { addEntry, getHistory, deleteEntry, clearHistory } = await import('../ui/history.js');
 
 function makeEntry(
   overrides?: Partial<Omit<EmailHistoryEntry, 'id'>>,

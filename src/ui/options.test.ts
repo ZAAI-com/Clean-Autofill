@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
-import { domainRegex, extractDomainFromEmail } from '../providers/providers.js';
+import { domainRegex, extractDomainFromEmail } from '../email/providers.js';
 
 // Load utils first
 beforeAll(async () => {
-  await import('../utils.js');
+  await import('../email/utils.js');
 });
 
 // Mock chrome API

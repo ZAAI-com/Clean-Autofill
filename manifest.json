@@ -23,7 +23,7 @@
     }
   },
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "extension/background.js",
     "type": "module"
   },
   "icons": {
@@ -42,8 +42,8 @@
         "<all_urls>"
       ],
       "js": [
-        "utils-content.js",
-        "content.js"
+        "email/utils-content.js",
+        "extension/autofill.js"
       ],
       "all_frames": true
     }
