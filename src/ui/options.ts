@@ -19,6 +19,100 @@ import type {
 const { debounce } =
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils || {};
 
+export type SaveIndicatorState = 'editing' | 'saving' | 'saved' | 'error';
+
+export type SettingsDraft = {
+  mode: EmailMode;
+  storagePayload: Record<string, string>;
+  canonicalInputValue: string;
+};
+
+type SelectedMode = EmailMode | null;
+
+const SAVE_INDICATOR_LABELS: Record<SaveIndicatorState, string> = {
+  editing: 'Editing…',
+  saving: 'Saving…',
+  saved: 'Saved',
+  error: 'Save failed',
+};
+
+const UNSUPPORTED_PROVIDER_MESSAGE =
+  'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.';
+
+export function getSaveIndicatorLabel(state: SaveIndicatorState): string {
+  return SAVE_INDICATOR_LABELS[state];
+}
+
+export function createSettingsDraft(value: string, mode: EmailMode): SettingsDraft | null {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return null;
+
+  const localPart = extractLocalPart(trimmedValue);
+  const domain = extractDomainFromEmail(trimmedValue)?.toLowerCase() ?? null;
+  const normalizedDomain = trimmedValue.replace(/^@/, '').toLowerCase();
+  const isFullEmail =
+    trimmedValue.includes('@') && localPart != null && domain != null && domainRegex.test(domain);
+
+  if (mode === 'plusAddressing') {
+    if (!isFullEmail || !domain) return null;
+    return {
+      mode,
+      canonicalInputValue: trimmedValue,
+      storagePayload: {
+        emailMode: mode,
+        emailDomain: domain,
+        baseEmail: trimmedValue,
+      },
+    };
+  }
+
+  if (isFullEmail && domain) {
+    return {
+      mode,
+      canonicalInputValue: trimmedValue,
+      storagePayload: {
+        emailMode: mode,
+        emailDomain: domain,
+        baseEmail: trimmedValue,
+      },
+    };
+  }
+
+  if (!domainRegex.test(normalizedDomain)) return null;
+
+  return {
+    mode,
+    canonicalInputValue: normalizedDomain,
+    storagePayload: {
+      emailMode: mode,
+      emailDomain: normalizedDomain,
+    },
+  };
+}
+
+export function areSettingsDraftsEqual(a: SettingsDraft | null, b: SettingsDraft | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.mode !== b.mode || a.canonicalInputValue !== b.canonicalInputValue) return false;
+
+  const aEntries = Object.entries(a.storagePayload).sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
+  const bEntries = Object.entries(b.storagePayload).sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
+
+  if (aEntries.length !== bEntries.length) return false;
+
+  for (let i = 0; i < aEntries.length; i++) {
+    if (aEntries[i][0] !== bEntries[i][0] || aEntries[i][1] !== bEntries[i][1]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // ── Sidebar Navigation ──
   const navItems = document.querySelectorAll<HTMLElement>('.nav-item[data-page]');
@@ -50,6 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settingsForm');
   const emailInput = document.getElementById('emailInput');
   const statusDiv = document.getElementById('status');
+  const saveStateIndicator = document.getElementById('saveStateIndicator');
   const chromeProfileEmail = document.getElementById('chromeProfileEmail');
   const colPlusAddressing = document.getElementById('colPlusAddressing');
   const colCatchAll = document.getElementById('colCatchAll');
@@ -79,6 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     !form ||
     !emailInput ||
     !statusDiv ||
+    !saveStateIndicator ||
     !chromeProfileEmail ||
     !colPlusAddressing ||
     !colCatchAll ||
@@ -111,6 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formEl = form as HTMLFormElement;
   const input = emailInput as HTMLInputElement;
   const statusEl = statusDiv as HTMLDivElement;
+  const saveStateEl = saveStateIndicator as HTMLDivElement;
   const profileEmailEl = chromeProfileEmail as HTMLSpanElement;
   const colPlus = colPlusAddressing as HTMLDivElement;
   const colCatch = colCatchAll as HTMLDivElement;
@@ -139,8 +236,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentLookupDomain: string | null = null;
   let currentDetectedProvider: DetectedProvider | null = null;
   let isLoading = true;
+  let lastSavedDraft: SettingsDraft | null = null;
+  let pendingDraft: SettingsDraft | null = null;
+  let saveDelayTimer: ReturnType<typeof setTimeout> | null = null;
+  let activeSavePromise: Promise<void> | null = null;
+  let statusTimer: ReturnType<typeof setTimeout> | null = null;
+  let preferredMode: EmailMode = 'catchAll';
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
+
+  interface InputState {
+    trimmedValue: string;
+    normalizedDomain: string;
+    localPart: string | null;
+    domain: string | null;
+    isFullEmail: boolean;
+    plusAllowed: boolean;
+    catchAllAllowed: boolean;
+  }
 
   // ── Provider Logos (local assets from src/icons/providers/) ──
   const PROVIDER_LOGO_FILES: Record<string, string> = {
@@ -277,43 +390,156 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Settings Logic ──
 
-  function getMode(): EmailMode {
-    return radioPlus.checked ? 'plusAddressing' : 'catchAll';
+  function getMode(): SelectedMode {
+    if (radioPlus.checked) return 'plusAddressing';
+    if (radioCatch.checked) return 'catchAll';
+    return null;
   }
 
-  function setMode(mode: EmailMode): void {
+  function getDisplayMode(): EmailMode {
+    return getMode() ?? preferredMode;
+  }
+
+  function applyModeSelection(mode: SelectedMode): void {
+    radioPlus.checked = mode === 'plusAddressing';
+    radioCatch.checked = mode === 'catchAll';
+    colPlus.classList.toggle('selected', mode === 'plusAddressing');
+    colCatch.classList.toggle('selected', mode === 'catchAll');
+  }
+
+  function clearModeSelection(): void {
+    applyModeSelection(null);
+  }
+
+  function restorePreferredModeSelection(): void {
+    if (getMode()) return;
+
+    if (preferredMode === 'plusAddressing' && !colPlus.classList.contains('disabled')) {
+      applyModeSelection('plusAddressing');
+      return;
+    }
+
+    if (preferredMode === 'catchAll' && !colCatch.classList.contains('disabled')) {
+      applyModeSelection('catchAll');
+      return;
+    }
+
+    if (!colPlus.classList.contains('disabled')) {
+      applyModeSelection('plusAddressing');
+      return;
+    }
+
+    if (!colCatch.classList.contains('disabled')) {
+      applyModeSelection('catchAll');
+    }
+  }
+
+  function shouldDisableBothModesForFullEmail(
+    domain: string,
+    finalStatus: ProviderStatus,
+  ): boolean {
+    return finalStatus === 'plus-unsupported' && getProviderStatus(domain) !== 'custom';
+  }
+
+  function getCurrentDraft(): SettingsDraft | null {
+    const mode = getMode();
+    if (!mode) return null;
+    return createSettingsDraft(input.value, mode);
+  }
+
+  function clearStatus(): void {
+    if (statusTimer) {
+      clearTimeout(statusTimer);
+      statusTimer = null;
+    }
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+  }
+
+  function clearInlineError(): void {
+    if (statusEl.classList.contains('error')) {
+      clearStatus();
+    }
+  }
+
+  function setSaveIndicator(state: SaveIndicatorState): void {
+    saveStateEl.hidden = false;
+    saveStateEl.dataset.state = state;
+    saveStateEl.className = `save-state-button is-${state}`;
+    saveStateEl.textContent = getSaveIndicatorLabel(state);
+  }
+
+  function syncSaveIndicatorFromDraft(): void {
+    if (isLoading) return;
+
+    const currentDraft = getCurrentDraft();
+    if (
+      !activeSavePromise &&
+      pendingDraft == null &&
+      areSettingsDraftsEqual(currentDraft, lastSavedDraft)
+    ) {
+      setSaveIndicator('saved');
+      return;
+    }
+
+    setSaveIndicator('editing');
+  }
+
+  function clearScheduledSave(): void {
+    if (saveDelayTimer) {
+      clearTimeout(saveDelayTimer);
+      saveDelayTimer = null;
+    }
+  }
+
+  function getInputState(value = input.value): InputState {
+    const trimmedValue = value.trim();
+    const localPart = extractLocalPart(trimmedValue);
+    const domain = extractDomainFromEmail(trimmedValue)?.toLowerCase() ?? null;
+    const normalizedDomain = trimmedValue.replace(/^@/, '').toLowerCase();
+    const isFullEmail = trimmedValue.includes('@') && domain != null && domainRegex.test(domain);
+
+    return {
+      trimmedValue,
+      normalizedDomain,
+      localPart,
+      domain,
+      isFullEmail,
+      plusAllowed: isFullEmail,
+      catchAllAllowed: isFullEmail || domainRegex.test(normalizedDomain),
+    };
+  }
+
+  function setMode(mode: EmailMode, options: { persist?: boolean } = {}): void {
+    const { persist = true } = options;
     // Don't allow selecting a disabled mode
     const col = mode === 'plusAddressing' ? colPlus : colCatch;
     if (col.classList.contains('disabled')) return;
 
-    if (mode === 'plusAddressing') {
-      radioPlus.checked = true;
-      radioCatch.checked = false;
-      colPlus.classList.add('selected');
-      colCatch.classList.remove('selected');
-    } else {
-      radioCatch.checked = true;
-      radioPlus.checked = false;
-      colCatch.classList.add('selected');
-      colPlus.classList.remove('selected');
-    }
+    preferredMode = mode;
+    applyModeSelection(mode);
     updateFormatDisplay();
     updateExamples();
-    saveSettings();
+    if (persist) {
+      syncSaveIndicatorFromDraft();
+      void requestSave({ immediate: true });
+    }
   }
 
   function setColumnDisabled(col: HTMLDivElement, disabled: boolean): void {
-    if (disabled) {
-      col.classList.add('disabled');
-    } else {
-      col.classList.remove('disabled');
-    }
+    col.classList.toggle('disabled', disabled);
+    col.setAttribute('aria-disabled', disabled ? 'true' : 'false');
   }
 
   function setFeedback(state: 'info' | 'warning' | 'clear', message: string): void {
     modeFeedbackEl.className = 'mode-feedback';
     modeFeedbackEl.textContent = '';
-    if (state === 'clear') return;
+    if (state === 'clear') {
+      modeFeedbackEl.classList.add('is-empty');
+      modeFeedbackEl.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    modeFeedbackEl.setAttribute('aria-hidden', 'false');
     if (state === 'warning') {
       modeFeedbackEl.classList.add('feedback-warning');
     }
@@ -467,10 +693,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     status: ProviderStatus,
     mxResult: MxLookupResult | null,
   ): void {
-    // Both columns available
-    setColumnDisabled(colPlus, false);
-    setColumnDisabled(colCatch, false);
-
     // Provider detection display
     const syncStatus = getProviderStatus(domain);
     let providerName: string | null = null;
@@ -493,6 +715,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Requirement indicators
     updateRequirementIndicators(syncStatus, mxResult?.provider != null, status, providerName);
+
+    if (shouldDisableBothModesForFullEmail(domain, status)) {
+      setColumnDisabled(colPlus, true);
+      setColumnDisabled(colCatch, true);
+      clearModeSelection();
+      setFeedback('warning', UNSUPPORTED_PROVIDER_MESSAGE);
+      return;
+    }
+
+    setColumnDisabled(colPlus, false);
+    setColumnDisabled(colCatch, false);
+    restorePreferredModeSelection();
 
     // Feedback bar
     if (status === 'plus-unsupported') {
@@ -540,33 +774,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentLookupDomain = null;
   }
 
-  function updateModeAvailability(): void {
-    const value = input.value.trim();
-    const domain = extractDomainFromEmail(value);
-    const isFullEmail = value.includes('@') && domain != null && domainRegex.test(domain);
-
+  function applyImmediateInputState(state: InputState): void {
     hideProviderDetection();
     resetRequirementIndicators();
 
-    if (!value) {
+    if (state.plusAllowed) {
+      const syncStatus = getProviderStatus(state.domain as string);
+      if (syncStatus === 'plus-unsupported') {
+        setColumnDisabled(colPlus, true);
+        setColumnDisabled(colCatch, true);
+        clearModeSelection();
+        setFeedback('warning', UNSUPPORTED_PROVIDER_MESSAGE);
+      } else {
+        setColumnDisabled(colPlus, false);
+        setColumnDisabled(colCatch, false);
+        restorePreferredModeSelection();
+        setFeedback('clear', '');
+      }
+    } else if (!state.trimmedValue) {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, true);
       setFeedback('info', 'Enter your email or domain above');
-      return;
-    }
-
-    if (!isFullEmail) {
-      // Domain-only input: Plus Addressing stays disabled, but provider detection still runs
-      const cleanValue = value.replace(/^@/, '').toLowerCase();
-
+    } else if (!state.catchAllAllowed) {
+      setColumnDisabled(colPlus, true);
+      setColumnDisabled(colCatch, true);
+      setFeedback('info', 'Enter a valid email or domain');
+    } else {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, false);
       setFeedback('info', 'Plus Addressing requires a full email address');
-      if (getMode() === 'plusAddressing') setMode('catchAll');
+      if (getMode() === 'plusAddressing') {
+        setMode('catchAll', { persist: false });
+      } else {
+        restorePreferredModeSelection();
+      }
+    }
 
-      if (!domainRegex.test(cleanValue)) {
-        setColumnDisabled(colCatch, true);
-        setFeedback('info', 'Enter a valid email or domain');
+    updateFormatDisplay(state);
+    updateExamples(state);
+  }
+
+  function updateModeAvailability(state = getInputState()): void {
+    hideProviderDetection();
+    resetRequirementIndicators();
+
+    if (!state.trimmedValue) {
+      return;
+    }
+
+    if (!state.isFullEmail) {
+      // Domain-only input: Plus Addressing stays disabled, but provider detection still runs
+      const cleanValue = state.normalizedDomain;
+
+      if (!state.catchAllAllowed) {
         return;
       }
 
@@ -658,61 +918,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Synchronous check first
-    const status = getProviderStatus(domain as string);
-    applyProviderStatus(domain as string, status, null);
+    const status = getProviderStatus(state.domain as string);
+    applyProviderStatus(state.domain as string, status, null);
 
     // If custom domain, try MX lookup
     if (status === 'custom') {
-      currentLookupDomain = domain as string;
+      currentLookupDomain = state.domain as string;
       showProviderLoading();
-      getProviderStatusWithMx(domain as string)
+      getProviderStatusWithMx(state.domain as string)
         .then(({ status: mxStatus, mxResult }) => {
-          if (currentLookupDomain === domain) {
-            applyProviderStatus(domain as string, mxStatus, mxResult);
+          if (currentLookupDomain === state.domain) {
+            applyProviderStatus(state.domain as string, mxStatus, mxResult);
           }
         })
         .catch(() => {
-          if (currentLookupDomain === domain) {
+          if (currentLookupDomain === state.domain) {
             hideProviderDetection();
           }
         });
     }
   }
 
-  function updateFormatDisplay(): void {
-    const value = input.value.trim();
-    const mode = getMode();
+  function updateFormatDisplay(state = getInputState()): void {
+    const mode = getDisplayMode();
 
     if (mode === 'plusAddressing') {
-      const localPart = extractLocalPart(value) || 'name';
-      const domain = extractDomainFromEmail(value) || 'gmail.com';
-      plusFormatEl.textContent = `${localPart}+site@${domain}`;
+      plusFormatEl.textContent = `${state.localPart || 'name'}+example.com@${state.domain || 'gmail.com'}`;
     } else {
-      const domain = value.includes('@')
-        ? extractDomainFromEmail(value) || value
-        : value || 'yourdomain.com';
-      catchAllFormatEl.textContent = `site@${domain}`;
+      catchAllFormatEl.textContent = `example.com@${state.domain || state.trimmedValue || 'yourdomain.com'}`;
     }
   }
 
-  function updateExamples(): void {
-    const value = input.value.trim();
-    const mode = getMode();
+  function updateExamples(state = getInputState()): void {
+    const mode = getDisplayMode();
 
     if (mode === 'plusAddressing') {
-      const localPart = extractLocalPart(value) || 'name';
-      const domain = extractDomainFromEmail(value) || 'gmail.com';
       for (let i = 0; i < exampleEls.length; i++) {
         const site = exampleEls[i].dataset.site;
-        if (site) exampleEls[i].textContent = `${localPart}+${site}@${domain}`;
+        if (site)
+          exampleEls[i].textContent =
+            `${state.localPart || 'name'}+${site}@${state.domain || 'gmail.com'}`;
       }
     } else {
-      const domain = value.includes('@')
-        ? extractDomainFromEmail(value) || value
-        : value || 'yourdomain.com';
       for (let i = 0; i < exampleEls.length; i++) {
         const site = exampleEls[i].dataset.site;
-        if (site) exampleEls[i].textContent = `${site}@${domain}`;
+        if (site) {
+          exampleEls[i].textContent =
+            `${site}@${state.domain || state.trimmedValue || 'yourdomain.com'}`;
+        }
       }
     }
   }
@@ -722,71 +975,133 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = await chrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
       const hasSavedSettings = result.emailMode || result.emailDomain || result.baseEmail;
       const mode: EmailMode = (result.emailMode as EmailMode) ?? 'catchAll';
+      preferredMode = mode;
 
       if (hasSavedSettings) {
-        if (mode === 'plusAddressing' && result.baseEmail) {
+        if (result.baseEmail) {
           input.value = result.baseEmail as string;
         } else if (result.emailDomain) {
           input.value = result.emailDomain as string;
         }
-        updateModeAvailability();
-        setMode(mode);
+        const state = getInputState();
+        applyImmediateInputState(state);
+        updateModeAvailability(state);
+        setMode(mode, { persist: false });
+        lastSavedDraft = createSettingsDraft(input.value, mode);
+        setSaveIndicator(lastSavedDraft ? 'saved' : 'editing');
       } else if (profileEmail) {
         // No saved settings, auto-configure with Chrome profile email
+        preferredMode = 'plusAddressing';
         input.value = profileEmail;
-        updateModeAvailability();
-        setMode('plusAddressing');
-        await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: profileEmail });
+        const state = getInputState();
+        applyImmediateInputState(state);
+        updateModeAvailability(state);
+        setMode('plusAddressing', { persist: false });
+        await requestSave({ immediate: true });
         showStatus('Settings auto-configured from your Chrome profile', 'success');
       } else {
-        updateModeAvailability();
+        const state = getInputState();
+        applyImmediateInputState(state);
+        updateModeAvailability(state);
+        lastSavedDraft = null;
+        setSaveIndicator('editing');
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
+      setSaveIndicator('error');
       showStatus('Failed to load settings', 'error');
     }
   }
 
-  async function saveSettings(): Promise<void> {
-    if (isLoading) return;
+  async function persistDraft(draft: SettingsDraft): Promise<void> {
+    await chrome.storage.sync.set(draft.storagePayload);
 
-    const value = input.value.trim();
-    const mode = getMode();
-
-    if (!value) return;
-
-    if (mode === 'plusAddressing') {
-      const localPart = extractLocalPart(value);
-      const domain = extractDomainFromEmail(value);
-      if (!localPart || !domain || !domainRegex.test(domain)) return;
-
-      try {
-        await chrome.storage.sync.set({ emailMode: 'plusAddressing', baseEmail: value });
-        showStatus('Settings saved', 'success');
-      } catch (error) {
-        showStatus(
-          `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          'error',
-        );
-      }
-    } else {
-      const cleanDomain = value.includes('@')
-        ? extractDomainFromEmail(value) || value.replace(/^@/, '')
-        : value.replace(/^@/, '');
-
-      if (!domainRegex.test(cleanDomain)) return;
-
-      try {
-        await chrome.storage.sync.set({ emailMode: 'catchAll', emailDomain: cleanDomain });
-        input.value = cleanDomain;
-        showStatus('Settings saved', 'success');
-      } catch (error) {
-        showStatus(
-          `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          'error',
-        );
-      }
+    if (!('baseEmail' in draft.storagePayload)) {
+      await chrome.storage.sync.remove(['baseEmail']);
     }
+
+    if (input.value !== draft.canonicalInputValue) {
+      input.value = draft.canonicalInputValue;
+      const normalizedState = getInputState();
+      applyImmediateInputState(normalizedState);
+      updateModeAvailability(normalizedState);
+    }
+  }
+
+  async function flushPendingSave(): Promise<void> {
+    if (activeSavePromise) return activeSavePromise;
+
+    activeSavePromise = (async () => {
+      while (pendingDraft) {
+        const draftToSave = pendingDraft;
+        pendingDraft = null;
+        setSaveIndicator('saving');
+
+        try {
+          await persistDraft(draftToSave);
+          lastSavedDraft = draftToSave;
+          clearInlineError();
+
+          const currentDraft = getCurrentDraft();
+          if (pendingDraft == null && areSettingsDraftsEqual(currentDraft, draftToSave)) {
+            setSaveIndicator('saved');
+          } else {
+            setSaveIndicator('editing');
+          }
+        } catch (error) {
+          setSaveIndicator('error');
+          showStatus(
+            `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            'error',
+          );
+
+          if (pendingDraft == null) {
+            break;
+          }
+        }
+      }
+    })().finally(() => {
+      activeSavePromise = null;
+      if (pendingDraft) {
+        void flushPendingSave();
+      }
+    });
+
+    return activeSavePromise;
+  }
+
+  function requestSave(options: { immediate: boolean }): Promise<void> | void {
+    const { immediate } = options;
+    const draft = getCurrentDraft();
+
+    if (!draft) {
+      pendingDraft = null;
+      clearScheduledSave();
+      if (!activeSavePromise) {
+        setSaveIndicator('editing');
+      }
+      return;
+    }
+
+    if (!activeSavePromise && areSettingsDraftsEqual(draft, lastSavedDraft)) {
+      pendingDraft = null;
+      clearScheduledSave();
+      setSaveIndicator('saved');
+      return;
+    }
+
+    pendingDraft = draft;
+
+    if (immediate) {
+      clearScheduledSave();
+      return flushPendingSave();
+    }
+
+    clearScheduledSave();
+    saveDelayTimer = setTimeout(() => {
+      saveDelayTimer = null;
+      void flushPendingSave();
+    }, 300);
   }
 
   async function loadChromeProfileEmail(): Promise<string | null> {
@@ -803,15 +1118,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     return null;
   }
 
-  function importChromeEmail(): void {
+  async function importChromeEmail(): Promise<void> {
     const email = profileEmailEl.textContent;
     if (!email || email === 'Not detected') return;
     input.value = email;
-    updateModeAvailability();
-    updateFormatDisplay();
-    updateExamples();
-    saveSettings();
+    const state = getInputState();
+    applyImmediateInputState(state);
+    updateModeAvailability(state);
     showStatus('Email imported', 'success');
+    await requestSave({ immediate: true });
   }
 
   function selectRecommendedMode(): void {
@@ -823,33 +1138,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showStatus(message: string, type: 'success' | 'error'): void {
+    if (statusTimer) {
+      clearTimeout(statusTimer);
+    }
     statusEl.textContent = message;
     statusEl.className = `status ${type}`;
 
-    setTimeout(() => {
-      statusEl.className = 'status';
+    statusTimer = setTimeout(() => {
+      statusTimer = null;
+      clearStatus();
     }, 3000);
   }
 
   const debouncedUpdate = debounce
     ? debounce(() => {
-        updateModeAvailability();
-        updateFormatDisplay();
-        updateExamples();
-        saveSettings();
+        const state = getInputState();
+        updateModeAvailability(state);
       }, 300)
     : () => {
-        updateModeAvailability();
-        updateFormatDisplay();
-        updateExamples();
-        saveSettings();
+        const state = getInputState();
+        updateModeAvailability(state);
       };
 
   // Settings event listeners
   formEl.addEventListener('submit', (e) => e.preventDefault());
-  profileEmailEl.addEventListener('click', importChromeEmail);
+  profileEmailEl.addEventListener('click', () => {
+    void importChromeEmail();
+  });
   providerDetectedEl.addEventListener('click', selectRecommendedMode);
-  input.addEventListener('input', debouncedUpdate);
+  input.addEventListener('input', () => {
+    const state = getInputState();
+    applyImmediateInputState(state);
+    syncSaveIndicatorFromDraft();
+    debouncedUpdate();
+    void requestSave({ immediate: false });
+  });
 
   colPlus.addEventListener('click', () => setMode('plusAddressing'));
   colCatch.addEventListener('click', () => setMode('catchAll'));

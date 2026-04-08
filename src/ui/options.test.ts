@@ -1,13 +1,22 @@
-import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
 import { domainRegex, extractDomainFromEmail, getProviderStatus } from '../email/providers.js';
+
+let createSettingsDraft: typeof import('./options.js').createSettingsDraft;
+let areSettingsDraftsEqual: typeof import('./options.js').areSettingsDraftsEqual;
+let getSaveIndicatorLabel: typeof import('./options.js').getSaveIndicatorLabel;
 
 // Load utils first
 beforeAll(async () => {
   await import('../email/utils.js');
+  const optionsModule = await import('./options.js');
+  createSettingsDraft = optionsModule.createSettingsDraft;
+  areSettingsDraftsEqual = optionsModule.areSettingsDraftsEqual;
+  getSaveIndicatorLabel = optionsModule.getSaveIndicatorLabel;
 });
 
 // Mock chrome API
 const mockStorage: Record<string, unknown> = {};
+const mockLocalStorage: Record<string, unknown> = {};
 const mockChrome = {
   storage: {
     sync: {
@@ -29,6 +38,18 @@ const mockChrome = {
         }
       }),
     },
+    local: {
+      get: mock(async (key: string) => {
+        const value = mockLocalStorage[key];
+        return value !== undefined ? { [key]: value } : {};
+      }),
+      set: mock(async (items: Record<string, unknown>) => {
+        Object.assign(mockLocalStorage, items);
+      }),
+      remove: mock(async (key: string) => {
+        delete mockLocalStorage[key];
+      }),
+    },
   },
   tabs: {
     query: mock(async () => [{ url: 'https://example.com/page' }]),
@@ -42,6 +63,74 @@ const mockChrome = {
 };
 
 (globalThis as Record<string, unknown>).chrome = mockChrome;
+
+function setupOptionsDOM(): void {
+  document.body.innerHTML = `
+    <div class="nav-item" data-page="settings"></div>
+    <div class="page" id="page-settings"></div>
+    <div class="page" id="page-history"></div>
+    <div class="page" id="page-help"></div>
+    <div id="saveStateIndicator" hidden></div>
+    <form id="settingsForm">
+      <input id="emailInput" type="text" />
+      <div id="status" class="status"></div>
+      <span id="chromeProfileEmail">Not detected</span>
+      <div id="colPlusAddressing" class="mode-column"></div>
+      <div id="colCatchAll" class="mode-column"></div>
+      <input type="radio" id="modePlusAddressing" name="emailMode" value="plusAddressing" />
+      <input type="radio" id="modeCatchAll" name="emailMode" value="catchAll" />
+      <code id="plusFormat"></code>
+      <code id="catchAllFormat"></code>
+      <div id="modeFeedback" class="mode-feedback is-empty" aria-hidden="true"></div>
+      <div id="providerDetected" style="display: none;"></div>
+      <span id="providerText"></span>
+      <span id="providerPlaceholder"></span>
+      <span id="providerLogo"></span>
+      <span id="plusProviderIndicator"></span>
+      <span id="plusSupportIndicator"></span>
+      <span id="catchAllDomainIndicator"></span>
+      <span id="catchAllEnabledIndicator"></span>
+      <span id="plusProviderValue"></span>
+      <span id="plusSupportValue"></span>
+      <span id="catchAllDomainValue"></span>
+      <span id="catchAllEnabledValue"></span>
+      <div id="detectionChromeProfile"></div>
+      <div id="detectionProvider"></div>
+      <span id="catchAllInfoIcon" style="display: none;"></span>
+      <div id="helpProvidersContainer"></div>
+    </form>
+    <code class="example-email" data-site="amazon.com"></code>
+    <code class="example-email" data-site="github.com"></code>
+    <table id="historyTable"><tbody id="historyBody"></tbody></table>
+    <div id="historyEmpty"></div>
+    <input id="historySearch" />
+    <button id="clearHistoryButton" type="button">Clear</button>
+  `;
+}
+
+function getOptionsElements() {
+  return {
+    input: document.getElementById('emailInput') as HTMLInputElement,
+    saveState: document.getElementById('saveStateIndicator') as HTMLDivElement,
+    status: document.getElementById('status') as HTMLDivElement,
+    modeFeedback: document.getElementById('modeFeedback') as HTMLDivElement,
+    profileEmail: document.getElementById('chromeProfileEmail') as HTMLSpanElement,
+    colPlus: document.getElementById('colPlusAddressing') as HTMLDivElement,
+    colCatch: document.getElementById('colCatchAll') as HTMLDivElement,
+    radioPlus: document.getElementById('modePlusAddressing') as HTMLInputElement,
+    radioCatch: document.getElementById('modeCatchAll') as HTMLInputElement,
+  };
+}
+
+async function initOptionsPage(): Promise<void> {
+  setupOptionsDOM();
+  document.dispatchEvent(new Event('DOMContentLoaded'));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function waitForDebounce(ms = 350): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Test-only helpers
 
@@ -391,15 +480,407 @@ describe('auto-save defaults on options page load', () => {
 });
 
 describe('status message types', () => {
-  function getStatusClass(type: 'success' | 'error'): string {
-    return `status ${type}`;
-  }
+  test('returns the correct label for each header save state', () => {
+    expect(getSaveIndicatorLabel('editing')).toBe('Editing…');
+    expect(getSaveIndicatorLabel('saving')).toBe('Saving…');
+    expect(getSaveIndicatorLabel('saved')).toBe('Saved');
+    expect(getSaveIndicatorLabel('error')).toBe('Save failed');
+  });
+});
 
-  test('returns correct class for success', () => {
-    expect(getStatusClass('success')).toBe('status success');
+describe('settings draft helpers', () => {
+  test('creates a plus-addressing draft from a valid email', () => {
+    expect(createSettingsDraft('name@gmail.com', 'plusAddressing')).toEqual({
+      mode: 'plusAddressing',
+      canonicalInputValue: 'name@gmail.com',
+      storagePayload: {
+        emailMode: 'plusAddressing',
+        emailDomain: 'gmail.com',
+        baseEmail: 'name@gmail.com',
+      },
+    });
   });
 
-  test('returns correct class for error', () => {
-    expect(getStatusClass('error')).toBe('status error');
+  test('creates a catch-all draft from a bare domain', () => {
+    expect(createSettingsDraft('example.com', 'catchAll')).toEqual({
+      mode: 'catchAll',
+      canonicalInputValue: 'example.com',
+      storagePayload: {
+        emailMode: 'catchAll',
+        emailDomain: 'example.com',
+      },
+    });
+  });
+
+  test('creates a catch-all draft from a leading-at domain', () => {
+    expect(createSettingsDraft('@Example.COM', 'catchAll')).toEqual({
+      mode: 'catchAll',
+      canonicalInputValue: 'example.com',
+      storagePayload: {
+        emailMode: 'catchAll',
+        emailDomain: 'example.com',
+      },
+    });
+  });
+
+  test('creates a catch-all draft from a full email without collapsing the input value', () => {
+    expect(createSettingsDraft('User@Example.com', 'catchAll')).toEqual({
+      mode: 'catchAll',
+      canonicalInputValue: 'User@Example.com',
+      storagePayload: {
+        emailMode: 'catchAll',
+        emailDomain: 'example.com',
+        baseEmail: 'User@Example.com',
+      },
+    });
+  });
+
+  test('returns null for incomplete or invalid input', () => {
+    expect(createSettingsDraft('name@', 'plusAddressing')).toBeNull();
+    expect(createSettingsDraft('exam', 'catchAll')).toBeNull();
+    expect(createSettingsDraft('', 'catchAll')).toBeNull();
+  });
+
+  test('compares drafts by payload and canonical input', () => {
+    const left = createSettingsDraft('name@gmail.com', 'plusAddressing');
+    const right = createSettingsDraft('name@gmail.com', 'plusAddressing');
+    const different = createSettingsDraft('other@gmail.com', 'plusAddressing');
+
+    expect(areSettingsDraftsEqual(left, right)).toBe(true);
+    expect(areSettingsDraftsEqual(left, different)).toBe(false);
+    expect(areSettingsDraftsEqual(left, null)).toBe(false);
+  });
+});
+
+describe('options page integration', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(mockStorage)) {
+      delete mockStorage[key];
+    }
+    for (const key of Object.keys(mockLocalStorage)) {
+      delete mockLocalStorage[key];
+    }
+    mockChrome.storage.sync.get.mockClear();
+    mockChrome.storage.sync.set.mockClear();
+    mockChrome.storage.sync.remove.mockClear();
+    mockChrome.storage.local.get.mockClear();
+    mockChrome.storage.local.set.mockClear();
+    mockChrome.storage.local.remove.mockClear();
+    mockChrome.identity.getProfileUserInfo = mock(async () => ({
+      email: 'user@gmail.com',
+      id: '12345',
+    }));
+  });
+
+  afterEach(async () => {
+    await waitForDebounce();
+    document.body.innerHTML = '';
+  });
+
+  test('shows full email on load when catch-all mode and baseEmail are both saved', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'mg.de';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colCatch, colPlus, saveState, status } = getOptionsElements();
+
+    expect(input.value).toBe('user@gmail.com');
+    expect(colCatch.classList.contains('selected')).toBe(true);
+    expect(colPlus.classList.contains('selected')).toBe(false);
+    expect(saveState.textContent).toBe('Saved');
+    expect(saveState.dataset.state).toBe('saved');
+    expect(status.textContent).toBe('');
+    expect(status.classList.contains('success')).toBe(false);
+    expect(status.classList.contains('error')).toBe(false);
+  });
+
+  test('imports Chrome profile email without collapsing it to a domain in catch-all mode', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'gmail.com';
+
+    await initOptionsPage();
+    const { input, profileEmail, colCatch, saveState, status } = getOptionsElements();
+
+    profileEmail.click();
+    await waitForDebounce(20);
+
+    expect(input.value).toBe('user@gmail.com');
+    expect(colCatch.classList.contains('selected')).toBe(true);
+    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+    expect(saveState.textContent).toBe('Saved');
+    expect(status.textContent).toBe('Email imported');
+  });
+
+  test('imports Chrome profile email and preserves plus mode when already selected', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'yahoo.com';
+    mockStorage.baseEmail = 'old@yahoo.com';
+
+    await initOptionsPage();
+    const { input, profileEmail, colPlus } = getOptionsElements();
+
+    profileEmail.click();
+    await waitForDebounce(20);
+
+    expect(input.value).toBe('user@gmail.com');
+    expect(colPlus.classList.contains('selected')).toBe(true);
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+  });
+
+  test('disables plus immediately for domain-only input and prevents reselection', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioPlus, radioCatch } = getOptionsElements();
+
+    expect(colPlus.classList.contains('selected')).toBe(true);
+
+    input.value = 'gmail.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(true);
+    expect(colCatch.classList.contains('disabled')).toBe(false);
+    expect(radioPlus.checked).toBe(false);
+    expect(radioCatch.checked).toBe(true);
+    expect(colCatch.classList.contains('selected')).toBe(true);
+
+    colPlus.click();
+
+    expect(radioPlus.checked).toBe(false);
+    expect(radioCatch.checked).toBe(true);
+
+    await waitForDebounce();
+
+    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBeUndefined();
+  });
+
+  test('saving a full email while catch-all stays selected preserves the full field value', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'gmail.com';
+
+    await initOptionsPage();
+    const { input, colCatch } = getOptionsElements();
+
+    input.value = 'worker@gmail.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForDebounce();
+
+    expect(colCatch.classList.contains('selected')).toBe(true);
+    expect(input.value).toBe('worker@gmail.com');
+    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBe('worker@gmail.com');
+  });
+
+  test('saving domain-only input clears baseEmail and reloads as domain-only', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    let elements = getOptionsElements();
+
+    elements.input.value = 'gmail.com';
+    elements.input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForDebounce();
+
+    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBeUndefined();
+
+    await initOptionsPage();
+    elements = getOptionsElements();
+
+    expect(elements.input.value).toBe('gmail.com');
+    expect(elements.colPlus.classList.contains('disabled')).toBe(true);
+    expect(elements.colCatch.classList.contains('selected')).toBe(true);
+  });
+
+  test('disables both modes for berlin.com emails and does not overwrite saved settings', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioPlus, radioCatch, modeFeedback, saveState } =
+      getOptionsElements();
+
+    expect(modeFeedback.classList.contains('is-empty')).toBe(true);
+
+    input.value = 'abc@berlin.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(true);
+    expect(colCatch.classList.contains('disabled')).toBe(true);
+    expect(radioPlus.checked).toBe(false);
+    expect(radioCatch.checked).toBe(false);
+    expect(modeFeedback.textContent).toBe(
+      'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.',
+    );
+    expect(modeFeedback.classList.contains('feedback-warning')).toBe(true);
+    expect(modeFeedback.classList.contains('is-empty')).toBe(false);
+    expect(modeFeedback.getAttribute('aria-hidden')).toBe('false');
+    expect(saveState.textContent).toBe('Editing…');
+
+    await waitForDebounce();
+
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+  });
+
+  test('applies the same both-disabled rule to yahoo.com emails', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioPlus, radioCatch, modeFeedback } = getOptionsElements();
+
+    input.value = 'abc@yahoo.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(true);
+    expect(colCatch.classList.contains('disabled')).toBe(true);
+    expect(radioPlus.checked).toBe(false);
+    expect(radioCatch.checked).toBe(false);
+    expect(modeFeedback.textContent).toBe(
+      'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.',
+    );
+  });
+
+  test('supported public-provider emails recover to the previous mode and clear the warning slot', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioPlus, radioCatch, modeFeedback } = getOptionsElements();
+
+    input.value = 'abc@berlin.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(radioPlus.checked).toBe(false);
+    expect(radioCatch.checked).toBe(false);
+
+    input.value = 'abc@gmail.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(false);
+    expect(colCatch.classList.contains('disabled')).toBe(false);
+    expect(radioPlus.checked).toBe(true);
+    expect(radioCatch.checked).toBe(false);
+    expect(modeFeedback.classList.contains('is-empty')).toBe(true);
+    expect(modeFeedback.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  test('custom-domain full emails do not disable both modes', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioCatch, modeFeedback } = getOptionsElements();
+
+    input.value = 'abc@mydomain.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(false);
+    expect(colCatch.classList.contains('disabled')).toBe(false);
+    expect(radioCatch.checked).toBe(true);
+    expect(modeFeedback.classList.contains('feedback-warning')).toBe(false);
+  });
+
+  test('shows editing immediately for invalid input and does not save it', async () => {
+    mockStorage.emailMode = 'plusAddressing';
+    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.baseEmail = 'user@gmail.com';
+
+    await initOptionsPage();
+    const { input, saveState } = getOptionsElements();
+
+    input.value = 'name@';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(saveState.textContent).toBe('Editing…');
+    expect(saveState.dataset.state).toBe('editing');
+
+    await waitForDebounce();
+
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+  });
+
+  test('transitions from editing to saved for valid input', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'old.com';
+
+    await initOptionsPage();
+    const { input, saveState } = getOptionsElements();
+
+    input.value = 'new.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(saveState.textContent).toBe('Editing…');
+    expect(saveState.dataset.state).toBe('editing');
+
+    await waitForDebounce();
+
+    expect(saveState.textContent).toBe('Saved');
+    expect(saveState.dataset.state).toBe('saved');
+    expect(mockStorage.emailDomain).toBe('new.com');
+  });
+
+  test('auto-configures first-run users and ends with a saved header state', async () => {
+    await initOptionsPage();
+    const { input, saveState, status } = getOptionsElements();
+
+    expect(input.value).toBe('user@gmail.com');
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.baseEmail).toBe('user@gmail.com');
+    expect(saveState.textContent).toBe('Saved');
+    expect(status.textContent).toBe('Settings auto-configured from your Chrome profile');
+  });
+
+  test('shows save failure in the header and recovers on the next successful save', async () => {
+    mockStorage.emailMode = 'catchAll';
+    mockStorage.emailDomain = 'start.com';
+
+    const failingSet = mock(async (_items: Record<string, unknown>) => {
+      throw new Error('sync unavailable');
+    });
+    mockChrome.storage.sync.set = failingSet;
+
+    await initOptionsPage();
+    let elements = getOptionsElements();
+
+    elements.input.value = 'broken.com';
+    elements.input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForDebounce();
+
+    expect(elements.saveState.textContent).toBe('Save failed');
+    expect(elements.saveState.dataset.state).toBe('error');
+    expect(elements.status.textContent).toContain('sync unavailable');
+
+    mockChrome.storage.sync.set = mock(async (items: Record<string, unknown>) => {
+      Object.assign(mockStorage, items);
+    });
+
+    elements.input.value = 'fixed.com';
+    elements.input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForDebounce();
+
+    elements = getOptionsElements();
+    expect(elements.saveState.textContent).toBe('Saved');
+    expect(mockStorage.emailDomain).toBe('fixed.com');
   });
 });

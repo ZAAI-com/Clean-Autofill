@@ -114,6 +114,16 @@ describe('generateEmail', () => {
       const email = generateEmail('https://example.com', 'mydomain.com', 'catchAll');
       expect(email).toBe('example.com@mydomain.com');
     });
+
+    test('ignores baseEmail when catch-all mode is selected', () => {
+      const email = generateEmail(
+        'https://example.com',
+        'mydomain.com',
+        'catchAll',
+        'user@gmail.com',
+      );
+      expect(email).toBe('example.com@mydomain.com');
+    });
   });
 
   describe('plus addressing mode', () => {
@@ -185,6 +195,16 @@ describe('generateEmail', () => {
     test('returns null when baseEmail has no @', () => {
       const email = generateEmail('https://example.com', '', 'plusAddressing', 'invalid-email');
       expect(email).toBeNull();
+    });
+
+    test('uses baseEmail even when userDomain is also present', () => {
+      const email = generateEmail(
+        'https://example.com',
+        'mydomain.com',
+        'plusAddressing',
+        'user@gmail.com',
+      );
+      expect(email).toBe('user+example.com@gmail.com');
     });
   });
 

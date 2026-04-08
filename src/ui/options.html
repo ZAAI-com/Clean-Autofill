@@ -125,6 +125,14 @@
           <h1 class="page-title">Settings</h1>
           <p class="page-subtitle">Configure your email for automatic email generation</p>
         </div>
+        <div
+          id="saveStateIndicator"
+          class="save-state-button is-saved"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          hidden
+        >Saved</div>
       </div>
 
       <form id="settingsForm">
@@ -169,7 +177,7 @@
               <div class="mode-header">Plus Addressing</div>
               <div class="mode-row">
                 <div class="row-label">Format</div>
-                <div class="row-value"><code id="plusFormat">name+site@gmail.com</code></div>
+                <div class="row-value"><code id="plusFormat">name+example.com@gmail.com</code></div>
               </div>
               <div class="mode-row">
                 <div class="row-label">Requirements</div>
@@ -195,7 +203,7 @@
               <div class="mode-header">Catch-All Prefix</div>
               <div class="mode-row">
                 <div class="row-label">Format</div>
-                <div class="row-value"><code id="catchAllFormat">site@yourdomain.com</code></div>
+                <div class="row-value"><code id="catchAllFormat">example.com@yourdomain.com</code></div>
               </div>
               <div class="mode-row">
                 <div class="row-label">Requirements</div>
@@ -218,7 +226,7 @@
               </div>
             </div>
           </div>
-          <div class="mode-feedback" id="modeFeedback"></div>
+          <div class="mode-feedback is-empty" id="modeFeedback" aria-hidden="true"></div>
           <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
           <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
         </section>
