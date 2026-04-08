@@ -131,10 +131,11 @@
         <!-- Section 1: Provide Email Address -->
         <section class="settings-section">
           <h2>1. Provide Email Address</h2>
-          <div class="chrome-profile">
-            <span class="detected-label">Detected from Chrome Profile:</span>
-            <span class="detected-email" id="chromeProfileEmail">Not detected</span>
-            <button type="button" class="button-use" id="importChromeButton">Use this</button>
+          <div class="detection-box" id="detectionChromeProfile">
+            <div class="detection-label">Chrome Profile</div>
+            <div class="detection-content">
+              <span class="detected-email" id="chromeProfileEmail">Not detected</span>
+            </div>
           </div>
           <div class="form-group">
             <input
@@ -148,14 +149,21 @@
             >
             <p class="help-text">Enter a full email for <strong>Plus Addressing</strong> Mode or just a domain for <strong>Catch-All Prefix</strong> Mode.</p>
           </div>
-          <div id="providerDetected" class="provider-detected" style="display: none;">
-            <span id="providerText" class="provider-text"></span>
-          </div>
         </section>
 
         <!-- Section 2: Select Mode -->
         <section class="settings-section">
           <h2>2. Select Mode</h2>
+          <div class="detection-box" id="detectionProvider">
+            <div class="detection-label">Email Provider Detection</div>
+            <div class="detection-content">
+              <span id="providerLogo" class="provider-logo" style="display: none;"></span>
+              <div id="providerDetected" class="provider-detected" style="display: none;">
+                <span id="providerText" class="provider-text"></span>
+              </div>
+              <span class="detection-placeholder" id="providerPlaceholder">Enter an email above to detect provider</span>
+            </div>
+          </div>
           <div class="mode-table">
             <div class="mode-column" id="colPlusAddressing" data-mode="plusAddressing">
               <div class="mode-header">Plus Addressing</div>
@@ -165,7 +173,22 @@
               </div>
               <div class="mode-row">
                 <div class="row-label">Requirement</div>
-                <div class="row-value">Email provider with Plus-Addressing support</div>
+                <div class="row-value req-checks">
+                  <div class="req-check">
+                    <span class="req-label">Email Provider</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="plusProviderValue">--</span>
+                      <span class="req-indicator" id="plusProviderIndicator"></span>
+                    </span>
+                  </div>
+                  <div class="req-check">
+                    <span class="req-label">Plus Addressing</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="plusSupportValue">--</span>
+                      <span class="req-indicator" id="plusSupportIndicator"></span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="mode-column" id="colCatchAll" data-mode="catchAll">
@@ -176,7 +199,22 @@
               </div>
               <div class="mode-row">
                 <div class="row-label">Requirement</div>
-                <div class="row-value">Custom Domain with enabled Catch-All</div>
+                <div class="row-value req-checks">
+                  <div class="req-check">
+                    <span class="req-label">Custom Domain</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="catchAllDomainValue">--</span>
+                      <span class="req-indicator" id="catchAllDomainIndicator"></span>
+                    </span>
+                  </div>
+                  <div class="req-check">
+                    <span class="req-label">Catch-All</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="catchAllEnabledValue">--</span>
+                      <span class="req-indicator" id="catchAllEnabledIndicator"></span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -186,6 +224,7 @@
 
         <!-- Section 3: Examples -->
         <section class="settings-section">
+          <div class="mode-feedback" id="plusFeedback"></div>
           <h2>3. Examples</h2>
           <div class="examples-list">
             <div class="example-row">
@@ -212,7 +251,6 @@
         </section>
 
         <div class="messages-area">
-          <div class="mode-feedback" id="plusFeedback"></div>
           <div class="mode-feedback" id="catchAllFeedback"></div>
           <div id="status" class="status" role="alert" aria-live="polite"></div>
         </div>

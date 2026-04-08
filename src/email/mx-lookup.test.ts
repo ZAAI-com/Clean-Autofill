@@ -251,6 +251,23 @@ describe('lookupMxRecords', () => {
     expect(result.status).toBe('custom');
   });
 
+  test('returns custom status when fetch times out', async () => {
+    mockFetch.mockImplementationOnce(
+      (_url: string, init?: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('The operation was aborted.', 'AbortError')),
+          );
+        }),
+    );
+
+    const result = await lookupMxRecords('hanging.com');
+
+    expect(result.provider).toBeNull();
+    expect(result.status).toBe('custom');
+    expect(result.ttl).toBe(300);
+  }, 10000);
+
   test('handles DNS NXDOMAIN (no Answer array)', async () => {
     fetchResponse = {
       ok: true,

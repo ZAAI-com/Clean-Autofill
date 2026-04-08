@@ -144,6 +144,18 @@ icons.forEach(icon => {
     console.log(`  ✅ icons/${icon}`);
 });
 
+// Copy provider icons
+const providerIconsSrc = path.join(SRC, 'icons', 'providers');
+const providerIconsDist = path.join(iconsDir, 'providers');
+if (fs.existsSync(providerIconsSrc)) {
+    fs.mkdirSync(providerIconsDist, { recursive: true });
+    const providerIcons = fs.readdirSync(providerIconsSrc).filter(f => f.endsWith('.png'));
+    providerIcons.forEach(icon => {
+        fs.copyFileSync(path.join(providerIconsSrc, icon), path.join(providerIconsDist, icon));
+        console.log(`  ✅ icons/providers/${icon}`);
+    });
+}
+
 // Verify compiled output
 console.log('\n📋 Verifying compiled files:');
 const requiredCompiledFiles = [

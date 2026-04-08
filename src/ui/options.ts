@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const emailInput = document.getElementById('emailInput');
   const statusDiv = document.getElementById('status');
   const clearButton = document.getElementById('clearButton');
-  const importChromeButton = document.getElementById('importChromeButton');
   const chromeProfileEmail = document.getElementById('chromeProfileEmail');
   const colPlusAddressing = document.getElementById('colPlusAddressing');
   const colCatchAll = document.getElementById('colCatchAll');
@@ -53,13 +52,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllFeedback = document.getElementById('catchAllFeedback');
   const providerDetected = document.getElementById('providerDetected');
   const providerText = document.getElementById('providerText');
+  const providerPlaceholder = document.getElementById('providerPlaceholder');
+  const providerLogo = document.getElementById('providerLogo');
+  const plusProviderIndicator = document.getElementById('plusProviderIndicator');
+  const plusSupportIndicator = document.getElementById('plusSupportIndicator');
+  const catchAllDomainIndicator = document.getElementById('catchAllDomainIndicator');
+  const catchAllEnabledIndicator = document.getElementById('catchAllEnabledIndicator');
+  const plusProviderValue = document.getElementById('plusProviderValue');
+  const plusSupportValue = document.getElementById('plusSupportValue');
+  const catchAllDomainValue = document.getElementById('catchAllDomainValue');
+  const catchAllEnabledValue = document.getElementById('catchAllEnabledValue');
+  const detectionChromeProfile = document.getElementById('detectionChromeProfile');
+  const detectionProvider = document.getElementById('detectionProvider');
 
   if (
     !form ||
     !emailInput ||
     !statusDiv ||
     !clearButton ||
-    !importChromeButton ||
     !chromeProfileEmail ||
     !colPlusAddressing ||
     !colCatchAll ||
@@ -70,7 +80,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     !plusFeedback ||
     !catchAllFeedback ||
     !providerDetected ||
-    !providerText
+    !providerText ||
+    !providerPlaceholder ||
+    !providerLogo ||
+    !plusProviderIndicator ||
+    !plusSupportIndicator ||
+    !catchAllDomainIndicator ||
+    !catchAllEnabledIndicator ||
+    !plusProviderValue ||
+    !plusSupportValue ||
+    !catchAllDomainValue ||
+    !catchAllEnabledValue ||
+    !detectionChromeProfile ||
+    !detectionProvider
   ) {
     console.error('Required DOM elements not found');
     return;
@@ -80,7 +102,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const input = emailInput as HTMLInputElement;
   const statusEl = statusDiv as HTMLDivElement;
   const clearBtn = clearButton as HTMLButtonElement;
-  const importBtn = importChromeButton as HTMLButtonElement;
   const profileEmailEl = chromeProfileEmail as HTMLSpanElement;
   const colPlus = colPlusAddressing as HTMLDivElement;
   const colCatch = colCatchAll as HTMLDivElement;
@@ -92,12 +113,104 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllFeedbackEl = catchAllFeedback as HTMLDivElement;
   const providerDetectedEl = providerDetected as HTMLDivElement;
   const providerTextEl = providerText as HTMLSpanElement;
+  const providerPlaceholderEl = providerPlaceholder as HTMLSpanElement;
+  const providerLogoEl = providerLogo as HTMLSpanElement;
+  const plusProviderEl = plusProviderIndicator as HTMLSpanElement;
+  const plusSupportEl = plusSupportIndicator as HTMLSpanElement;
+  const catchAllDomainEl = catchAllDomainIndicator as HTMLSpanElement;
+  const catchAllEnabledEl = catchAllEnabledIndicator as HTMLSpanElement;
+  const plusProviderValueEl = plusProviderValue as HTMLSpanElement;
+  const plusSupportValueEl = plusSupportValue as HTMLSpanElement;
+  const catchAllDomainValueEl = catchAllDomainValue as HTMLSpanElement;
+  const catchAllEnabledValueEl = catchAllEnabledValue as HTMLSpanElement;
+  const chromeDetectionBoxEl = detectionChromeProfile as HTMLDivElement;
+  const providerDetectionBoxEl = detectionProvider as HTMLDivElement;
 
   let currentLookupDomain: string | null = null;
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
 
-  // ── Settings Logic (unchanged) ──
+  // ── Provider Logos (local assets from src/icons/providers/) ──
+  const PROVIDER_LOGO_FILES: Record<string, string> = {
+    gmail: 'icons/providers/gmail.png',
+    'google-workspace': 'icons/providers/google-workspace.png',
+    outlook: 'icons/providers/outlook.png',
+    protonmail: 'icons/providers/protonmail.png',
+    fastmail: 'icons/providers/fastmail.png',
+    zoho: 'icons/providers/zoho.png',
+    icloud: 'icons/providers/icloud.png',
+    yahoo: 'icons/providers/yahoo.png',
+    gmx: 'icons/providers/gmx.png',
+    tutanota: 'icons/providers/tutanota.png',
+  };
+
+  const DOMAIN_TO_PROVIDER: Record<string, string> = {
+    'gmail.com': 'gmail',
+    'googlemail.com': 'gmail',
+    'outlook.com': 'outlook',
+    'hotmail.com': 'outlook',
+    'live.com': 'outlook',
+    'msn.com': 'outlook',
+    'protonmail.com': 'protonmail',
+    'proton.me': 'protonmail',
+    'pm.me': 'protonmail',
+    'protonmail.ch': 'protonmail',
+    'fastmail.com': 'fastmail',
+    'fastmail.fm': 'fastmail',
+    'zoho.com': 'zoho',
+    'icloud.com': 'icloud',
+    'me.com': 'icloud',
+    'mac.com': 'icloud',
+    'yahoo.com': 'yahoo',
+    'ymail.com': 'yahoo',
+    'rocketmail.com': 'yahoo',
+    'gmx.com': 'gmx',
+    'gmx.de': 'gmx',
+    'gmx.net': 'gmx',
+    'tuta.com': 'tutanota',
+    'tutanota.com': 'tutanota',
+  };
+
+  const DETECTED_PROVIDER_TO_LOGO: Record<string, string> = {
+    'google-workspace': 'google-workspace',
+    'microsoft-365': 'outlook',
+    fastmail: 'fastmail',
+    protonmail: 'protonmail',
+    zoho: 'zoho',
+    icloud: 'icloud',
+  };
+
+  const DOMAIN_TO_FRIENDLY_NAME: Record<string, string> = {
+    'gmail.com': 'Gmail',
+    'googlemail.com': 'Gmail',
+    'outlook.com': 'Outlook',
+    'hotmail.com': 'Outlook',
+    'live.com': 'Outlook',
+    'msn.com': 'Outlook',
+    'protonmail.com': 'Proton Mail',
+    'proton.me': 'Proton Mail',
+    'pm.me': 'Proton Mail',
+    'protonmail.ch': 'Proton Mail',
+    'fastmail.com': 'Fastmail',
+    'fastmail.fm': 'Fastmail',
+    'zoho.com': 'Zoho Mail',
+    'icloud.com': 'iCloud Mail',
+    'me.com': 'iCloud Mail',
+    'mac.com': 'iCloud Mail',
+    'yahoo.com': 'Yahoo Mail',
+    'ymail.com': 'Yahoo Mail',
+    'rocketmail.com': 'Yahoo Mail',
+    'gmx.com': 'GMX',
+    'gmx.de': 'GMX',
+    'gmx.net': 'GMX',
+    'web.de': 'web.de',
+    't-online.de': 'T-Online',
+    'tuta.com': 'Tuta',
+    'tutanota.com': 'Tuta',
+    'mailbox.org': 'Mailbox.org',
+  };
+
+  // ── Settings Logic ──
 
   function getMode(): EmailMode {
     return radioPlus.checked ? 'plusAddressing' : 'catchAll';
@@ -143,6 +256,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function setIndicator(
+    el: HTMLSpanElement,
+    state: 'supported' | 'possible' | 'incompatible' | null,
+  ): void {
+    el.className = 'req-indicator';
+    if (state) el.classList.add(`req-${state}`);
+  }
+
+  function updateRequirementIndicators(
+    syncStatus: ProviderStatus,
+    mxProviderFound: boolean,
+    finalStatus: ProviderStatus,
+    providerName: string | null,
+  ): void {
+    const isCustomDomain = syncStatus === 'custom';
+    const providerDetected = !isCustomDomain || mxProviderFound;
+
+    // Plus Addressing: Email Provider
+    setIndicator(plusProviderEl, providerDetected ? 'supported' : 'incompatible');
+    plusProviderValueEl.textContent = providerDetected
+      ? (providerName ?? 'Detected')
+      : 'Not Detected';
+
+    // Plus Addressing: Plus Addressing Supported
+    if (finalStatus === 'plus-supported') {
+      setIndicator(plusSupportEl, 'supported');
+      plusSupportValueEl.textContent = 'Supported';
+    } else if (finalStatus === 'plus-unsupported') {
+      setIndicator(plusSupportEl, 'incompatible');
+      plusSupportValueEl.textContent = 'Not Supported';
+    } else {
+      setIndicator(plusSupportEl, 'possible');
+      plusSupportValueEl.textContent = 'Possible';
+    }
+
+    // Catch-All: Custom Domain
+    if (!isCustomDomain) {
+      setIndicator(catchAllDomainEl, 'incompatible');
+      catchAllDomainValueEl.textContent = 'No';
+    } else if (mxProviderFound) {
+      setIndicator(catchAllDomainEl, 'supported');
+      catchAllDomainValueEl.textContent = 'Yes';
+    } else {
+      setIndicator(catchAllDomainEl, 'possible');
+      catchAllDomainValueEl.textContent = 'Possible';
+    }
+
+    // Catch-All: Catch-All Enabled
+    if (isCustomDomain) {
+      setIndicator(catchAllEnabledEl, 'possible');
+      catchAllEnabledValueEl.textContent = 'Possible';
+    } else {
+      setIndicator(catchAllEnabledEl, 'incompatible');
+      catchAllEnabledValueEl.textContent = 'Not Available';
+    }
+  }
+
+  function resetRequirementIndicators(): void {
+    setIndicator(plusProviderEl, null);
+    setIndicator(plusSupportEl, null);
+    setIndicator(catchAllDomainEl, null);
+    setIndicator(catchAllEnabledEl, null);
+    plusProviderValueEl.textContent = '--';
+    plusSupportValueEl.textContent = '--';
+    catchAllDomainValueEl.textContent = '--';
+    catchAllEnabledValueEl.textContent = '--';
+  }
+
+  function showProviderPlaceholder(): void {
+    providerPlaceholderEl.style.display = '';
+  }
+
+  function hideProviderPlaceholder(): void {
+    providerPlaceholderEl.style.display = 'none';
+  }
+
   function applyProviderStatus(
     domain: string,
     status: ProviderStatus,
@@ -164,36 +353,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
 
     // Provider detection display
+    const syncStatus = getProviderStatus(domain);
+    let providerName: string | null = null;
     if (mxResult?.provider) {
       const info = getProviderInfo(mxResult.provider);
-      showProviderDetection(info.name, status);
+      const logoKey = DETECTED_PROVIDER_TO_LOGO[mxResult.provider] ?? null;
+      providerName = info.name;
+      showProviderDetection(info.name, logoKey);
+    } else if (syncStatus !== 'custom') {
+      const friendlyName = DOMAIN_TO_FRIENDLY_NAME[domain] ?? domain;
+      const logoKey = DOMAIN_TO_PROVIDER[domain] ?? null;
+      providerName = friendlyName;
+      showProviderDetection(friendlyName, logoKey);
     } else if (mxResult) {
       hideProviderDetection();
+    }
+
+    // Requirement indicators
+    updateRequirementIndicators(syncStatus, mxResult?.provider != null, status, providerName);
+  }
+
+  function showProviderLogo(logoKey: string | null): void {
+    const file = logoKey ? PROVIDER_LOGO_FILES[logoKey] : null;
+    if (file) {
+      providerLogoEl.innerHTML = `<img src="../${file}" width="18" height="18" alt="" />`;
+      providerLogoEl.style.display = 'inline-flex';
+    } else {
+      providerLogoEl.innerHTML = '';
+      providerLogoEl.style.display = 'none';
     }
   }
 
   function showProviderLoading(): void {
+    hideProviderPlaceholder();
+    showProviderLogo(null);
     providerDetectedEl.style.display = 'flex';
     providerDetectedEl.className = 'provider-detected loading';
     providerTextEl.textContent = 'Checking email provider...';
   }
 
-  function showProviderDetection(providerName: string, status: ProviderStatus): void {
+  function showProviderDetection(providerName: string, logoKey: string | null): void {
+    hideProviderPlaceholder();
+    showProviderLogo(logoKey);
     providerDetectedEl.style.display = 'flex';
-    if (status === 'plus-supported') {
-      providerDetectedEl.className = 'provider-detected detected-supported';
-      providerTextEl.textContent = `Detected: ${providerName}, plus addressing supported`;
-    } else if (status === 'plus-unsupported') {
-      providerDetectedEl.className = 'provider-detected detected-unsupported';
-      providerTextEl.textContent = `Detected: ${providerName}, plus addressing may not be supported`;
-    } else {
-      providerDetectedEl.className = 'provider-detected detected-custom';
-      providerTextEl.textContent = `Detected: ${providerName}`;
-    }
+    providerDetectionBoxEl.classList.add('detected');
+    providerDetectedEl.className = 'provider-detected';
+    providerTextEl.textContent = providerName;
   }
 
   function hideProviderDetection(): void {
     providerDetectedEl.style.display = 'none';
+    showProviderLogo(null);
+    providerDetectionBoxEl.classList.remove('detected');
+    showProviderPlaceholder();
     currentLookupDomain = null;
   }
 
@@ -203,6 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isFullEmail = value.includes('@') && domain != null;
 
     hideProviderDetection();
+    resetRequirementIndicators();
 
     if (!value) {
       setColumnState(colPlus, plusFeedbackEl, 'disabled', 'Enter your email or domain above');
@@ -219,6 +432,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       );
       setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
       if (getMode() === 'plusAddressing') setMode('catchAll');
+      setIndicator(catchAllDomainEl, 'supported');
+      catchAllDomainValueEl.textContent = 'Yes';
+      setIndicator(catchAllEnabledEl, 'possible');
+      catchAllEnabledValueEl.textContent = 'Possible';
       return;
     }
 
@@ -230,11 +447,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (status === 'custom') {
       currentLookupDomain = domain as string;
       showProviderLoading();
-      getProviderStatusWithMx(domain as string).then(({ status: mxStatus, mxResult }) => {
-        if (currentLookupDomain === domain) {
-          applyProviderStatus(domain as string, mxStatus, mxResult);
-        }
-      });
+      getProviderStatusWithMx(domain as string)
+        .then(({ status: mxStatus, mxResult }) => {
+          if (currentLookupDomain === domain) {
+            applyProviderStatus(domain as string, mxStatus, mxResult);
+          }
+        })
+        .catch(() => {
+          if (currentLookupDomain === domain) {
+            hideProviderDetection();
+          }
+        });
     }
   }
 
@@ -383,6 +606,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
       if (userInfo.email) {
         profileEmailEl.textContent = userInfo.email;
+        chromeDetectionBoxEl.classList.add('detected');
         return userInfo.email;
       }
     } catch {
@@ -391,29 +615,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     return null;
   }
 
-  async function importFromChrome(): Promise<void> {
-    try {
-      importBtn.disabled = true;
-      const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+  function importChromeEmail(): void {
+    const email = profileEmailEl.textContent;
+    if (!email || email === 'Not detected') return;
+    input.value = email;
+    updateModeAvailability();
+    updateFormatDisplay();
+    updateExamples();
+    showStatus('Email imported. Click Save to keep it.', 'success');
+  }
 
-      if (!userInfo.email) {
-        showStatus('No Google account found in this Chrome profile', 'error');
-        return;
-      }
-
-      profileEmailEl.textContent = userInfo.email;
-      input.value = userInfo.email;
-      updateModeAvailability();
-      updateFormatDisplay();
-      updateExamples();
-      showStatus('Email imported. Click Save to keep it.', 'success');
-    } catch (error) {
-      showStatus(
-        `Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'error',
-      );
-    } finally {
-      importBtn.disabled = false;
+  function selectRecommendedMode(): void {
+    if (!colPlus.classList.contains('disabled')) {
+      setMode('plusAddressing');
+    } else if (!colCatch.classList.contains('disabled')) {
+      setMode('catchAll');
     }
   }
 
@@ -441,7 +657,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Settings event listeners
   formEl.addEventListener('submit', saveSettings);
   clearBtn.addEventListener('click', clearSettings);
-  importBtn.addEventListener('click', importFromChrome);
+  profileEmailEl.addEventListener('click', importChromeEmail);
+  providerDetectedEl.addEventListener('click', selectRecommendedMode);
   input.addEventListener('input', debouncedUpdate);
 
   colPlus.addEventListener('click', () => setMode('plusAddressing'));

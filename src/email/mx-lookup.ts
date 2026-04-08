@@ -6,6 +6,7 @@ const MX_RECORD_TYPE = 15;
 const MIN_TTL = 3600; // 1 hour
 const MAX_TTL = 86400; // 24 hours
 const ERROR_TTL = 300; // 5 minutes — retry sooner on failure
+const MX_FETCH_TIMEOUT = 5000;
 const MX_CACHE_STORAGE_KEY = 'mxCache';
 
 // MX exchange patterns mapped to detected providers
@@ -66,29 +67,35 @@ export function getProviderInfo(provider: DetectedProvider): ProviderInfo {
 
 async function fetchMxRecords(domain: string): Promise<{ records: MxRecord[]; ttl: number }> {
   const url = `${DNS_API_URL}?name=${encodeURIComponent(domain)}&type=MX`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`DNS lookup failed: ${response.status}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), MX_FETCH_TIMEOUT);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`DNS lookup failed: ${response.status}`);
+    }
+    const data: DnsResponse = await response.json();
+
+    if (data.Status !== 0) {
+      return { records: [], ttl: MIN_TTL };
+    }
+
+    const mxAnswers = (data.Answer ?? []).filter((a) => a.type === MX_RECORD_TYPE);
+    let minTtl = MAX_TTL;
+
+    const records: MxRecord[] = mxAnswers.map((a) => {
+      if (a.TTL < minTtl) minTtl = a.TTL;
+      const spaceIndex = a.data.indexOf(' ');
+      const priority = Number.parseInt(a.data.substring(0, spaceIndex), 10);
+      const exchange = a.data.substring(spaceIndex + 1).replace(/\.$/, '');
+      return { priority, exchange };
+    });
+
+    const ttl = Math.max(MIN_TTL, Math.min(minTtl, MAX_TTL));
+    return { records, ttl };
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const data: DnsResponse = await response.json();
-
-  if (data.Status !== 0) {
-    return { records: [], ttl: MIN_TTL };
-  }
-
-  const mxAnswers = (data.Answer ?? []).filter((a) => a.type === MX_RECORD_TYPE);
-  let minTtl = MAX_TTL;
-
-  const records: MxRecord[] = mxAnswers.map((a) => {
-    if (a.TTL < minTtl) minTtl = a.TTL;
-    const spaceIndex = a.data.indexOf(' ');
-    const priority = Number.parseInt(a.data.substring(0, spaceIndex), 10);
-    const exchange = a.data.substring(spaceIndex + 1).replace(/\.$/, '');
-    return { priority, exchange };
-  });
-
-  const ttl = Math.max(MIN_TTL, Math.min(minTtl, MAX_TTL));
-  return { records, ttl };
 }
 
 function isExpired(result: MxLookupResult): boolean {

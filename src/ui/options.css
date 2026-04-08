@@ -174,50 +174,19 @@ body {
   margin: 0 0 16px 0;
 }
 
-.chrome-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.detected-label {
-  font-size: 14px;
-  color: #666;
-}
-
 .detected-email {
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  font-family: monospace;
 }
 
-.button-use {
-  background-color: transparent;
+.detection-box.detected .detected-email {
   color: #4CAF50;
-  border: none;
-  padding: 4px 8px;
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
-  border-radius: 4px;
-  margin-left: auto;
 }
 
-.button-use:hover {
-  background-color: #e8f5e9;
+.detection-box.detected .detected-email:hover {
   text-decoration: underline;
-}
-
-.button-use:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-  text-decoration: none;
 }
 
 .form-group {
@@ -253,36 +222,77 @@ input[type="text"]:focus {
   margin-top: 8px;
 }
 
+/* ── Detection Boxes ── */
+.detection-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-left: 3px solid #e0e0e0;
+  border-radius: 0 6px 6px 0;
+  background-color: #f8f9fa;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.detection-box.detected {
+  border-left-color: #4CAF50;
+  background-color: #f1f8f1;
+}
+
+.detection-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+.detection-box.detected .detection-label {
+  color: #66bb6a;
+}
+
+.detection-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detection-placeholder {
+  font-size: 13px;
+  color: #aaa;
+}
+
 /* Provider Detection */
+.provider-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .provider-detected {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  margin-top: 12px;
   font-size: 14px;
-  transition: opacity 0.2s;
+  font-weight: 500;
+  color: #4CAF50;
+  cursor: pointer;
+}
+
+.provider-detected:hover .provider-text {
+  text-decoration: underline;
 }
 
 .provider-detected.loading {
   color: #888;
-  background-color: #f8f9fa;
+  font-weight: 400;
+  cursor: default;
 }
 
-.provider-detected.detected-supported {
-  color: #2e7d32;
-  background-color: #e8f5e9;
-}
-
-.provider-detected.detected-unsupported {
-  color: #e65100;
-  background-color: #fff3e0;
-}
-
-.provider-detected.detected-custom {
-  color: #666;
-  background-color: #f8f9fa;
+.provider-detected.loading:hover .provider-text {
+  text-decoration: none;
 }
 
 /* Mode Table */
@@ -397,6 +407,88 @@ input[type="text"]:focus {
 .mode-column.selected .row-value code {
   background-color: #e8f5e9;
   color: #2e7d32;
+}
+
+/* ── Requirement Indicators ── */
+.req-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.req-check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.req-label {
+  font-size: 13px;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.req-value-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.req-value {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+.req-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.req-indicator.req-supported,
+.req-indicator.req-possible,
+.req-indicator.req-incompatible {
+  display: inline-flex;
+}
+
+.req-indicator.req-supported {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1.5px solid #4CAF50;
+}
+
+.req-indicator.req-supported::before {
+  content: "\2713";
+}
+
+.req-indicator.req-possible {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1.5px solid #42a5f5;
+}
+
+.req-indicator.req-possible::before {
+  content: "~";
+}
+
+.req-indicator.req-incompatible {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1.5px solid #ef5350;
+}
+
+.req-indicator.req-incompatible::before {
+  content: "\2717";
 }
 
 .sr-only {
