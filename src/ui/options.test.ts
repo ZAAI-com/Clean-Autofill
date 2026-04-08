@@ -288,11 +288,11 @@ describe('chrome profile import', () => {
     expect(domain).toBeNull();
   });
 
-  test('handles API error gracefully', () => {
+  test('handles API error gracefully', async () => {
     mockChrome.identity.getProfileUserInfo = mock(async () => {
       throw new Error('API unavailable');
     });
-    expect(mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' })).rejects.toThrow(
+    await expect(mockChrome.identity.getProfileUserInfo({ accountStatus: 'ANY' })).rejects.toThrow(
       'API unavailable',
     );
   });

@@ -8,7 +8,7 @@ Clean Autofill supports two email generation modes. Which modes are available de
 
 Format: `yourname+website.com@provider.com`
 
-Uses [sub-addressing (RFC 5233)](https://www.rfc-editor.org/rfc/rfc5233) to append the visited site's domain as a tag. Requires an email provider that supports the `+` separator in the local part. No setup needed; it works automatically.
+Uses sub-addressing (based on the concept described in [RFC 5233](https://www.rfc-editor.org/rfc/rfc5233), which defines Sieve filtering for subaddressed emails) to append the visited site's domain as a tag. The `+` separator convention is provider-specific — requires an email provider that supports it. No setup needed; it works automatically.
 
 ### Catch-All Prefix
 
@@ -106,7 +106,7 @@ Gmail ignores dots in the local part: `f.i.r.s.t.l.a.s.t@gmail.com` is the same 
 
 ## How the Extension Detects Providers
 
-The extension maintains two lists of known email provider domains in `src/providers.ts`. When you enter your email address:
+The extension maintains two lists of known email provider domains in `src/email/provider-domains.ts`. When you enter your email address:
 
 1. If the domain matches a **known provider that supports `+`** (Gmail, Outlook, Proton, Fastmail, mailbox.org, Hey) the Plus Addressing column is available and Catch-All is disabled
 2. If the domain matches a **known provider without `+` support** (Yahoo, GMX, iCloud, mail.com, web.de, T-Online, Tuta) the Plus Addressing column shows a warning and Catch-All is disabled

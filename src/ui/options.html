@@ -15,6 +15,7 @@
     <a class="nav-item active" data-page="home">Home</a>
     <a class="nav-item" data-page="settings">Settings</a>
     <a class="nav-item" data-page="history">History</a>
+    <a class="nav-item" data-page="help">Help</a>
   </nav>
 
   <!-- Content Area -->
@@ -208,21 +209,15 @@
                     </span>
                   </div>
                   <div class="req-check">
-                    <span class="req-label">Catch-All</span>
+                    <span class="req-label">Catch-All <span class="req-info-icon" id="catchAllInfoIcon" title="How to enable catch-all" style="display: none;">i</span></span>
                     <span class="req-value-group">
                       <span class="req-value" id="catchAllEnabledValue">--</span>
                       <span class="req-indicator" id="catchAllEnabledIndicator"></span>
-                      <a class="req-help-link" id="catchAllHelpLink" style="display: none;">How to enable</a>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="catch-all-instructions" id="catchAllInstructions" style="display: none;">
-            <ol id="catchAllSteps"></ol>
-            <div class="catch-all-links" id="catchAllLinks"></div>
-            <p class="catch-all-note" id="catchAllNotes"></p>
           </div>
           <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
           <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
@@ -297,6 +292,26 @@
         <strong>No history yet</strong>
         Click the extension icon on any website to generate your first email.
       </div>
+    </section>
+
+    <!-- ── Help Page ── -->
+    <section class="page" id="page-help">
+      <h1 class="page-title">Help</h1>
+      <p class="page-subtitle">Setup guides and documentation</p>
+
+      <section class="settings-section">
+        <h2>Setting Up Catch-All</h2>
+        <p class="help-intro">Catch-All mode requires your custom domain to accept emails sent to any address. Below are instructions for configuring catch-all with your email provider.</p>
+        <div class="help-provider-info" id="helpProviderInfo" style="display: none;">
+          <span class="help-provider-label">Detected Provider:</span>
+          <span class="help-provider-name" id="helpProviderName"></span>
+        </div>
+        <div class="catch-all-instructions" id="helpCatchAllInstructions">
+          <ol id="helpCatchAllSteps"></ol>
+          <div class="catch-all-links" id="helpCatchAllLinks"></div>
+          <p class="catch-all-note" id="helpCatchAllNotes"></p>
+        </div>
+      </section>
     </section>
 
   </main>

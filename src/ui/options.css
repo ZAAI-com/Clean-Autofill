@@ -491,20 +491,31 @@ input[type="text"]:focus {
   content: "\2717";
 }
 
-/* ── Catch-All Instructions ── */
-.req-help-link {
-  font-size: 11px;
-  color: #4CAF50;
+/* ── Info Icon ── */
+.req-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #42a5f5;
   cursor: pointer;
-  text-decoration: none;
-  font-weight: 500;
-  white-space: nowrap;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
-.req-help-link:hover {
-  text-decoration: underline;
+.req-info-icon:hover {
+  background-color: #bbdefb;
 }
 
+/* ── Catch-All Instructions ── */
 .catch-all-instructions {
   margin-top: 16px;
   padding: 16px 20px;
@@ -820,4 +831,37 @@ button[type="submit"]:active {
   font-size: 16px;
   color: #666;
   margin-bottom: 8px;
+}
+
+/* ── Help Page ── */
+.help-intro {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.help-provider-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-left: 3px solid #4CAF50;
+  border-radius: 0 6px 6px 0;
+  background-color: #f1f8f1;
+  margin-bottom: 16px;
+}
+
+.help-provider-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #66bb6a;
+}
+
+.help-provider-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2e7d32;
 }

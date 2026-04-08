@@ -1,18 +1,18 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import type { GenerateAndFillResponse } from '../types';
 
-// Mock chrome API
-let sendMessageRequest: Record<string, unknown> | null = null;
+// Mock chrome API — must be set up before dynamic import of popup.ts
+let mockResponse: GenerateAndFillResponse | undefined;
 
 const mockChrome = {
   runtime: {
     sendMessage: mock(
       (
-        request: Record<string, unknown>,
-        _callback: (response: GenerateAndFillResponse) => void,
+        _request: Record<string, unknown>,
+        callback: (response: GenerateAndFillResponse) => void,
       ) => {
-        sendMessageRequest = request;
+        callback(mockResponse as GenerateAndFillResponse);
       },
     ),
     openOptionsPage: mock(() => {}),
@@ -62,13 +62,23 @@ function getElements() {
   };
 }
 
+// Dynamic import so mocks are in place before popup.ts module-level init() runs
+let init: () => void;
+beforeAll(async () => {
+  setupPopupDOM();
+  mockResponse = { success: true, email: 'setup@test.com' };
+  const mod = await import('./popup.js');
+  init = mod.init;
+});
+
 beforeEach(() => {
-  sendMessageRequest = null;
+  mockResponse = undefined;
   clipboardContent = '';
   mockChrome.runtime.lastError = null;
   mockChrome.runtime.sendMessage.mockClear();
   mockChrome.runtime.openOptionsPage.mockClear();
   mockClipboard.writeText.mockClear();
+  (window.close as ReturnType<typeof mock>).mockClear();
   setupPopupDOM();
 });
 
@@ -77,30 +87,26 @@ afterEach(() => {
 });
 
 describe('popup message protocol', () => {
-  test('sends generateAndFill action on load', async () => {
-    // Simulate what popup.ts does on load
-    chrome.runtime.sendMessage({ action: 'generateAndFill' }, () => {});
+  test('sends generateAndFill action on load', () => {
+    mockResponse = { success: true, email: 'test@test.com' };
+    init();
 
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessageRequest).toEqual({ action: 'generateAndFill' });
+    const call = mockChrome.runtime.sendMessage.mock.calls[0];
+    expect(call[0]).toEqual({ action: 'generateAndFill' });
   });
 });
 
 describe('popup UI states', () => {
   test('shows email on successful response', () => {
-    const els = getElements();
-
-    const response: GenerateAndFillResponse = {
+    mockResponse = {
       success: true,
       email: 'example.com@mydomain.com',
       message: 'Email filled successfully',
     };
+    init();
 
-    els.loading.style.display = 'none';
-    els.emailDisplay.textContent = response.email ?? '';
-    els.result.style.display = 'block';
-    els.statusMessage.textContent = response.message ?? '';
-
+    const els = getElements();
     expect(els.loading.style.display).toBe('none');
     expect(els.result.style.display).toBe('block');
     expect(els.emailDisplay.textContent).toBe('example.com@mydomain.com');
@@ -108,67 +114,99 @@ describe('popup UI states', () => {
   });
 
   test('shows config prompt when needsConfig is true', () => {
+    mockResponse = { success: false, needsConfig: true };
+    init();
+
     const els = getElements();
-
-    els.loading.style.display = 'none';
-    els.configPrompt.style.display = 'block';
-
     expect(els.loading.style.display).toBe('none');
     expect(els.configPrompt.style.display).toBe('block');
     expect(els.result.style.display).toBe('none');
   });
 
   test('shows error message on failure', () => {
-    const els = getElements();
-
-    const response: GenerateAndFillResponse = {
+    mockResponse = {
       success: false,
       error: 'Cannot generate email for browser pages',
     };
+    init();
 
-    els.loading.style.display = 'none';
-    els.errorDiv.textContent = response.error ?? '';
-    els.errorDiv.style.display = 'block';
-
+    const els = getElements();
+    expect(els.loading.style.display).toBe('none');
     expect(els.errorDiv.style.display).toBe('block');
     expect(els.errorDiv.textContent).toBe('Cannot generate email for browser pages');
     expect(els.result.style.display).toBe('none');
   });
 
   test('shows email even when fill fails', () => {
-    const els = getElements();
-
-    const response: GenerateAndFillResponse = {
+    mockResponse = {
       success: true,
       email: 'example.com@mydomain.com',
       message: 'Email generated (no field found to fill)',
     };
+    init();
 
-    els.loading.style.display = 'none';
-    els.emailDisplay.textContent = response.email ?? '';
-    els.result.style.display = 'block';
-    els.statusMessage.textContent = response.message ?? '';
-
+    const els = getElements();
     expect(els.result.style.display).toBe('block');
     expect(els.emailDisplay.textContent).toBe('example.com@mydomain.com');
     expect(els.statusMessage.textContent).toBe('Email generated (no field found to fill)');
   });
+
+  test('shows error when lastError is set', () => {
+    mockChrome.runtime.lastError = { message: 'Extension context invalidated' };
+    mockResponse = { success: true, email: 'test@test.com' };
+    init();
+
+    const els = getElements();
+    expect(els.loading.style.display).toBe('none');
+    expect(els.errorDiv.style.display).toBe('block');
+    expect(els.errorDiv.textContent).toBe('Unable to generate email. Please try again.');
+  });
+
+  test('shows error when response is undefined', () => {
+    mockResponse = undefined;
+    init();
+
+    const els = getElements();
+    expect(els.loading.style.display).toBe('none');
+    expect(els.errorDiv.style.display).toBe('block');
+    expect(els.errorDiv.textContent).toBe('No response from extension. Please try again.');
+  });
+
+  test('shows default error when response has no error message', () => {
+    mockResponse = { success: false };
+    init();
+
+    const els = getElements();
+    expect(els.errorDiv.textContent).toBe('Failed to generate email');
+  });
 });
 
 describe('copy button', () => {
-  test('copies email to clipboard', async () => {
-    const email = 'example.com@mydomain.com';
-    await navigator.clipboard.writeText(email);
+  test('copies email to clipboard on click', async () => {
+    mockResponse = { success: true, email: 'example.com@mydomain.com' };
+    init();
 
-    expect(mockClipboard.writeText).toHaveBeenCalledWith(email);
-    expect(clipboardContent).toBe(email);
+    const els = getElements();
+    els.copyButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockClipboard.writeText).toHaveBeenCalledWith('example.com@mydomain.com');
+    expect(clipboardContent).toBe('example.com@mydomain.com');
+    expect(els.copyButton.textContent).toBe('Copied!');
+    expect(els.copyButton.classList.contains('copied')).toBe(true);
   });
 });
 
 describe('config link', () => {
-  test('opens options page', () => {
-    chrome.runtime.openOptionsPage();
+  test('opens options page and closes popup on click', () => {
+    mockResponse = { success: false, needsConfig: true };
+    init();
+
+    const els = getElements();
+    els.configLink.click();
+
     expect(mockChrome.runtime.openOptionsPage).toHaveBeenCalledTimes(1);
+    expect(window.close).toHaveBeenCalledTimes(1);
   });
 });
 

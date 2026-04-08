@@ -8,7 +8,7 @@
 
 ## Dependencies
 
-```
+```text
 W3 → W1 (CI gate) → W2 (build + package) → release job
 ```
 

@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pageId === 'history') {
       loadHistory();
     }
+    if (pageId === 'help') {
+      renderHelpPage();
+    }
   }
 
   navItems.forEach((nav) => {
@@ -71,11 +74,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllEnabledValue = document.getElementById('catchAllEnabledValue');
   const detectionChromeProfile = document.getElementById('detectionChromeProfile');
   const detectionProvider = document.getElementById('detectionProvider');
-  const catchAllHelpLink = document.getElementById('catchAllHelpLink');
-  const catchAllInstructions = document.getElementById('catchAllInstructions');
-  const catchAllSteps = document.getElementById('catchAllSteps');
-  const catchAllLinks = document.getElementById('catchAllLinks');
-  const catchAllNotes = document.getElementById('catchAllNotes');
+  const catchAllInfoIcon = document.getElementById('catchAllInfoIcon');
+  const helpCatchAllSteps = document.getElementById('helpCatchAllSteps');
+  const helpCatchAllLinks = document.getElementById('helpCatchAllLinks');
+  const helpCatchAllNotes = document.getElementById('helpCatchAllNotes');
+  const helpProviderInfo = document.getElementById('helpProviderInfo');
+  const helpProviderName = document.getElementById('helpProviderName');
 
   if (
     !form ||
@@ -105,11 +109,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     !catchAllEnabledValue ||
     !detectionChromeProfile ||
     !detectionProvider ||
-    !catchAllHelpLink ||
-    !catchAllInstructions ||
-    !catchAllSteps ||
-    !catchAllLinks ||
-    !catchAllNotes
+    !catchAllInfoIcon ||
+    !helpCatchAllSteps ||
+    !helpCatchAllLinks ||
+    !helpCatchAllNotes ||
+    !helpProviderInfo ||
+    !helpProviderName
   ) {
     console.error('Required DOM elements not found');
     return;
@@ -142,11 +147,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catchAllEnabledValueEl = catchAllEnabledValue as HTMLSpanElement;
   const chromeDetectionBoxEl = detectionChromeProfile as HTMLDivElement;
   const providerDetectionBoxEl = detectionProvider as HTMLDivElement;
-  const catchAllHelpLinkEl = catchAllHelpLink as HTMLAnchorElement;
-  const catchAllInstructionsEl = catchAllInstructions as HTMLDivElement;
-  const catchAllStepsEl = catchAllSteps as HTMLOListElement;
-  const catchAllLinksEl = catchAllLinks as HTMLDivElement;
-  const catchAllNotesEl = catchAllNotes as HTMLParagraphElement;
+  const catchAllInfoIconEl = catchAllInfoIcon as HTMLSpanElement;
+  const helpStepsEl = helpCatchAllSteps as HTMLOListElement;
+  const helpLinksEl = helpCatchAllLinks as HTMLDivElement;
+  const helpNotesEl = helpCatchAllNotes as HTMLParagraphElement;
+  const helpProviderInfoEl = helpProviderInfo as HTMLDivElement;
+  const helpProviderNameEl = helpProviderName as HTMLSpanElement;
 
   let currentLookupDomain: string | null = null;
   let currentDetectedProvider: DetectedProvider | null = null;
@@ -330,11 +336,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isCustomDomain) {
       setIndicator(catchAllEnabledEl, 'possible');
       catchAllEnabledValueEl.textContent = 'Possible';
-      showCatchAllHelpLink(currentDetectedProvider);
+      showCatchAllInfoIcon();
     } else {
       setIndicator(catchAllEnabledEl, 'incompatible');
       catchAllEnabledValueEl.textContent = 'Not Available';
-      hideCatchAllInstructions();
+      hideCatchAllInfoIcon();
     }
   }
 
@@ -347,60 +353,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     plusSupportValueEl.textContent = '--';
     catchAllDomainValueEl.textContent = '--';
     catchAllEnabledValueEl.textContent = '--';
-    hideCatchAllInstructions();
+    hideCatchAllInfoIcon();
   }
 
-  function showCatchAllHelpLink(provider: DetectedProvider | null): void {
-    currentDetectedProvider = provider;
-    catchAllHelpLinkEl.style.display = 'inline';
+  function showCatchAllInfoIcon(): void {
+    catchAllInfoIconEl.style.display = 'inline-flex';
   }
 
-  function hideCatchAllHelpLink(): void {
-    catchAllHelpLinkEl.style.display = 'none';
+  function hideCatchAllInfoIcon(): void {
+    catchAllInfoIconEl.style.display = 'none';
   }
 
-  function toggleCatchAllInstructions(): void {
-    if (catchAllInstructionsEl.style.display === 'none') {
-      renderCatchAllInstructions(currentDetectedProvider);
-      catchAllInstructionsEl.style.display = '';
-    } else {
-      catchAllInstructionsEl.style.display = 'none';
-    }
-  }
+  function renderHelpPage(): void {
+    const instructions = getCatchAllInstructions(currentDetectedProvider);
 
-  function renderCatchAllInstructions(provider: DetectedProvider | null): void {
-    const instructions = getCatchAllInstructions(provider);
-
-    catchAllStepsEl.innerHTML = '';
+    helpStepsEl.innerHTML = '';
     for (const step of instructions.steps) {
       const li = document.createElement('li');
       li.textContent = step;
-      catchAllStepsEl.appendChild(li);
+      helpStepsEl.appendChild(li);
     }
 
-    catchAllLinksEl.innerHTML = '';
+    helpLinksEl.innerHTML = '';
     if (instructions.adminUrl) {
       const a = document.createElement('a');
       a.href = instructions.adminUrl;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.textContent = `Open ${instructions.providerName} Admin`;
-      catchAllLinksEl.appendChild(a);
+      helpLinksEl.appendChild(a);
     }
 
-    catchAllNotesEl.textContent = instructions.notes ?? '';
+    helpNotesEl.textContent = instructions.notes ?? '';
+
+    // Show detected provider if available
+    if (currentDetectedProvider) {
+      const info = getProviderInfo(currentDetectedProvider);
+      helpProviderNameEl.textContent = info.name;
+      helpProviderInfoEl.style.display = 'flex';
+    } else {
+      helpProviderInfoEl.style.display = 'none';
+    }
 
     // Use warning style for iCloud (no catch-all support)
-    if (provider === 'icloud') {
-      catchAllInstructionsEl.className = 'catch-all-instructions warning';
-    } else {
-      catchAllInstructionsEl.className = 'catch-all-instructions';
+    const instructionsEl = document.getElementById('helpCatchAllInstructions');
+    if (instructionsEl) {
+      instructionsEl.className =
+        currentDetectedProvider === 'icloud'
+          ? 'catch-all-instructions warning'
+          : 'catch-all-instructions';
     }
-  }
-
-  function hideCatchAllInstructions(): void {
-    catchAllInstructionsEl.style.display = 'none';
-    hideCatchAllHelpLink();
   }
 
   function showProviderPlaceholder(): void {
@@ -494,7 +496,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateModeAvailability(): void {
     const value = input.value.trim();
     const domain = extractDomainFromEmail(value);
-    const isFullEmail = value.includes('@') && domain != null;
+    const isFullEmail = value.includes('@') && domain != null && domainRegex.test(domain);
 
     hideProviderDetection();
     resetRequirementIndicators();
@@ -518,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       catchAllDomainValueEl.textContent = 'Yes';
       setIndicator(catchAllEnabledEl, 'possible');
       catchAllEnabledValueEl.textContent = 'Possible';
-      showCatchAllHelpLink(null);
+      showCatchAllInfoIcon();
       return;
     }
 
@@ -746,10 +748,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   colPlus.addEventListener('click', () => setMode('plusAddressing'));
   colCatch.addEventListener('click', () => setMode('catchAll'));
-  catchAllHelpLinkEl.addEventListener('click', (e) => {
-    e.preventDefault();
+  catchAllInfoIconEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    toggleCatchAllInstructions();
+    switchPage('help');
   });
 
   // ── History Page ──
