@@ -37,7 +37,7 @@ const SAVE_INDICATOR_LABELS: Record<SaveIndicatorState, string> = {
 };
 
 const UNSUPPORTED_PROVIDER_MESSAGE =
-  'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.';
+  'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.';
 
 export function getSaveIndicatorLabel(state: SaveIndicatorState): string {
   return SAVE_INDICATOR_LABELS[state];

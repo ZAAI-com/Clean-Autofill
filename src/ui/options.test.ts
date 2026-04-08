@@ -724,7 +724,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.',
+      'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.',
     );
     expect(modeFeedback.classList.contains('feedback-warning')).toBe(true);
     expect(modeFeedback.classList.contains('is-empty')).toBe(false);
@@ -754,7 +754,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This email provider does not support Plus Addressing, and Catch-All requires your own custom domain.',
+      'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.',
     );
   });
 
