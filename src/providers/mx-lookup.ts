@@ -1,5 +1,5 @@
+import type { DetectedProvider, MxLookupResult, MxRecord, ProviderInfo } from '../types';
 import type { ProviderStatus } from './providers.js';
-import type { DetectedProvider, MxLookupResult, MxRecord, ProviderInfo } from './types';
 
 const DNS_API_URL = 'https://dns.google/resolve';
 const MX_RECORD_TYPE = 15;

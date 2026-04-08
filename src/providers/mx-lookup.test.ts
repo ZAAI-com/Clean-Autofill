@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
-import type { MxRecord } from './types';
+import type { MxRecord } from '../types';
 
 // Mock chrome.storage.local
 let store: Record<string, unknown> = {};

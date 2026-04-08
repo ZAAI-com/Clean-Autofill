@@ -1,12 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
-import {
-  domainRegex,
-  extractDomainFromEmail,
-  extractLocalPart,
-  getProviderStatus,
-  PLUS_SUPPORTED_DOMAINS,
-  PLUS_UNSUPPORTED_DOMAINS,
-} from '../providers.js';
+import { domainRegex, extractDomainFromEmail } from '../providers/providers.js';
 
 // Load utils first
 beforeAll(async () => {
@@ -52,10 +45,6 @@ const mockChrome = {
 
 // Test-only helpers
 
-function isValidDomain(domain: string): boolean {
-  return domainRegex.test(domain);
-}
-
 function cleanDomain(domain: string): string {
   return domain.trim().replace(/^@/, '');
 }
@@ -82,84 +71,6 @@ function isValidBaseEmail(email: string): boolean {
   const domain = trimmed.substring(atIndex + 1);
   return domainRegex.test(domain);
 }
-
-describe('domain validation', () => {
-  describe('valid domains', () => {
-    test('accepts simple domain', () => {
-      expect(isValidDomain('example.com')).toBe(true);
-    });
-
-    test('accepts domain with subdomain', () => {
-      expect(isValidDomain('mail.example.com')).toBe(true);
-    });
-
-    test('accepts domain with multiple subdomains', () => {
-      expect(isValidDomain('sub.mail.example.com')).toBe(true);
-    });
-
-    test('accepts short domain names', () => {
-      expect(isValidDomain('mg.de')).toBe(true);
-    });
-
-    test('accepts single char subdomain', () => {
-      expect(isValidDomain('a.example.com')).toBe(true);
-    });
-
-    test('accepts domain with hyphens', () => {
-      expect(isValidDomain('my-domain.com')).toBe(true);
-    });
-
-    test('accepts .co.uk TLD', () => {
-      expect(isValidDomain('example.co.uk')).toBe(true);
-    });
-
-    test('accepts longer TLDs', () => {
-      expect(isValidDomain('example.technology')).toBe(true);
-    });
-  });
-
-  describe('invalid domains', () => {
-    test('rejects empty string', () => {
-      expect(isValidDomain('')).toBe(false);
-    });
-
-    test('rejects domain without TLD', () => {
-      expect(isValidDomain('localhost')).toBe(false);
-    });
-
-    test('rejects domain starting with hyphen', () => {
-      expect(isValidDomain('-example.com')).toBe(false);
-    });
-
-    test('rejects domain ending with hyphen', () => {
-      expect(isValidDomain('example-.com')).toBe(false);
-    });
-
-    test('rejects domain with spaces', () => {
-      expect(isValidDomain('example .com')).toBe(false);
-    });
-
-    test('rejects domain with underscore', () => {
-      expect(isValidDomain('example_domain.com')).toBe(false);
-    });
-
-    test('rejects single letter TLD', () => {
-      expect(isValidDomain('example.c')).toBe(false);
-    });
-
-    test('rejects IP address', () => {
-      expect(isValidDomain('192.168.1.1')).toBe(false);
-    });
-
-    test('rejects domain with protocol', () => {
-      expect(isValidDomain('https://example.com')).toBe(false);
-    });
-
-    test('rejects domain with path', () => {
-      expect(isValidDomain('example.com/path')).toBe(false);
-    });
-  });
-});
 
 describe('cleanDomain', () => {
   test('removes leading @ symbol', () => {
@@ -291,78 +202,6 @@ describe('isValidBaseEmail', () => {
   });
 });
 
-describe('extractDomainFromEmail', () => {
-  test('extracts domain from standard email', () => {
-    expect(extractDomainFromEmail('user@example.com')).toBe('example.com');
-  });
-
-  test('extracts domain from email with subdomain', () => {
-    expect(extractDomainFromEmail('user@mail.example.com')).toBe('mail.example.com');
-  });
-
-  test('extracts domain from email with plus addressing', () => {
-    expect(extractDomainFromEmail('user+tag@example.com')).toBe('example.com');
-  });
-
-  test('returns null for empty string', () => {
-    expect(extractDomainFromEmail('')).toBeNull();
-  });
-
-  test('returns null for whitespace-only string', () => {
-    expect(extractDomainFromEmail('   ')).toBeNull();
-  });
-
-  test('returns null for string without @', () => {
-    expect(extractDomainFromEmail('no-at-symbol')).toBeNull();
-  });
-
-  test('returns null for string ending with @', () => {
-    expect(extractDomainFromEmail('user@')).toBeNull();
-  });
-
-  test('returns null for string starting with @', () => {
-    expect(extractDomainFromEmail('@domain.com')).toBeNull();
-  });
-
-  test('handles email with multiple @ by using last one', () => {
-    expect(extractDomainFromEmail('weird@local@domain.com')).toBe('domain.com');
-  });
-
-  test('trims whitespace from input', () => {
-    expect(extractDomainFromEmail('  user@example.com  ')).toBe('example.com');
-  });
-});
-
-describe('extractLocalPart', () => {
-  test('extracts local part from standard email', () => {
-    expect(extractLocalPart('user@example.com')).toBe('user');
-  });
-
-  test('extracts local part with dots', () => {
-    expect(extractLocalPart('first.last@example.com')).toBe('first.last');
-  });
-
-  test('extracts local part with plus', () => {
-    expect(extractLocalPart('user+tag@example.com')).toBe('user+tag');
-  });
-
-  test('returns null for empty string', () => {
-    expect(extractLocalPart('')).toBeNull();
-  });
-
-  test('returns null for string without @', () => {
-    expect(extractLocalPart('no-at-symbol')).toBeNull();
-  });
-
-  test('returns null for string starting with @', () => {
-    expect(extractLocalPart('@domain.com')).toBeNull();
-  });
-
-  test('handles multiple @ by using last one', () => {
-    expect(extractLocalPart('weird@local@domain.com')).toBe('weird@local');
-  });
-});
-
 describe('chrome storage mock', () => {
   beforeEach(() => {
     for (const key of Object.keys(mockStorage)) {
@@ -470,106 +309,5 @@ describe('status message types', () => {
 
   test('returns correct class for error', () => {
     expect(getStatusClass('error')).toBe('status error');
-  });
-});
-
-describe('getProviderStatus', () => {
-  describe('plus-supported providers', () => {
-    const supported = [
-      'gmail.com',
-      'googlemail.com',
-      'outlook.com',
-      'hotmail.com',
-      'live.com',
-      'msn.com',
-      'protonmail.com',
-      'proton.me',
-      'pm.me',
-      'protonmail.ch',
-      'fastmail.com',
-      'fastmail.fm',
-      'pobox.com',
-      'sent.com',
-      'mailbox.org',
-      'yandex.com',
-      'yandex.ru',
-      'ya.ru',
-    ];
-
-    for (const domain of supported) {
-      test(`${domain} is plus-supported`, () => {
-        expect(getProviderStatus(domain)).toBe('plus-supported');
-      });
-    }
-
-    test('is case-insensitive', () => {
-      expect(getProviderStatus('Gmail.com')).toBe('plus-supported');
-      expect(getProviderStatus('OUTLOOK.COM')).toBe('plus-supported');
-    });
-  });
-
-  describe('plus-unsupported providers', () => {
-    const unsupported = [
-      'yahoo.com',
-      'ymail.com',
-      'rocketmail.com',
-      'gmx.com',
-      'gmx.de',
-      'gmx.net',
-      'web.de',
-      'mail.com',
-      'email.com',
-      't-online.de',
-      'tuta.com',
-      'tutanota.com',
-      'icloud.com',
-      'me.com',
-      'mac.com',
-      '163.com',
-      'qq.com',
-      'foxmail.com',
-      'libero.it',
-      'laposte.net',
-      'rediffmail.com',
-      'hey.com',
-      'mail.ru',
-      'inbox.ru',
-      'bk.ru',
-    ];
-
-    for (const domain of unsupported) {
-      test(`${domain} is plus-unsupported`, () => {
-        expect(getProviderStatus(domain)).toBe('plus-unsupported');
-      });
-    }
-  });
-
-  describe('custom domains', () => {
-    test('unknown domain returns custom', () => {
-      expect(getProviderStatus('company.com')).toBe('custom');
-    });
-
-    test('personal domain returns custom', () => {
-      expect(getProviderStatus('manuelgruber.com')).toBe('custom');
-    });
-
-    test('subdomain of known provider returns custom', () => {
-      expect(getProviderStatus('mail.gmail.com')).toBe('custom');
-    });
-
-    test('zoho.com returns custom (unverified)', () => {
-      expect(getProviderStatus('zoho.com')).toBe('custom');
-    });
-  });
-
-  describe('provider lists are disjoint', () => {
-    test('no domain appears in both supported and unsupported lists', () => {
-      for (const domain of PLUS_SUPPORTED_DOMAINS) {
-        expect(PLUS_UNSUPPORTED_DOMAINS.has(domain)).toBe(false);
-      }
-      for (const domain of PLUS_UNSUPPORTED_DOMAINS) {
-        expect(PLUS_SUPPORTED_DOMAINS.has(domain)).toBe(false);
-      }
-    });
   });
 });

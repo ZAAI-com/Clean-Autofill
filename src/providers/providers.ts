@@ -2,9 +2,9 @@ export type ProviderStatus = 'plus-supported' | 'plus-unsupported' | 'custom';
 
 export { PLUS_SUPPORTED_DOMAINS, PLUS_UNSUPPORTED_DOMAINS } from './provider-domains.js';
 
+import type { MxLookupResult } from '../types';
 import { lookupMxRecords } from './mx-lookup.js';
 import { PLUS_SUPPORTED_DOMAINS, PLUS_UNSUPPORTED_DOMAINS } from './provider-domains.js';
-import type { MxLookupResult } from './types';
 
 export function getProviderStatus(domain: string): ProviderStatus {
   const lower = domain.toLowerCase();

@@ -1,12 +1,12 @@
-import { getProviderInfo } from '../mx-lookup.js';
-import type { ProviderStatus } from '../providers.js';
+import { getProviderInfo } from '../providers/mx-lookup.js';
+import type { ProviderStatus } from '../providers/providers.js';
 import {
   domainRegex,
   extractDomainFromEmail,
   extractLocalPart,
   getProviderStatus,
   getProviderStatusWithMx,
-} from '../providers.js';
+} from '../providers/providers.js';
 import type { CleanAutofillUtils, EmailHistoryEntry, EmailMode, MxLookupResult } from '../types';
 
 const { debounce } =
@@ -160,13 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setColumnState(colPlus, plusFeedbackEl, 'available', '');
     }
 
-    // Catch-All column — disabled for known providers
-    if (status === 'plus-supported' || status === 'plus-unsupported') {
-      setColumnState(colCatch, catchAllFeedbackEl, 'disabled', `Not available for ${domain}`);
-      if (getMode() === 'catchAll') setMode('plusAddressing');
-    } else {
-      setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
-    }
+    // Catch-All column
+    setColumnState(colCatch, catchAllFeedbackEl, 'available', '');
 
     // Provider detection display
     if (mxResult?.provider) {
@@ -187,10 +182,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     providerDetectedEl.style.display = 'flex';
     if (status === 'plus-supported') {
       providerDetectedEl.className = 'provider-detected detected-supported';
-      providerTextEl.textContent = `Detected: ${providerName} — plus addressing supported`;
+      providerTextEl.textContent = `Detected: ${providerName}, plus addressing supported`;
     } else if (status === 'plus-unsupported') {
       providerDetectedEl.className = 'provider-detected detected-unsupported';
-      providerTextEl.textContent = `Detected: ${providerName} — plus addressing may not be supported`;
+      providerTextEl.textContent = `Detected: ${providerName}, plus addressing may not be supported`;
     } else {
       providerDetectedEl.className = 'provider-detected detected-custom';
       providerTextEl.textContent = `Detected: ${providerName}`;
@@ -296,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateModeAvailability();
         setMode(mode);
       } else if (profileEmail) {
-        // No saved settings — prefill with Chrome profile email and default to Plus Addressing
+        // No saved settings, prefill with Chrome profile email and default to Plus Addressing
         input.value = profileEmail;
         updateModeAvailability();
         setMode('plusAddressing');

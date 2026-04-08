@@ -91,6 +91,11 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - `createTimeout()` - Promise-based timeout for async operations
 - `debounce()` - Rate-limiting for input events
 
+### 7. Provider Detection (`src/providers/`)
+- **`providers.ts`** - `getProviderStatus()` / `getProviderStatusWithMx()` for determining plus-addressing support
+- **`provider-domains.ts`** - Static data: 500+ email domains categorized as plus-supported or unsupported
+- **`mx-lookup.ts`** - DNS MX record lookup via Google DNS API with memory + storage caching
+
 ## File Structure
 
 ```
@@ -108,6 +113,8 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   └── tsconfig.json  # TypeScript configuration
 │   ├── husky/
 │   │   └── pre-commit     # Pre-commit hook (typecheck, lint, test)
+│   ├── test/
+│   │   └── test-setup.ts  # DOM test setup (happy-dom)
 │   └── scripts/           # Build scripts
 │       ├── build.js       # Compiles TS + copies assets to dist/
 │       ├── pack.js        # Creates distribution zip
@@ -122,7 +129,13 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   ├── history.test.ts    # History module tests
 │   ├── utils.ts           # Shared utilities
 │   ├── utils.test.ts      # Utility tests
-│   ├── test-setup.ts      # DOM test setup (happy-dom)
+│   ├── providers/         # Provider detection logic + domain data
+│   │   ├── providers.ts   # Provider status functions
+│   │   ├── providers.test.ts
+│   │   ├── mx-lookup.ts   # MX record DNS lookup + caching
+│   │   ├── mx-lookup.test.ts
+│   │   ├── provider-domains.ts  # Static domain sets
+│   │   └── provider-domains.test.ts
 │   ├── types/
 │   │   └── index.ts       # TypeScript type definitions
 │   ├── ui/                # UI pages (popup + options)
@@ -139,6 +152,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
     ├── history.js         # Compiled history module
     ├── utils.js           # Compiled utilities
     ├── manifest.json      # Copied from root
+    ├── providers/         # Compiled provider modules
     ├── ui/                # Compiled UI pages
     │   ├── popup.html
     │   ├── popup.js
