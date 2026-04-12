@@ -1,7 +1,7 @@
 #!/bin/bash
 # Conductor run script - builds the Chrome Extension
 
-. "$(dirname "$0")/../scripts/ensure-bun.sh"
+export PATH="$HOME/.bun/bin:$PATH"
 
 # Check if dependencies are installed
 if [ ! -d "node_modules" ]; then
@@ -9,4 +9,4 @@ if [ ! -d "node_modules" ]; then
     exit 1
 fi
 
-"$BUN" run build
+bun run build

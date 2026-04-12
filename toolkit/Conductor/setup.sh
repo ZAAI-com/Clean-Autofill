@@ -2,14 +2,14 @@
 # Conductor setup script - installs dependencies and builds the extension
 
 set -e
-. "$(dirname "$0")/../scripts/ensure-bun.sh"
+export PATH="$HOME/.bun/bin:$PATH"
 
 echo "📦 Installing dependencies..."
-"$BUN" install
+bun install
 
 echo ""
 echo "🔨 Building extension..."
-"$BUN" run build
+bun run build
 
 echo ""
 echo "✅ Setup complete!"
