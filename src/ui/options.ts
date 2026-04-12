@@ -36,8 +36,15 @@ const SAVE_INDICATOR_LABELS: Record<SaveIndicatorState, string> = {
   error: 'Save failed',
 };
 
-const UNSUPPORTED_PROVIDER_MESSAGE =
-  'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.';
+const FEEDBACK_MESSAGES = {
+  unsupportedProvider:
+    'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
+  unsupportedPlusAddressing: 'This email provider does not support plus addressing.',
+  possiblyUnsupportedPlusAddressing: 'This email provider likely does not support plus addressing.',
+  enterEmailOrDomain: 'Enter your email or domain above.',
+  enterValidEmailOrDomain: 'Enter a valid email or domain.',
+  plusRequiresFullEmail: 'Plus addressing requires a full email address.',
+} as const;
 
 export function getSaveIndicatorLabel(state: SaveIndicatorState): string {
   return SAVE_INDICATOR_LABELS[state];
@@ -241,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let saveDelayTimer: ReturnType<typeof setTimeout> | null = null;
   let activeSavePromise: Promise<void> | null = null;
   let statusTimer: ReturnType<typeof setTimeout> | null = null;
-  let preferredMode: EmailMode = 'catchAll';
+  let preferredMode: EmailMode = 'plusAddressing';
 
   const exampleEls = document.querySelectorAll<HTMLElement>('.example-email[data-site]');
 
@@ -720,7 +727,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, true);
       clearModeSelection();
-      setFeedback('warning', UNSUPPORTED_PROVIDER_MESSAGE);
+      setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
       return;
     }
 
@@ -730,9 +737,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Feedback bar
     if (status === 'plus-unsupported') {
-      const displayName = providerName ?? domain;
-      const verb = syncStatus !== 'custom' ? 'does not' : 'likely does not';
-      setFeedback('warning', `Email Provider ${displayName} ${verb} support plus addressing`);
+      setFeedback(
+        'warning',
+        syncStatus !== 'custom'
+          ? FEEDBACK_MESSAGES.unsupportedPlusAddressing
+          : FEEDBACK_MESSAGES.possiblyUnsupportedPlusAddressing,
+      );
     } else {
       setFeedback('clear', '');
     }
@@ -784,7 +794,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setColumnDisabled(colPlus, true);
         setColumnDisabled(colCatch, true);
         clearModeSelection();
-        setFeedback('warning', UNSUPPORTED_PROVIDER_MESSAGE);
+        setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
       } else {
         setColumnDisabled(colPlus, false);
         setColumnDisabled(colCatch, false);
@@ -794,15 +804,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (!state.trimmedValue) {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, true);
-      setFeedback('info', 'Enter your email or domain above');
+      setFeedback('info', FEEDBACK_MESSAGES.enterEmailOrDomain);
     } else if (!state.catchAllAllowed) {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, true);
-      setFeedback('info', 'Enter a valid email or domain');
+      setFeedback('info', FEEDBACK_MESSAGES.enterValidEmailOrDomain);
     } else {
       setColumnDisabled(colPlus, true);
       setColumnDisabled(colCatch, false);
-      setFeedback('info', 'Plus Addressing requires a full email address');
+      setFeedback('info', FEEDBACK_MESSAGES.plusRequiresFullEmail);
       if (getMode() === 'plusAddressing') {
         setMode('catchAll', { persist: false });
       } else {
@@ -974,10 +984,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const result = await chrome.storage.sync.get(['emailDomain', 'emailMode', 'baseEmail']);
       const hasSavedSettings = result.emailMode || result.emailDomain || result.baseEmail;
-      const mode: EmailMode = (result.emailMode as EmailMode) ?? 'catchAll';
-      preferredMode = mode;
 
       if (hasSavedSettings) {
+        const mode: EmailMode = (result.emailMode as EmailMode) ?? 'catchAll';
+        preferredMode = mode;
         if (result.baseEmail) {
           input.value = result.baseEmail as string;
         } else if (result.emailDomain) {
@@ -1000,6 +1010,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await requestSave({ immediate: true });
         showStatus('Settings auto-configured from your Chrome profile', 'success');
       } else {
+        preferredMode = 'plusAddressing';
         const state = getInputState();
         applyImmediateInputState(state);
         updateModeAvailability(state);

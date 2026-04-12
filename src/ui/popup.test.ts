@@ -159,7 +159,7 @@ describe('popup UI states', () => {
     const els = getElements();
     expect(els.loading.style.display).toBe('none');
     expect(els.errorDiv.style.display).toBe('block');
-    expect(els.errorDiv.textContent).toBe('Unable to generate email. Please try again.');
+    expect(els.errorDiv.textContent).toBe('Unable to generate an email. Please try again.');
   });
 
   test('shows error when response is undefined', () => {
@@ -169,7 +169,7 @@ describe('popup UI states', () => {
     const els = getElements();
     expect(els.loading.style.display).toBe('none');
     expect(els.errorDiv.style.display).toBe('block');
-    expect(els.errorDiv.textContent).toBe('No response from extension. Please try again.');
+    expect(els.errorDiv.textContent).toBe('No response from the extension. Please try again.');
   });
 
   test('shows default error when response has no error message', () => {
@@ -177,7 +177,7 @@ describe('popup UI states', () => {
     init();
 
     const els = getElements();
-    expect(els.errorDiv.textContent).toBe('Failed to generate email');
+    expect(els.errorDiv.textContent).toBe('Failed to generate an email.');
   });
 });
 
@@ -194,6 +194,21 @@ describe('copy button', () => {
     expect(clipboardContent).toBe('example.com@mydomain.com');
     expect(els.copyButton.textContent).toBe('Copied!');
     expect(els.copyButton.classList.contains('copied')).toBe(true);
+  });
+
+  test('shows a red error message when copy fails', async () => {
+    mockClipboard.writeText.mockImplementationOnce(async () => {
+      throw new Error('Clipboard denied');
+    });
+    mockResponse = { success: true, email: 'example.com@mydomain.com' };
+    init();
+
+    const els = getElements();
+    els.copyButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(els.errorDiv.style.display).toBe('block');
+    expect(els.errorDiv.textContent).toBe('Failed to copy.');
   });
 });
 

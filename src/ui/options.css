@@ -166,9 +166,9 @@ body {
 }
 
 .save-state-button.is-error {
-  background-color: #ffebee;
-  border-color: #ef9a9a;
-  color: #c62828;
+  background-color: var(--ui-error-bg);
+  border-color: var(--ui-error-border);
+  color: var(--ui-error-text);
 }
 
 @keyframes save-state-spin {
@@ -418,9 +418,9 @@ input[type="text"]:focus {
 }
 
 .mode-feedback.feedback-warning {
-  border-left-color: #ca8a04;
-  background-color: #fef3c7;
-  color: #713f12;
+  border-left-color: var(--ui-warning-border);
+  background-color: var(--ui-warning-bg);
+  color: var(--ui-warning-text);
 }
 
 .mode-header {
@@ -548,9 +548,9 @@ input[type="text"]:focus {
 }
 
 .req-indicator.req-incompatible {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1.5px solid #ef5350;
+  background-color: var(--ui-error-bg);
+  color: var(--ui-error-text);
+  border: 1.5px solid var(--ui-error-border);
 }
 
 .req-indicator.req-incompatible::before {
@@ -631,17 +631,17 @@ input[type="text"]:focus {
 }
 
 .catch-all-instructions.warning {
-  background-color: #f8f9fa;
+  background-color: var(--ui-warning-surface);
 }
 
 .catch-all-instructions.warning .catch-all-note {
-  color: #555;
+  color: var(--ui-warning-text);
   font-style: normal;
   font-weight: 400;
-  background-color: #f0f0f0;
+  background-color: var(--ui-warning-bg);
   padding: 10px 14px;
   border-radius: 6px;
-  border-left: 3px solid #bbb;
+  border-left: 3px solid var(--ui-warning-border);
   margin-top: 0;
 }
 
@@ -714,7 +714,7 @@ input[type="text"]:focus {
   font-size: 14px;
   font-weight: 500;
   background-color: #fff;
-  color: #c62828;
+  color: var(--ui-error-text);
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   cursor: pointer;
@@ -722,8 +722,8 @@ input[type="text"]:focus {
 }
 
 .button-danger:hover {
-  background-color: #ffebee;
-  border-color: #ef9a9a;
+  background-color: var(--ui-error-bg);
+  border-color: var(--ui-error-border);
 }
 
 /* Status */
@@ -743,8 +743,8 @@ input[type="text"]:focus {
 }
 
 .status.error {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: var(--ui-error-bg);
+  color: var(--ui-error-text);
   display: block;
 }
 
@@ -842,8 +842,8 @@ input[type="text"]:focus {
 }
 
 .btn-delete:hover {
-  color: #c62828;
-  background-color: #ffebee;
+  color: var(--ui-error-text);
+  background-color: var(--ui-error-bg);
 }
 
 .history-empty {

@@ -64,6 +64,14 @@ const mockChrome = {
 
 (globalThis as Record<string, unknown>).chrome = mockChrome;
 
+const mockFetch = mock(async () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({ Status: 3 }),
+}));
+
+(globalThis as Record<string, unknown>).fetch = mockFetch;
+
 function setupOptionsDOM(): void {
   document.body.innerHTML = `
     <div class="nav-item" data-page="settings"></div>
@@ -570,6 +578,7 @@ describe('options page integration', () => {
       email: 'user@gmail.com',
       id: '12345',
     }));
+    mockFetch.mockClear();
   });
 
   afterEach(async () => {
@@ -681,6 +690,26 @@ describe('options page integration', () => {
     expect(mockStorage.baseEmail).toBe('worker@gmail.com');
   });
 
+  test('defaults to plus addressing for first-time supported full-email input', async () => {
+    mockChrome.identity.getProfileUserInfo = mock(async () => ({
+      email: '',
+      id: '',
+    }));
+
+    await initOptionsPage();
+    const { input, colPlus, colCatch } = getOptionsElements();
+
+    input.value = 'worker@gmail.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForDebounce();
+
+    expect(colPlus.classList.contains('selected')).toBe(true);
+    expect(colCatch.classList.contains('selected')).toBe(false);
+    expect(mockStorage.emailMode).toBe('plusAddressing');
+    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.baseEmail).toBe('worker@gmail.com');
+  });
+
   test('saving domain-only input clears baseEmail and reloads as domain-only', async () => {
     mockStorage.emailMode = 'plusAddressing';
     mockStorage.emailDomain = 'gmail.com';
@@ -724,7 +753,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.',
+      'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
     );
     expect(modeFeedback.classList.contains('feedback-warning')).toBe(true);
     expect(modeFeedback.classList.contains('is-empty')).toBe(false);
@@ -754,7 +783,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This email provider does not support Plus Addressing and Catch-All requires your own custom domain.',
+      'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
     );
   });
 

@@ -17,6 +17,7 @@ const requiredSourceFiles = [
     'src/ui/history.ts',
     'src/email/utils.ts',
     'src/ui/options.ts',
+    'src/ui/options-preview.ts',
     'src/ui/popup.ts',
     'src/email/mx-lookup.ts',
     'src/email/provider-domains.ts',
@@ -132,6 +133,8 @@ fs.copyFileSync(path.join(SRC, 'ui', 'options.html'), path.join(uiDir, 'options.
 console.log('  ✅ ui/options.html');
 fs.copyFileSync(path.join(SRC, 'ui', 'popup.html'), path.join(uiDir, 'popup.html'));
 console.log('  ✅ ui/popup.html');
+fs.copyFileSync(path.join(SRC, 'ui', 'message-tokens.css'), path.join(uiDir, 'message-tokens.css'));
+console.log('  ✅ ui/message-tokens.css');
 fs.copyFileSync(path.join(SRC, 'ui', 'options.css'), path.join(uiDir, 'options.css'));
 console.log('  ✅ ui/options.css');
 
@@ -169,7 +172,9 @@ const requiredCompiledFiles = [
     'email/providers.js',
     'manifest.json',
     'ui/options.js',
+    'ui/options-preview.js',
     'ui/options.html',
+    'ui/message-tokens.css',
     'ui/options.css',
     'ui/popup.js',
     'ui/popup.html',

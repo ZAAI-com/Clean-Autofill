@@ -1,0 +1,9 @@
+:root {
+  --ui-warning-surface: #fffbeb;
+  --ui-warning-bg: #fef3c7;
+  --ui-warning-border: #ca8a04;
+  --ui-warning-text: #713f12;
+  --ui-error-bg: #ffebee;
+  --ui-error-border: #ef9a9a;
+  --ui-error-text: #c62828;
+}

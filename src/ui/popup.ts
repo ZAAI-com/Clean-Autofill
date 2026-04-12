@@ -1,5 +1,12 @@
 import type { GenerateAndFillResponse } from '../types';
 
+const POPUP_MESSAGES = {
+  unableToGenerate: 'Unable to generate an email. Please try again.',
+  noResponse: 'No response from the extension. Please try again.',
+  failedToGenerate: 'Failed to generate an email.',
+  failedToCopy: 'Failed to copy.',
+} as const;
+
 export function init(): void {
   const loading = document.getElementById('loading') as HTMLDivElement;
   const result = document.getElementById('result') as HTMLDivElement;
@@ -15,14 +22,15 @@ export function init(): void {
   // Request email generation and fill immediately on popup open
   chrome.runtime.sendMessage({ action: 'generateAndFill' }, (response: GenerateAndFillResponse) => {
     loading.style.display = 'none';
+    showMessage('clear');
 
     if (chrome.runtime.lastError) {
-      showError('Unable to generate email. Please try again.');
+      showMessage('error', POPUP_MESSAGES.unableToGenerate);
       return;
     }
 
     if (!response) {
-      showError('No response from extension. Please try again.');
+      showMessage('error', POPUP_MESSAGES.noResponse);
       return;
     }
 
@@ -32,7 +40,7 @@ export function init(): void {
     }
 
     if (!response.success || !response.email) {
-      showError(response.error ?? 'Failed to generate email');
+      showMessage('error', response.error ?? POPUP_MESSAGES.failedToGenerate);
       return;
     }
 
@@ -41,7 +49,7 @@ export function init(): void {
     result.style.display = 'block';
 
     if (response.message) {
-      statusMessage.textContent = response.message;
+      showMessage('status', response.message);
     }
   });
 
@@ -55,7 +63,7 @@ export function init(): void {
         copyButton.classList.remove('copied');
       }, 1500);
     } catch {
-      statusMessage.textContent = 'Failed to copy';
+      showMessage('error', POPUP_MESSAGES.failedToCopy);
     }
   });
 
@@ -65,9 +73,24 @@ export function init(): void {
     window.close();
   });
 
-  function showError(message: string): void {
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
+  function showMessage(type: 'status' | 'error' | 'clear', message = ''): void {
+    if (type === 'status') {
+      statusMessage.textContent = message;
+      errorDiv.textContent = '';
+      errorDiv.style.display = 'none';
+      return;
+    }
+
+    if (type === 'error') {
+      statusMessage.textContent = '';
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    statusMessage.textContent = '';
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
   }
 }
 

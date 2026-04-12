@@ -43,6 +43,7 @@ refresh-token.txt
 # Test coverage
 coverage/
 .nyc_output/
+test-results/
 
 # Design files (keep source, ignore temp)
 icons/designs/
@@ -61,3 +62,4 @@ __pycache__/
 
 # Workspace files
 .context/
+.gstack/
