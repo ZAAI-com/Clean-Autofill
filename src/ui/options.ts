@@ -448,6 +448,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     return finalStatus === 'plus-unsupported' && getProviderStatus(domain) !== 'custom';
   }
 
+  function shouldDisableCatchAllForFullEmail(domain: string): boolean {
+    return getProviderStatus(domain) !== 'custom';
+  }
+
   function getCurrentDraft(): SettingsDraft | null {
     const mode = getMode();
     if (!mode) return null;
@@ -731,8 +735,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    const disableCatchAll = shouldDisableCatchAllForFullEmail(domain);
     setColumnDisabled(colPlus, false);
-    setColumnDisabled(colCatch, false);
+    setColumnDisabled(colCatch, disableCatchAll);
+    if (disableCatchAll && getMode() === 'catchAll') {
+      clearModeSelection();
+    }
     restorePreferredModeSelection();
 
     // Feedback bar
@@ -797,7 +805,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
       } else {
         setColumnDisabled(colPlus, false);
-        setColumnDisabled(colCatch, false);
+        const disableCatchAll = shouldDisableCatchAllForFullEmail(state.domain as string);
+        setColumnDisabled(colCatch, disableCatchAll);
+        if (disableCatchAll && getMode() === 'catchAll') {
+          clearModeSelection();
+        }
         restorePreferredModeSelection();
         setFeedback('clear', '');
       }

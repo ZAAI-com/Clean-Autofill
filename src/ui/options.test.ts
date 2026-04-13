@@ -595,8 +595,9 @@ describe('options page integration', () => {
     const { input, colCatch, colPlus, saveState, status } = getOptionsElements();
 
     expect(input.value).toBe('user@gmail.com');
-    expect(colCatch.classList.contains('selected')).toBe(true);
-    expect(colPlus.classList.contains('selected')).toBe(false);
+    expect(colCatch.classList.contains('disabled')).toBe(true);
+    expect(colCatch.classList.contains('selected')).toBe(false);
+    expect(colPlus.classList.contains('selected')).toBe(true);
     expect(saveState.textContent).toBe('Saved');
     expect(saveState.dataset.state).toBe('saved');
     expect(status.textContent).toBe('');
@@ -604,19 +605,20 @@ describe('options page integration', () => {
     expect(status.classList.contains('error')).toBe(false);
   });
 
-  test('imports Chrome profile email without collapsing it to a domain in catch-all mode', async () => {
+  test('imports Chrome profile email and auto-selects plus addressing for known providers', async () => {
     mockStorage.emailMode = 'catchAll';
     mockStorage.emailDomain = 'gmail.com';
 
     await initOptionsPage();
-    const { input, profileEmail, colCatch, saveState, status } = getOptionsElements();
+    const { input, profileEmail, colPlus, colCatch, saveState, status } = getOptionsElements();
 
     profileEmail.click();
     await waitForDebounce(20);
 
     expect(input.value).toBe('user@gmail.com');
-    expect(colCatch.classList.contains('selected')).toBe(true);
-    expect(mockStorage.emailMode).toBe('catchAll');
+    expect(colCatch.classList.contains('disabled')).toBe(true);
+    expect(colPlus.classList.contains('selected')).toBe(true);
+    expect(mockStorage.emailMode).toBe('plusAddressing');
     expect(mockStorage.emailDomain).toBe('gmail.com');
     expect(mockStorage.baseEmail).toBe('user@gmail.com');
     expect(saveState.textContent).toBe('Saved');
@@ -674,20 +676,20 @@ describe('options page integration', () => {
 
   test('saving a full email while catch-all stays selected preserves the full field value', async () => {
     mockStorage.emailMode = 'catchAll';
-    mockStorage.emailDomain = 'gmail.com';
+    mockStorage.emailDomain = 'mycorp.com';
 
     await initOptionsPage();
     const { input, colCatch } = getOptionsElements();
 
-    input.value = 'worker@gmail.com';
+    input.value = 'worker@mycorp.com';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await waitForDebounce();
 
     expect(colCatch.classList.contains('selected')).toBe(true);
-    expect(input.value).toBe('worker@gmail.com');
+    expect(input.value).toBe('worker@mycorp.com');
     expect(mockStorage.emailMode).toBe('catchAll');
-    expect(mockStorage.emailDomain).toBe('gmail.com');
-    expect(mockStorage.baseEmail).toBe('worker@gmail.com');
+    expect(mockStorage.emailDomain).toBe('mycorp.com');
+    expect(mockStorage.baseEmail).toBe('worker@mycorp.com');
   });
 
   test('defaults to plus addressing for first-time supported full-email input', async () => {
@@ -805,17 +807,30 @@ describe('options page integration', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
 
     expect(colPlus.classList.contains('disabled')).toBe(false);
-    expect(colCatch.classList.contains('disabled')).toBe(false);
+    expect(colCatch.classList.contains('disabled')).toBe(true);
     expect(radioPlus.checked).toBe(true);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.classList.contains('is-empty')).toBe(true);
     expect(modeFeedback.getAttribute('aria-hidden')).toBe('true');
   });
 
+  test('full email with plus-supported provider disables catch-all column', async () => {
+    await initOptionsPage();
+    const { input, colPlus, colCatch, radioPlus, radioCatch } = getOptionsElements();
+
+    input.value = 'user@gmail.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(colPlus.classList.contains('disabled')).toBe(false);
+    expect(colCatch.classList.contains('disabled')).toBe(true);
+    expect(radioPlus.checked).toBe(true);
+    expect(radioCatch.checked).toBe(false);
+  });
+
   test('custom-domain full emails do not disable both modes', async () => {
     mockStorage.emailMode = 'catchAll';
-    mockStorage.emailDomain = 'gmail.com';
-    mockStorage.baseEmail = 'user@gmail.com';
+    mockStorage.emailDomain = 'mycorp.com';
+    mockStorage.baseEmail = 'user@mycorp.com';
 
     await initOptionsPage();
     const { input, colPlus, colCatch, radioCatch, modeFeedback } = getOptionsElements();
