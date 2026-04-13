@@ -32,7 +32,7 @@ chrome.runtime.onMessage.addListener(
   ) => {
     if (request.action === 'fillEmail') {
       // Validate email before using
-      if (!cleanAutofillUtils?.isValidEmail || !cleanAutofillUtils.isValidEmail(request.email)) {
+      if (!cleanAutofillUtils?.isValidEmail?.(request.email)) {
         sendResponse({ success: false, error: 'Invalid email format received' });
         return true;
       }

@@ -187,4 +187,4 @@ if (typeof globalThis !== 'undefined') {
   (globalThis as { CleanAutofillUtils?: CleanAutofillUtils }).CleanAutofillUtils = utils;
 }
 
-export { extractMainDomain, isValidEmail, createTimeout, debounce, SPECIAL_TLDS };
+export { createTimeout, debounce, extractMainDomain, isValidEmail, SPECIAL_TLDS };

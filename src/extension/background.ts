@@ -111,19 +111,19 @@ async function generateEmailForTab(tab: chrome.tabs.Tab): Promise<GenerateResult
 
   // Check required config for active mode
   if (mode === 'plusAddressing') {
-    if (!baseEmail || !baseEmail.includes('@')) return null;
+    if (!baseEmail?.includes('@')) return null;
   } else {
     if (!userDomain) return null;
   }
 
   // Extract domain from tab URL
-  if (!tab || !tab.url) {
+  if (!tab?.url) {
     throw new Error('Unable to get current website domain');
   }
 
   // Skip chrome:// and extension:// URLs
   if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-    throw new Error('Cannot generate email for browser pages');
+    throw new Error("Email addresses can't be generated on browser pages.");
   }
 
   try {

@@ -126,14 +126,14 @@ describe('popup UI states', () => {
   test('shows error message on failure', () => {
     mockResponse = {
       success: false,
-      error: 'Cannot generate email for browser pages',
+      error: "Email addresses can't be generated on browser pages.",
     };
     init();
 
     const els = getElements();
     expect(els.loading.style.display).toBe('none');
     expect(els.errorDiv.style.display).toBe('block');
-    expect(els.errorDiv.textContent).toBe('Cannot generate email for browser pages');
+    expect(els.errorDiv.textContent).toBe("Email addresses can't be generated on browser pages.");
     expect(els.result.style.display).toBe('none');
   });
 

@@ -26,14 +26,14 @@ function generateEmail(
 
   // Check required config for active mode
   if (mode === 'plusAddressing') {
-    if (!baseEmail || !baseEmail.includes('@')) return null;
+    if (!baseEmail?.includes('@')) return null;
   } else {
     if (!userDomain) return null;
   }
 
   // Skip chrome:// and extension:// URLs
   if (tabUrl.startsWith('chrome://') || tabUrl.startsWith('chrome-extension://')) {
-    throw new Error('Cannot generate email for browser pages');
+    throw new Error("Email addresses can't be generated on browser pages.");
   }
 
   try {
@@ -218,20 +218,20 @@ describe('generateEmail', () => {
   describe('browser pages', () => {
     test('throws error for chrome:// URL', () => {
       expect(() => generateEmail('chrome://extensions', 'mydomain.com')).toThrow(
-        'Cannot generate email for browser pages',
+        "Email addresses can't be generated on browser pages.",
       );
     });
 
     test('throws error for chrome-extension:// URL', () => {
       expect(() => generateEmail('chrome-extension://abc123/options.html', 'mydomain.com')).toThrow(
-        'Cannot generate email for browser pages',
+        "Email addresses can't be generated on browser pages.",
       );
     });
 
     test('throws error for chrome:// URL in plus addressing mode', () => {
       expect(() =>
         generateEmail('chrome://extensions', '', 'plusAddressing', 'name@gmail.com'),
-      ).toThrow('Cannot generate email for browser pages');
+      ).toThrow("Email addresses can't be generated on browser pages.");
     });
   });
 
