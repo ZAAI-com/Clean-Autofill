@@ -2,12 +2,12 @@
 """
 Generate Chrome Web Store listing images for Clean Autofill.
 
-The pipeline has two layers:
-1. Render real extension UI from the source templates in src/ui/.
-2. Compose those renders into polished store assets with a shared visual system.
+The pipeline:
+1. Load real screenshots from docs/store-listing/screenshots/.
+2. Crop off macOS window shadow and Chrome chrome to get page content.
+3. Compose those crops into polished store assets with a shared dark-background visual system.
 
-The browser scenes use deterministic, site-inspired signup mocks so the final
-store assets stay clean and stable over time.
+The marquee banner still uses a deterministic mock for stability.
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ from __future__ import annotations
 import base64
 import html
 import io
-import re
 import shutil
 from pathlib import Path
 
@@ -24,355 +23,24 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).parent.parent.parent.parent
 OUT = Path(__file__).parent
-SRC_UI = ROOT / "src" / "ui"
+SCREENSHOTS = ROOT / "docs" / "Screenshots"
 SRC_ICONS = ROOT / "src" / "icons"
 
-OPTIONS_HTML = (SRC_UI / "options.html").read_text()
-OPTIONS_CSS = (SRC_UI / "options.css").read_text()
-POPUP_HTML = (SRC_UI / "popup.html").read_text()
-
 APP_ICON_URI = ""
-GMAIL_ICON_URI = ""
-
-SCRIPT_TAG_RE = re.compile(r"<script\b[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL)
 
 # --- Dark theme card styling ---
 CARD_SHADOW = "0 32px 72px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(0, 0, 0, 0.30)"
 CARD_BORDER = "1px solid rgba(255, 255, 255, 0.10)"
 CARD_RADIUS = 20
 
-OPTIONS_BASE_OVERRIDES = """
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+# Chrome chrome height (from window top to page content) in the real screenshots.
+# Measured from alpha-channel analysis: window starts at y=76, content at y=250.
+CHROME_HEIGHT = 174  # pixels within the window (tab bar + address bar)
 
-.sidebar-header .icon {
-  background: url('__APP_ICON__') center / contain no-repeat !important;
-  background-color: transparent !important;
-  border-radius: 7px !important;
-}
 
-.messages-area {
-  display: none !important;
-}
-
-#saveStateIndicator {
-  display: none !important;
-}
-
-.history-table tr.is-spotlight td {
-  background: #f4fbf5;
-}
-
-.history-table tr.is-spotlight:hover td {
-  background: #eef8ef;
-}
-""".replace("__APP_ICON__", "__APP_ICON__")
-
-POPUP_BASE_OVERRIDES = """
-body {
-  min-width: 380px;
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-#statusMessage {
-  color: #2f7a35;
-  font-weight: 500;
-}
-"""
-
-SETTINGS_SHOT_CSS = """
-body {
-  background: #f4f7fa;
-  display: block;
-  min-height: auto;
-}
-
-.sidebar {
-  display: none;
-}
-
-.content {
-  margin-left: 0;
-  width: 100%;
-  max-width: none;
-  padding: 24px 28px 20px;
-}
-
-.page-subtitle {
-  display: none;
-}
-
-.settings-section {
-  margin-bottom: 12px;
-}
-
-.help-text {
-  display: none;
-}
-
-.mode-table {
-  gap: 12px;
-}
-
-#settingsForm {
-  display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
-  gap: 14px 18px;
-  align-items: start;
-}
-
-#settingsForm > .settings-section:nth-of-type(1) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-#settingsForm > .settings-section:nth-of-type(2) {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-}
-
-#settingsForm > .settings-section:nth-of-type(3) {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.page-title {
-  font-size: 26px;
-  margin-bottom: 4px;
-}
-
-.settings-section h2 {
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-
-.example-row {
-  padding-top: 9px;
-  padding-bottom: 9px;
-}
-
-.examples-list .example-row:nth-of-type(n + 3) {
-  display: none;
-}
-
-.form-group {
-  margin-bottom: 6px;
-}
-
-.page-header {
-  margin-bottom: 12px;
-}
-
-.detection-box {
-  margin-bottom: 8px;
-  padding: 6px 10px;
-}
-
-input[type="text"] {
-  padding: 9px 12px;
-}
-
-.mode-header {
-  font-size: 15px;
-  padding: 10px;
-}
-
-.mode-row {
-  padding: 6px 10px;
-}
-
-.row-label {
-  font-size: 10px;
-  margin-bottom: 2px;
-}
-
-.row-value code {
-  font-size: 11px;
-}
-
-.req-checks {
-  gap: 2px;
-}
-
-.req-label,
-.req-value {
-  font-size: 11px;
-}
-
-#colCatchAll {
-  display: none;
-}
-
-.mode-column {
-  opacity: 1;
-}
-"""
-
-HISTORY_SHOT_CSS = """
-body {
-  background: #f4f7fa;
-  display: block;
-  min-height: auto;
-}
-
-.sidebar {
-  display: none;
-}
-
-.content {
-  margin-left: 0;
-  width: 100%;
-  max-width: none;
-  padding: 24px 28px;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-
-.history-table td,
-.history-table th {
-  padding-top: 13px;
-  padding-bottom: 13px;
-}
-
-.page-title {
-  font-size: 26px;
-  margin-bottom: 4px;
-}
-
-.history-controls {
-  margin-bottom: 18px;
-}
-
-.history-table td.col-email {
-  color: #357c3c;
-}
-
-#historySearch {
-  font-size: 15px;
-}
-"""
-
-HOME_SHOT_CSS = """
-body {
-  background: #f4f7fa;
-  display: block;
-  min-height: auto;
-}
-
-.sidebar {
-  display: none;
-}
-
-.content {
-  margin-left: 0;
-  width: 100%;
-  max-width: none;
-  padding: 24px 28px;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.how-it-works {
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.settings-section {
-  margin-bottom: 0;
-}
-
-.examples-list {
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.page-title {
-  font-size: 26px;
-  margin-bottom: 4px;
-}
-
-#page-home {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 14px 26px;
-  align-items: start;
-}
-
-#page-home .page-title,
-#page-home .page-subtitle {
-  grid-column: 1 / -1;
-}
-
-#page-home > h2 {
-  grid-column: 1;
-  margin-bottom: 0 !important;
-}
-
-#page-home .how-it-works {
-  grid-column: 1;
-  margin-bottom: 0;
-}
-
-#page-home .settings-section {
-  grid-column: 2;
-  grid-row: 3 / span 2;
-  align-self: stretch;
-}
-
-#page-home .settings-section h2 {
-  margin-bottom: 14px;
-}
-
-.step {
-  gap: 12px;
-}
-
-.step-number {
-  width: 30px;
-  height: 30px;
-  font-size: 14px;
-}
-
-.step-text strong {
-  font-size: 15px;
-}
-
-.step-text span {
-  font-size: 13px;
-}
-
-.settings-section h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.example-row {
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-.example-site {
-  font-size: 15px;
-}
-
-.example-email {
-  font-size: 13px;
-}
-
-.examples-list .example-row:nth-of-type(n + 5) {
-  display: none;
-}
-"""
-
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def data_uri(path: Path, mime: str | None = None) -> str:
     suffix = path.suffix.lower()
@@ -391,22 +59,77 @@ def png_uri(png_bytes: bytes) -> str:
     return f"data:image/png;base64,{base64.b64encode(png_bytes).decode()}"
 
 
-def strip_scripts(markup: str) -> str:
-    return SCRIPT_TAG_RE.sub("", markup)
+def load_and_crop(path: Path, target_aspect: float, crop_mode: str = "content") -> bytes:
+    """Load a macOS screenshot, strip shadow, crop to target aspect ratio.
+
+    crop_mode:
+      "content"      — strip Chrome chrome, keep page content from top (default)
+      "with_chrome"   — keep Chrome chrome (tab bar + address bar) in the crop
+      "center_content" — strip Chrome chrome, then center-crop vertically
+    """
+    img = Image.open(path)
+
+    # Find opaque window bounds (skip macOS shadow which has alpha < 255)
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    alpha = img.getchannel("A")
+    bbox = alpha.point(lambda p: 255 if p > 200 else 0).getbbox()
+    if not bbox:
+        raise ValueError(f"Could not find opaque region in {path}")
+    win_left, win_top, win_right, win_bottom = bbox
+
+    if crop_mode == "with_chrome":
+        # Include Chrome chrome — start from window top
+        content_top = win_top
+    else:
+        # Strip Chrome chrome — start from page content
+        content_top = win_top + CHROME_HEIGHT
+
+    content_left = win_left
+    content_right = win_right
+    content_bottom = win_bottom
+
+    content_width = content_right - content_left
+    content_height = content_bottom - content_top
+
+    # Crop height to match target aspect ratio
+    target_height = int(content_width / target_aspect)
+    if target_height < content_height:
+        if crop_mode == "center_content":
+            # Center the crop vertically to capture mid-page content
+            excess = content_height - target_height
+            content_top += excess // 2
+            content_bottom = content_top + target_height
+        else:
+            # Top-aligned crop
+            content_bottom = content_top + target_height
+
+    cropped = img.crop((content_left, content_top, content_right, content_bottom))
+
+    # Convert RGBA to RGB (white background) for the data URI
+    rgb = Image.new("RGB", cropped.size, (255, 255, 255))
+    rgb.paste(cropped, mask=cropped.split()[3])
+
+    buf = io.BytesIO()
+    rgb.save(buf, format="PNG")
+    return buf.getvalue()
 
 
-def inline_options_html(extra_css: str = "") -> str:
-    style = OPTIONS_CSS + "\n" + OPTIONS_BASE_OVERRIDES.replace("__APP_ICON__", APP_ICON_URI) + "\n" + extra_css
-    html_doc = strip_scripts(OPTIONS_HTML)
-    return html_doc.replace(
-        '<link rel="stylesheet" href="options.css">',
-        f"<style>{style}</style>",
-    )
-
-
-def inline_popup_html(extra_css: str = "") -> str:
-    html_doc = strip_scripts(POPUP_HTML).replace("../icons/icon32.png", APP_ICON_URI)
-    return html_doc.replace("</style>", f"\n{POPUP_BASE_OVERRIDES}\n{extra_css}\n</style>", 1)
+def load_full_window(path: Path) -> bytes:
+    """Load a macOS screenshot, strip only the shadow, keep the full window."""
+    img = Image.open(path)
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    alpha = img.getchannel("A")
+    bbox = alpha.point(lambda p: 255 if p > 200 else 0).getbbox()
+    if not bbox:
+        raise ValueError(f"Could not find opaque region in {path}")
+    cropped = img.crop(bbox)
+    rgb = Image.new("RGB", cropped.size, (255, 255, 255))
+    rgb.paste(cropped, mask=cropped.split()[3])
+    buf = io.BytesIO()
+    rgb.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 def render_markup(page, markup: str, width: int, height: int) -> bytes:
@@ -416,271 +139,9 @@ def render_markup(page, markup: str, width: int, height: int) -> bytes:
     return page.screenshot(type="png")
 
 
-def capture_live_signup(page, url: str, email_text: str, script: str, clip: dict[str, int]) -> bytes:
-    page.set_viewport_size({"width": 1440, "height": 900})
-    page.goto(url, wait_until="domcontentloaded", timeout=20000)
-    page.wait_for_timeout(2800)
-    page.evaluate(script, {"email": email_text})
-    page.wait_for_timeout(160)
-    return page.screenshot(type="png", clip=clip)
-
-
-def render_options_capture(page, page_id: str, width: int, height: int) -> bytes:
-    extra_css = {
-        "settings": SETTINGS_SHOT_CSS,
-        "history": HISTORY_SHOT_CSS,
-        "home": HOME_SHOT_CSS,
-    }[page_id]
-
-    page.set_viewport_size({"width": width, "height": height})
-    page.set_content(inline_options_html(extra_css), wait_until="load")
-    page.wait_for_timeout(80)
-
-    if page_id == "settings":
-        populate_settings(page)
-    elif page_id == "history":
-        populate_history(page)
-    elif page_id == "home":
-        populate_home(page)
-
-    page.wait_for_timeout(80)
-    return page.screenshot(type="png")
-
-
-def populate_settings(page) -> None:
-    data = {
-        "baseEmail": "name@gmail.com",
-        "providerName": "Gmail",
-        "providerLogo": GMAIL_ICON_URI,
-        "plusFormat": "name+site@gmail.com",
-        "catchAllFormat": "site@yourdomain.com",
-        "examples": [
-            {"site": "amazon.com", "email": "name+amazon.com@gmail.com"},
-            {"site": "wikipedia.org", "email": "name+wikipedia.org@gmail.com"},
-        ],
-    }
-    page.evaluate(
-        """
-        (data) => {
-          const pageId = 'settings';
-          document.querySelectorAll('.nav-item[data-page]').forEach((nav) => {
-            nav.classList.toggle('active', nav.dataset.page === pageId);
-          });
-          document.querySelectorAll('.page').forEach((section) => {
-            section.classList.toggle('active', section.id === `page-${pageId}`);
-          });
-
-          const setText = (selector, value) => {
-            const node = document.querySelector(selector);
-            if (node) node.textContent = value;
-          };
-
-          const input = document.getElementById('emailInput');
-          if (input) {
-            input.value = data.baseEmail;
-            input.style.borderColor = '#4CAF50';
-            input.style.boxShadow = '0 0 0 4px rgba(76, 175, 80, 0.12)';
-          }
-
-          const chromeProfile = document.getElementById('detectionChromeProfile');
-          const detectionProvider = document.getElementById('detectionProvider');
-          chromeProfile?.classList.add('detected');
-          detectionProvider?.classList.add('detected');
-
-          setText('#chromeProfileEmail', data.baseEmail);
-          setText('#providerText', data.providerName);
-          setText('#plusFormat', data.plusFormat);
-          setText('#catchAllFormat', data.catchAllFormat);
-          setText('#plusProviderValue', data.providerName);
-          setText('#plusSupportValue', 'Supported');
-          setText('#catchAllDomainValue', 'Setup needed');
-          setText('#catchAllEnabledValue', '--');
-
-          const providerLogo = document.getElementById('providerLogo');
-          const providerDetected = document.getElementById('providerDetected');
-          const providerPlaceholder = document.getElementById('providerPlaceholder');
-          if (providerLogo) {
-            providerLogo.style.display = 'inline-flex';
-            providerLogo.innerHTML = `<img src="${data.providerLogo}" width="18" height="18" alt="">`;
-          }
-          if (providerDetected) providerDetected.style.display = 'flex';
-          if (providerPlaceholder) providerPlaceholder.style.display = 'none';
-
-          const supported = (selector) => {
-            const node = document.querySelector(selector);
-            if (node) node.className = 'req-indicator req-supported';
-          };
-          const possible = (selector) => {
-            const node = document.querySelector(selector);
-            if (node) node.className = 'req-indicator req-possible';
-          };
-          supported('#plusProviderIndicator');
-          supported('#plusSupportIndicator');
-          possible('#catchAllDomainIndicator');
-
-          const catchAllIndicator = document.getElementById('catchAllEnabledIndicator');
-          if (catchAllIndicator) catchAllIndicator.className = 'req-indicator';
-
-          const plusColumn = document.getElementById('colPlusAddressing');
-          const catchAllColumn = document.getElementById('colCatchAll');
-          plusColumn?.classList.add('selected');
-          catchAllColumn?.classList.remove('selected');
-
-          const plusRadio = document.getElementById('modePlusAddressing');
-          const catchAllRadio = document.getElementById('modeCatchAll');
-          if (plusRadio) plusRadio.checked = true;
-          if (catchAllRadio) catchAllRadio.checked = false;
-
-          const rows = [...document.querySelectorAll('#page-settings .examples-list .example-row')];
-          rows.forEach((row, index) => {
-            const item = data.examples[index];
-            if (!item) {
-              row.remove();
-              return;
-            }
-            const site = row.querySelector('.example-site');
-            const email = row.querySelector('.example-email');
-            if (site) site.textContent = item.site;
-            if (email) email.textContent = item.email;
-          });
-        }
-        """,
-        data,
-    )
-
-
-def populate_history(page) -> None:
-    rows = [
-        {"domain": "github.com", "email": "github.com@yourdomain.com", "date": "Apr 8, 10:23", "spotlight": True},
-        {"domain": "netflix.com", "email": "netflix.com@yourdomain.com", "date": "Apr 7, 15:45", "spotlight": False},
-        {"domain": "wikipedia.org", "email": "wikipedia.org@yourdomain.com", "date": "Apr 7, 11:02", "spotlight": False},
-        {"domain": "stripe.com", "email": "stripe.com@yourdomain.com", "date": "Apr 6, 09:18", "spotlight": False},
-        {"domain": "claude.ai", "email": "claude.ai@yourdomain.com", "date": "Apr 5, 16:12", "spotlight": False},
-    ]
-    page.evaluate(
-        """
-        (rows) => {
-          const pageId = 'history';
-          document.querySelectorAll('.nav-item[data-page]').forEach((nav) => {
-            nav.classList.toggle('active', nav.dataset.page === pageId);
-          });
-          document.querySelectorAll('.page').forEach((section) => {
-            section.classList.toggle('active', section.id === `page-${pageId}`);
-          });
-
-          const body = document.getElementById('historyBody');
-          if (!body) return;
-
-          body.innerHTML = rows.map((row) => `
-            <tr class="${row.spotlight ? 'is-spotlight' : ''}">
-              <td class="col-domain">${row.domain}</td>
-              <td class="col-email">${row.email}</td>
-              <td class="col-date">${row.date}</td>
-              <td class="col-actions">
-                <button>Copy</button>
-              </td>
-            </tr>
-          `).join('');
-
-          const search = document.getElementById('historySearch');
-          if (search) search.value = '';
-        }
-        """,
-        rows,
-    )
-
-
-def populate_home(page) -> None:
-    examples = [
-        {"site": "netflix.com", "email": "netflix.com@yourdomain.com"},
-        {"site": "amazon.com", "email": "amazon.com@yourdomain.com"},
-        {"site": "github.com", "email": "github.com@yourdomain.com"},
-        {"site": "wikipedia.org", "email": "wikipedia.org@yourdomain.com"},
-    ]
-    page.evaluate(
-        """
-        (examples) => {
-          const pageId = 'home';
-          document.querySelectorAll('.nav-item[data-page]').forEach((nav) => {
-            nav.classList.toggle('active', nav.dataset.page === pageId);
-          });
-          document.querySelectorAll('.page').forEach((section) => {
-            section.classList.toggle('active', section.id === `page-${pageId}`);
-          });
-
-          const rows = [...document.querySelectorAll('#page-home .examples-list .example-row')];
-          rows.forEach((row, index) => {
-            const item = examples[index];
-            if (!item) {
-              row.remove();
-              return;
-            }
-            const site = row.querySelector('.example-site');
-            const email = row.querySelector('.example-email');
-            if (site) site.textContent = item.site;
-            if (email) email.textContent = item.email;
-          });
-        }
-        """,
-        examples,
-    )
-
-
-def render_popup_capture(page, email_text: str, status_text: str) -> bytes:
-    page.set_viewport_size({"width": 360, "height": 156})
-    page.set_content(inline_popup_html(), wait_until="load")
-    page.evaluate(
-        """
-        (data) => {
-          const loading = document.getElementById('loading');
-          const result = document.getElementById('result');
-          const emailDisplay = document.getElementById('emailDisplay');
-          const status = document.getElementById('statusMessage');
-          if (loading) loading.style.display = 'none';
-          if (result) result.style.display = 'block';
-          if (emailDisplay) emailDisplay.textContent = data.email;
-          if (status) status.textContent = data.status;
-        }
-        """,
-        {"email": email_text, "status": status_text},
-    )
-    page.wait_for_timeout(60)
-    return page.locator("body").screenshot(type="png")
-
-
-NETFLIX_SIGNUP_SCRIPT = """
-(data) => {
-  document.querySelectorAll(
-    '[data-testid*=cookie], [id*=cookie], [class*=cookie], [class*=intercom], [class*=chat], iframe'
-  ).forEach((node) => node.remove());
-
-  const input = document.querySelector('input[type="email"]');
-  if (input) {
-    input.value = data.email;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.style.borderColor = '#4CAF50';
-    input.style.boxShadow = '0 0 0 4px rgba(76, 175, 80, 0.16)';
-    input.style.background = 'rgba(76, 175, 80, 0.08)';
-  }
-}
-"""
-
-
-WIKIPEDIA_SIGNUP_SCRIPT = """
-(data) => {
-  document.querySelectorAll('[id*=cookie], [class*=cookie], [aria-label*=cookie], iframe').forEach((node) => node.remove());
-
-  const input = document.querySelector('#wpEmail') || document.querySelector('input[name="wpEmail"]') || document.querySelector('input[type="email"]');
-  if (input) {
-    input.value = data.email;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.style.borderColor = '#4CAF50';
-    input.style.boxShadow = '0 0 0 4px rgba(76, 175, 80, 0.16)';
-    input.style.background = '#f4fbf5';
-  }
-}
-"""
-
+# ---------------------------------------------------------------------------
+# Marquee mock — Netflix signup (deterministic, no live capture needed)
+# ---------------------------------------------------------------------------
 
 def netflix_site_html(width: int, height: int) -> str:
     return f"""
@@ -820,169 +281,49 @@ def netflix_site_html(width: int, height: int) -> str:
     """
 
 
-def wikipedia_site_html(width: int, height: int) -> str:
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        * {{ box-sizing: border-box; }}
-        body {{
-          margin: 0;
-          width: {width}px;
-          height: {height}px;
-          background: #f8f9fa;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          padding-top: 22px;
-        }}
-        .header {{
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 56px;
-          padding: 0 28px;
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          border-bottom: 1px solid #e0e0e0;
-          background: #fff;
-        }}
-        .wiki-logo {{
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: #f0f0f0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 22px;
-          font-weight: 700;
-          color: #333;
-          font-family: 'Linux Libertine', 'Georgia', serif;
-        }}
-        .wiki-wordmark {{
-          font-size: 18px;
-          font-weight: 700;
-          color: #202122;
-          font-family: 'Linux Libertine', 'Georgia', serif;
-          letter-spacing: -0.02em;
-        }}
-        .card {{
-          margin-top: 56px;
-          padding: 32px 42px;
-          width: 520px;
-          background: #fff;
-          border: 1px solid #c8ccd1;
-          border-radius: 2px;
-        }}
-        h1 {{
-          margin: 0 0 6px;
-          font-size: 28px;
-          line-height: 1.2;
-          color: #202122;
-          font-weight: 400;
-          font-family: 'Linux Libertine', 'Georgia', serif;
-        }}
-        .subtitle {{
-          margin: 0 0 22px;
-          font-size: 13px;
-          color: #72777d;
-        }}
-        .subtitle a {{
-          color: #3366cc;
-          text-decoration: none;
-        }}
-        .form-group {{
-          margin-bottom: 16px;
-        }}
-        label {{
-          display: block;
-          font-size: 13px;
-          font-weight: 700;
-          color: #202122;
-          margin-bottom: 6px;
-        }}
-        .label-optional {{
-          font-weight: 400;
-          color: #72777d;
-        }}
-        input {{
-          width: 100%;
-          border: 1px solid #a2a9b1;
-          background: #fff;
-          border-radius: 2px;
-          padding: 10px 12px;
-          font-size: 14px;
-          color: #202122;
-        }}
-        input.filled {{
-          border: 2px solid #4CAF50;
-          background: #f4fbf5;
-          color: #2a6a31;
-          font-weight: 600;
-          box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.14);
-        }}
-        .password-note {{
-          font-size: 12px;
-          color: #72777d;
-          margin-top: 4px;
-        }}
-        button {{
-          background: #3366cc;
-          color: #fff;
-          border: none;
-          border-radius: 2px;
-          padding: 10px 16px;
-          font-size: 14px;
-          font-weight: 700;
-          margin-top: 8px;
-          cursor: pointer;
-        }}
-        .captcha-note {{
-          margin-top: 18px;
-          padding-top: 16px;
-          border-top: 1px solid #eaecf0;
-          font-size: 12px;
-          color: #72777d;
-        }}
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="wiki-logo">W</div>
-        <div class="wiki-wordmark">Wikipedia</div>
-      </div>
-      <div class="card">
-        <h1>Create account</h1>
-        <p class="subtitle">Already have an account? <a href="#">Log in</a></p>
-        <div class="form-group">
-          <label>Username</label>
-          <input value="">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" value="">
-          <div class="password-note">Must be at least 8 characters</div>
-        </div>
-        <div class="form-group">
-          <label>Confirm password</label>
-          <input type="password" value="">
-        </div>
-        <div class="form-group">
-          <label>Email address <span class="label-optional">(recommended)</span></label>
-          <input class="filled" value="wikipedia.org@yourdomain.com">
-        </div>
-        <button>Create your account</button>
-        <div class="captcha-note">To protect the wiki against automated account creation, please solve the CAPTCHA below.</div>
-      </div>
-    </body>
-    </html>
-    """
+# Popup mock for marquee only
+POPUP_HTML_TEMPLATE = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-width: 380px; background: #fff; color: #333; padding: 16px;
+  border-radius: 18px; overflow: hidden;
+}
+.header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.header img { width: 20px; height: 20px; }
+.header h1 { font-size: 14px; font-weight: 600; color: #333; }
+.email-row {
+  display: flex; align-items: center; gap: 8px;
+  background: #f5f5f5; border: 1px solid #e0e0e0;
+  border-radius: 6px; padding: 8px 12px;
+}
+#emailDisplay { flex: 1; font-family: monospace; font-size: 13px; color: #333; word-break: break-all; }
+#copyButton {
+  background: #4CAF50; color: #fff; border: none; border-radius: 4px;
+  padding: 6px 12px; font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+#statusMessage { font-size: 12px; color: #2f7a35; font-weight: 500; margin-top: 8px; }
+</style></head>
+<body>
+  <div class="header">
+    <img src="__ICON__" alt=""><h1>Clean Autofill</h1>
+  </div>
+  <div class="email-row">
+    <span id="emailDisplay">__EMAIL__</span>
+    <button id="copyButton">Copy</button>
+  </div>
+  <div id="statusMessage">Filled into email field</div>
+</body></html>"""
+
+
+def render_popup(page, email_text: str, icon_uri: str) -> bytes:
+    markup = POPUP_HTML_TEMPLATE.replace("__ICON__", icon_uri).replace("__EMAIL__", email_text)
+    page.set_viewport_size({"width": 360, "height": 156})
+    page.set_content(markup, wait_until="load")
+    page.wait_for_timeout(60)
+    return page.locator("body").screenshot(type="png")
 
 
 # ---------------------------------------------------------------------------
@@ -1128,27 +469,15 @@ def scene_shell(content: str, width: int, height: int, bg_from: str, bg_to: str)
       object-fit: cover;
     }}
 
-    .popup-float {{
-      position: absolute;
-      right: 18px;
-      top: 80px;
-      width: 380px;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28), 0 10px 24px rgba(0, 0, 0, 0.18);
-      border: 1px solid rgba(217, 226, 235, 0.88);
-      background: #fff;
-    }}
-
     .extension-card {{
-      background: #f4f7fa;
+      background: transparent;
     }}
 
     .extension-image {{
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
     }}
   </style>
 </head>
@@ -1165,15 +494,7 @@ def browser_scene(
     site_image_uri: str,
     bg_from: str,
     bg_to: str,
-    popup_image_uri: str | None = None,
 ) -> str:
-    popup_markup = ""
-    if popup_image_uri:
-        popup_markup = f"""
-        <div class="popup-float">
-          <img class="frame-image" src="{popup_image_uri}" alt="">
-        </div>
-        """
     content = f"""
     <div class="stage">
       <div class="headline">
@@ -1195,7 +516,6 @@ def browser_scene(
         <div class="browser-body">
           <img class="frame-image" src="{site_image_uri}" alt="">
         </div>
-        {popup_markup}
       </div>
     </div>
     """
@@ -1221,6 +541,53 @@ def extension_scene(
     </div>
     """
     return scene_shell(content, 1280, 800, bg_from, bg_to)
+
+
+def split_scene(
+    headline: str,
+    subtitle: str,
+    bullets: list[str],
+    screenshot_uri: str,
+    bg_from: str,
+    bg_to: str,
+) -> str:
+    """Text on left, full screenshot card on right."""
+    bullet_html = "\n".join(f'<li>{html.escape(b)}</li>' for b in bullets)
+    content = f"""
+    <div class="stage" style="display:grid;grid-template-columns:1fr 740px;gap:28px;padding:48px 42px;align-items:end;">
+      <div style="max-width:440px;padding-bottom:60px;">
+        <h2 style="margin:0 0 10px;font-size:44px;font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.08;text-shadow:0 2px 12px rgba(0,0,0,0.20);">{html.escape(headline)}</h2>
+        <p style="margin:0 0 22px;font-size:18px;font-weight:500;color:rgba(255,255,255,0.60);">{html.escape(subtitle)}</p>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;">
+          {bullet_html}
+        </ul>
+      </div>
+      <div style="position:relative;width:740px;height:780px;justify-self:end;align-self:end;">
+        <img src="{screenshot_uri}" alt="" style="width:100%;height:100%;display:block;object-fit:contain;object-position:bottom right;">
+      </div>
+    </div>
+    """
+    # Override the .stage default positioning and add bullet styling
+    shell = scene_shell(content, 1280, 800, bg_from, bg_to)
+    bullet_css = """
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.4;
+    }
+    li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4CAF50;
+      flex-shrink: 0;
+    }
+    """
+    return shell.replace("</style>", f"{bullet_css}\n</style>", 1)
 
 
 def small_promo_html() -> str:
@@ -1517,50 +884,70 @@ def marquee_html(site_image_uri: str, popup_image_uri: str) -> str:
 </html>"""
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+# Browser body aspect: (1280 - 52 - 52) / (680 - 52) = 1176 / 628
+BROWSER_BODY_ASPECT = 1176 / 628
+
+# Extension card aspect: (1280 - 52 - 52) / 660 = 1176 / 660
+EXTENSION_CARD_ASPECT = 1176 / 660
+
+
 def main() -> None:
-    global APP_ICON_URI, GMAIL_ICON_URI
+    global APP_ICON_URI
 
     APP_ICON_URI = data_uri(SRC_ICONS / "icon128.png")
-    GMAIL_ICON_URI = data_uri(SRC_ICONS / "providers" / "gmail.png")
 
-    print("Generating refreshed Chrome Web Store images...\n")
+    print("Generating Chrome Web Store images...\n")
 
+    # --- Load and crop real screenshots ---
+    # Action shots (browser scenes)
+    netflix_png = load_and_crop(SCREENSHOTS / "Signup-Netflix.com-Filled.png", BROWSER_BODY_ASPECT)
+    ted_png = load_and_crop(SCREENSHOTS / "Signup-TED.com-Filled.png", BROWSER_BODY_ASPECT)
+    ui_png = load_and_crop(SCREENSHOTS / "Signup-UI.com-Filled.png", BROWSER_BODY_ASPECT)
+
+    # Extension pages (extension scenes)
+    home_png = load_and_crop(SCREENSHOTS / "Options-1-Home.png", EXTENSION_CARD_ASPECT)
+    settings_plus_png = load_and_crop(SCREENSHOTS / "Options-2a-Settings-PlusAddressing.png", EXTENSION_CARD_ASPECT)
+    settings_catchall_png = load_and_crop(SCREENSHOTS / "Options-2b-Settings-CatchAll.png", EXTENSION_CARD_ASPECT)
+    history_png = load_and_crop(SCREENSHOTS / "Options-3-History.png", EXTENSION_CARD_ASPECT)
+    help_png = load_and_crop(SCREENSHOTS / "Options-4-Help.png", EXTENSION_CARD_ASPECT)
+
+    # Full window screenshots for split layout (text left, screenshot right)
+    settings_plus_full_png = load_full_window(SCREENSHOTS / "Options-2a-Settings-PlusAddressing.png")
+    settings_catchall_full_png = load_full_window(SCREENSHOTS / "Options-2b-Settings-CatchAll.png")
+
+    # --- Marquee assets (mock Netflix + popup, rendered with Playwright) ---
     with sync_playwright() as p:
         browser = p.chromium.launch()
         source_context = browser.new_context(device_scale_factor=2)
         scene_context = browser.new_context(device_scale_factor=2)
 
-        options_page = source_context.new_page()
-        popup_page = source_context.new_page()
-        site_page = source_context.new_page()
+        source_page = source_context.new_page()
         scene_page = scene_context.new_page()
 
-        popup_netflix_png = render_popup_capture(popup_page, "netflix.com@yourdomain.com", "Filled into email field")
-        popup_wikipedia_png = render_popup_capture(popup_page, "wikipedia.org@yourdomain.com", "Filled into email field")
-        settings_png = render_options_capture(options_page, "settings", 1040, 620)
-        history_png = render_options_capture(options_page, "history", 1040, 560)
-        home_png = render_options_capture(options_page, "home", 1040, 560)
-
-        # Deterministic local mocks keep the store assets clean and stable.
-        # Live captures are available as fallback but the mocks are preferred
-        # because real pages have cookie banners and layout clutter.
-        netflix_png = render_markup(site_page, netflix_site_html(1176, 628), 1176, 628)
-        netflix_marquee_png = render_markup(site_page, netflix_site_html(768, 470), 768, 470)
-        wikipedia_png = render_markup(site_page, wikipedia_site_html(1176, 628), 1176, 628)
+        netflix_marquee_png = render_markup(source_page, netflix_site_html(768, 470), 768, 470)
+        popup_marquee_png = render_popup(source_page, "netflix.com@yourdomain.com", APP_ICON_URI)
 
         assets = {
-            "popup_netflix": png_uri(popup_netflix_png),
-            "popup_wikipedia": png_uri(popup_wikipedia_png),
-            "settings": png_uri(settings_png),
-            "history": png_uri(history_png),
-            "home": png_uri(home_png),
             "netflix": png_uri(netflix_png),
+            "ted": png_uri(ted_png),
+            "ui": png_uri(ui_png),
+            "home": png_uri(home_png),
+            "settings_plus": png_uri(settings_plus_png),
+            "settings_catchall": png_uri(settings_catchall_png),
+            "history": png_uri(history_png),
+            "help": png_uri(help_png),
+            "settings_plus_full": png_uri(settings_plus_full_png),
+            "settings_catchall_full": png_uri(settings_catchall_full_png),
             "netflix_marquee": png_uri(netflix_marquee_png),
-            "wikipedia": png_uri(wikipedia_png),
+            "popup_marquee": png_uri(popup_marquee_png),
         }
 
         shots = [
-            # 1 — Netflix signup with popup overlay
+            # 1 — Netflix signup with popup
             (
                 "screenshot-1.png",
                 browser_scene(
@@ -1570,61 +957,109 @@ def main() -> None:
                     site_image_uri=assets["netflix"],
                     bg_from="#1B3A2A",
                     bg_to="#0F2A1C",
-                    popup_image_uri=assets["popup_netflix"],
                 ),
                 1280,
                 800,
             ),
-            # 2 — Wikipedia signup with popup overlay
+            # 2 — TED signup with popup
             (
                 "screenshot-2.png",
                 browser_scene(
                     headline="Instant Email Generation",
                     subtitle="Generate, fill, and copy in one click",
-                    url_text="https://wikipedia.org/createaccount",
-                    site_image_uri=assets["wikipedia"],
+                    url_text="https://auth.ted.com/users/new",
+                    site_image_uri=assets["ted"],
                     bg_from="#1A2D42",
                     bg_to="#132235",
-                    popup_image_uri=assets["popup_wikipedia"],
                 ),
                 1280,
                 800,
             ),
-            # 3 — Settings: provider detection
+            # 3 — Ubiquiti signup with popup
             (
                 "screenshot-3.png",
+                browser_scene(
+                    headline="Works on Every Website",
+                    subtitle="Signup forms detected and filled automatically",
+                    url_text="https://account.ui.com/register",
+                    site_image_uri=assets["ui"],
+                    bg_from="#1D2D3A",
+                    bg_to="#14222D",
+                ),
+                1280,
+                800,
+            ),
+            # 4 — Home page
+            (
+                "screenshot-4.png",
                 extension_scene(
+                    headline="Simple Setup. Powerful Results.",
+                    subtitle="Configure once, generate emails everywhere",
+                    screenshot_uri=assets["home"],
+                    bg_from="#1B3A2A",
+                    bg_to="#0F2A1C",
+                ),
+                1280,
+                800,
+            ),
+            # 5 — Settings: Plus Addressing (split layout)
+            (
+                "screenshot-5.png",
+                split_scene(
                     headline="Smart Provider Detection",
                     subtitle="Works with Gmail, Outlook, and 500+ providers",
-                    screenshot_uri=assets["settings"],
+                    bullets=[
+                        "Auto-detects your email provider",
+                        "Plus addressing for Gmail, Outlook, and more",
+                        "Per-site emails like name+site@gmail.com",
+                    ],
+                    screenshot_uri=assets["settings_plus_full"],
                     bg_from="#2A1F3D",
                     bg_to="#1A1530",
                 ),
                 1280,
                 800,
             ),
-            # 4 — History page
+            # 6 — Settings: Catch-All (split layout)
             (
-                "screenshot-4.png",
-                extension_scene(
-                    headline="Every Signup. Tracked.",
-                    subtitle="Search, copy, and manage your email history",
-                    screenshot_uri=assets["history"],
+                "screenshot-6.png",
+                split_scene(
+                    headline="Catch-All Email Routing",
+                    subtitle="Custom domain support with catch-all prefix mode",
+                    bullets=[
+                        "Use your own domain for unique addresses",
+                        "Catch-all prefix like site@yourdomain.com",
+                        "Step-by-step setup guides included",
+                    ],
+                    screenshot_uri=assets["settings_catchall_full"],
                     bg_from="#1F2D3D",
                     bg_to="#152535",
                 ),
                 1280,
                 800,
             ),
-            # 5 — Home / examples page
+            # 7 — History page
             (
-                "screenshot-5.png",
+                "screenshot-7.png",
                 extension_scene(
-                    headline="Simple Setup. Powerful Results.",
-                    subtitle="Configure once, generate emails everywhere",
-                    screenshot_uri=assets["home"],
+                    headline="Every Signup. Tracked.",
+                    subtitle="Search, copy, and manage your email history",
+                    screenshot_uri=assets["history"],
                     bg_from="#2D2A1F",
                     bg_to="#201E15",
+                ),
+                1280,
+                800,
+            ),
+            # 8 — Help / Catch-All setup guide
+            (
+                "screenshot-8.png",
+                extension_scene(
+                    headline="Step-by-Step Setup Guides",
+                    subtitle="Catch-all instructions for every major provider",
+                    screenshot_uri=assets["help"],
+                    bg_from="#1A3540",
+                    bg_to="#122830",
                 ),
                 1280,
                 800,
@@ -1632,7 +1067,7 @@ def main() -> None:
             # Small promo tile
             ("small-promo-440x280.png", small_promo_html(), 440, 280),
             # Marquee banner
-            ("marquee-1400x560.png", marquee_html(assets["netflix_marquee"], assets["popup_netflix"]), 1400, 560),
+            ("marquee-1400x560.png", marquee_html(assets["netflix_marquee"], assets["popup_marquee"]), 1400, 560),
         ]
 
         for filename, markup, width, height in shots:
