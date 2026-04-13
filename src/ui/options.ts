@@ -441,15 +441,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function shouldDisableBothModesForFullEmail(
+  function getDisabledModesForFullEmail(
     domain: string,
     finalStatus: ProviderStatus,
-  ): boolean {
-    return finalStatus === 'plus-unsupported' && getProviderStatus(domain) !== 'custom';
-  }
-
-  function shouldDisableCatchAllForFullEmail(domain: string): boolean {
-    return getProviderStatus(domain) !== 'custom';
+  ): { plus: boolean; catchAll: boolean } {
+    const isKnownProvider = getProviderStatus(domain) !== 'custom';
+    return {
+      plus: isKnownProvider && finalStatus === 'plus-unsupported',
+      catchAll: isKnownProvider,
+    };
   }
 
   function getCurrentDraft(): SettingsDraft | null {
@@ -727,21 +727,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Requirement indicators
     updateRequirementIndicators(syncStatus, mxResult?.provider != null, status, providerName);
 
-    if (shouldDisableBothModesForFullEmail(domain, status)) {
-      setColumnDisabled(colPlus, true);
-      setColumnDisabled(colCatch, true);
-      clearModeSelection();
-      setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
-      return;
-    }
-
-    const disableCatchAll = shouldDisableCatchAllForFullEmail(domain);
-    setColumnDisabled(colPlus, false);
-    setColumnDisabled(colCatch, disableCatchAll);
-    if (disableCatchAll && getMode() === 'catchAll') {
+    const disabled = getDisabledModesForFullEmail(domain, status);
+    setColumnDisabled(colPlus, disabled.plus);
+    setColumnDisabled(colCatch, disabled.catchAll);
+    if (
+      (disabled.plus && getMode() === 'plusAddressing') ||
+      (disabled.catchAll && getMode() === 'catchAll')
+    ) {
       clearModeSelection();
     }
     restorePreferredModeSelection();
+
+    if (disabled.plus && disabled.catchAll) {
+      setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
+      return;
+    }
 
     // Feedback bar
     if (status === 'plus-unsupported') {
@@ -798,19 +798,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (state.plusAllowed) {
       const syncStatus = getProviderStatus(state.domain as string);
-      if (syncStatus === 'plus-unsupported') {
-        setColumnDisabled(colPlus, true);
-        setColumnDisabled(colCatch, true);
+      const disabled = getDisabledModesForFullEmail(state.domain as string, syncStatus);
+      setColumnDisabled(colPlus, disabled.plus);
+      setColumnDisabled(colCatch, disabled.catchAll);
+      if (
+        (disabled.plus && getMode() === 'plusAddressing') ||
+        (disabled.catchAll && getMode() === 'catchAll')
+      ) {
         clearModeSelection();
+      }
+      restorePreferredModeSelection();
+      if (disabled.plus && disabled.catchAll) {
         setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
       } else {
-        setColumnDisabled(colPlus, false);
-        const disableCatchAll = shouldDisableCatchAllForFullEmail(state.domain as string);
-        setColumnDisabled(colCatch, disableCatchAll);
-        if (disableCatchAll && getMode() === 'catchAll') {
-          clearModeSelection();
-        }
-        restorePreferredModeSelection();
         setFeedback('clear', '');
       }
     } else if (!state.trimmedValue) {
