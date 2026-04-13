@@ -35,7 +35,7 @@ async function handleGenerateAndFill(): Promise<GenerateAndFillResponse> {
     addEntry({
       email,
       domain: result.domain,
-      pageUrl: tab.url ?? '',
+      pageUrl: tab.url ? new URL(tab.url).origin + new URL(tab.url).pathname : '',
       pageTitle: tab.title ?? '',
       createdAt: new Date().toISOString(),
       mode: result.mode,

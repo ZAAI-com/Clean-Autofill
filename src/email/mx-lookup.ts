@@ -83,13 +83,16 @@ async function fetchMxRecords(domain: string): Promise<{ records: MxRecord[]; tt
     const mxAnswers = (data.Answer ?? []).filter((a) => a.type === MX_RECORD_TYPE);
     let minTtl = MAX_TTL;
 
-    const records: MxRecord[] = mxAnswers.map((a) => {
+    const records: MxRecord[] = [];
+    for (const a of mxAnswers) {
       if (a.TTL < minTtl) minTtl = a.TTL;
       const spaceIndex = a.data.indexOf(' ');
+      if (spaceIndex === -1) continue;
       const priority = Number.parseInt(a.data.substring(0, spaceIndex), 10);
+      if (Number.isNaN(priority)) continue;
       const exchange = a.data.substring(spaceIndex + 1).replace(/\.$/, '');
-      return { priority, exchange };
-    });
+      records.push({ priority, exchange });
+    }
 
     const ttl = Math.max(MIN_TTL, Math.min(minTtl, MAX_TTL));
     return { records, ttl };
