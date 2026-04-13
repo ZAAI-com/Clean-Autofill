@@ -1030,7 +1030,7 @@ def scene_shell(content: str, width: int, height: int, bg_from: str, bg_to: str)
 
     .headline h2 {{
       margin: 0 0 6px;
-      font-size: 40px;
+      font-size: 46px;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.03em;
@@ -1040,7 +1040,7 @@ def scene_shell(content: str, width: int, height: int, bg_from: str, bg_to: str)
 
     .headline p {{
       margin: 0;
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 500;
       color: rgba(255, 255, 255, 0.65);
       letter-spacing: 0.01em;
@@ -1132,7 +1132,7 @@ def scene_shell(content: str, width: int, height: int, bg_from: str, bg_to: str)
       position: absolute;
       right: 18px;
       top: 80px;
-      width: 340px;
+      width: 380px;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28), 0 10px 24px rgba(0, 0, 0, 0.18);
@@ -1505,7 +1505,7 @@ def marquee_html(site_image_uri: str, popup_image_uri: str) -> str:
           <span class="yellow"></span>
           <span class="green"></span>
         </div>
-        <div class="address"><span></span><span>netflix.com</span></div>
+        <div class="address"><span></span><span>https://netflix.com</span></div>
       </div>
       <div class="hero-body">
         <img src="{site_image_uri}" alt="">
@@ -1535,20 +1535,22 @@ def main() -> None:
         site_page = source_context.new_page()
         scene_page = scene_context.new_page()
 
-        popup_png = render_popup_capture(popup_page, "wikipedia.org@yourdomain.com", "Filled into email field")
-        settings_png = render_options_capture(options_page, "settings", 1176, 660)
-        history_png = render_options_capture(options_page, "history", 1176, 660)
-        home_png = render_options_capture(options_page, "home", 1176, 660)
+        popup_netflix_png = render_popup_capture(popup_page, "netflix.com@yourdomain.com", "Filled into email field")
+        popup_wikipedia_png = render_popup_capture(popup_page, "wikipedia.org@yourdomain.com", "Filled into email field")
+        settings_png = render_options_capture(options_page, "settings", 1040, 620)
+        history_png = render_options_capture(options_page, "history", 1040, 560)
+        home_png = render_options_capture(options_page, "home", 1040, 560)
 
         # Deterministic local mocks keep the store assets clean and stable.
         # Live captures are available as fallback but the mocks are preferred
         # because real pages have cookie banners and layout clutter.
         netflix_png = render_markup(site_page, netflix_site_html(1176, 628), 1176, 628)
-        netflix_marquee_png = render_markup(site_page, netflix_site_html(640, 392), 640, 392)
+        netflix_marquee_png = render_markup(site_page, netflix_site_html(768, 470), 768, 470)
         wikipedia_png = render_markup(site_page, wikipedia_site_html(1176, 628), 1176, 628)
 
         assets = {
-            "popup": png_uri(popup_png),
+            "popup_netflix": png_uri(popup_netflix_png),
+            "popup_wikipedia": png_uri(popup_wikipedia_png),
             "settings": png_uri(settings_png),
             "history": png_uri(history_png),
             "home": png_uri(home_png),
@@ -1558,16 +1560,17 @@ def main() -> None:
         }
 
         shots = [
-            # 1 — Netflix signup with highlighted email field
+            # 1 — Netflix signup with popup overlay
             (
                 "screenshot-1.png",
                 browser_scene(
                     headline="One Click. Auto-Filled.",
                     subtitle="A unique email address for every signup",
-                    url_text="netflix.com",
+                    url_text="https://netflix.com",
                     site_image_uri=assets["netflix"],
                     bg_from="#1B3A2A",
                     bg_to="#0F2A1C",
+                    popup_image_uri=assets["popup_netflix"],
                 ),
                 1280,
                 800,
@@ -1578,11 +1581,11 @@ def main() -> None:
                 browser_scene(
                     headline="Instant Email Generation",
                     subtitle="Generate, fill, and copy in one click",
-                    url_text="wikipedia.org/createaccount",
+                    url_text="https://wikipedia.org/createaccount",
                     site_image_uri=assets["wikipedia"],
                     bg_from="#1A2D42",
                     bg_to="#132235",
-                    popup_image_uri=assets["popup"],
+                    popup_image_uri=assets["popup_wikipedia"],
                 ),
                 1280,
                 800,
@@ -1594,8 +1597,8 @@ def main() -> None:
                     headline="Smart Provider Detection",
                     subtitle="Works with Gmail, Outlook, and 500+ providers",
                     screenshot_uri=assets["settings"],
-                    bg_from="#1A3540",
-                    bg_to="#122830",
+                    bg_from="#2A1F3D",
+                    bg_to="#1A1530",
                 ),
                 1280,
                 800,
@@ -1607,8 +1610,8 @@ def main() -> None:
                     headline="Every Signup. Tracked.",
                     subtitle="Search, copy, and manage your email history",
                     screenshot_uri=assets["history"],
-                    bg_from="#243442",
-                    bg_to="#1A2830",
+                    bg_from="#1F2D3D",
+                    bg_to="#152535",
                 ),
                 1280,
                 800,
@@ -1620,8 +1623,8 @@ def main() -> None:
                     headline="Simple Setup. Powerful Results.",
                     subtitle="Configure once, generate emails everywhere",
                     screenshot_uri=assets["home"],
-                    bg_from="#1D3D2D",
-                    bg_to="#142A1E",
+                    bg_from="#2D2A1F",
+                    bg_to="#201E15",
                 ),
                 1280,
                 800,
@@ -1629,7 +1632,7 @@ def main() -> None:
             # Small promo tile
             ("small-promo-440x280.png", small_promo_html(), 440, 280),
             # Marquee banner
-            ("marquee-1400x560.png", marquee_html(assets["netflix_marquee"], assets["popup"]), 1400, 560),
+            ("marquee-1400x560.png", marquee_html(assets["netflix_marquee"], assets["popup_netflix"]), 1400, 560),
         ]
 
         for filename, markup, width, height in shots:
