@@ -1,4 +1,4 @@
-# Chrome Web Store — Image Specifications
+# Chrome Web Store — Image Assets
 
 ## Brand Colors
 
@@ -25,11 +25,23 @@ Green shield with @ symbol. Already meets Chrome Web Store requirements (96px ar
 
 ---
 
+## Generation
+
+Run:
+
+```bash
+python3 docs/store-listing/images/generate.py
+```
+
+The generator renders real extension UI from `src/ui/options.html`, `src/ui/options.css`, and `src/ui/popup.html`, then composes the final store assets on a shared dark gradient background. The two action shots try live captures of recognizable signup pages (Netflix, Wikipedia) and fall back to deterministic local mocks if those pages change.
+
+---
+
 ## Screenshots (1280x800 px, PNG)
 
 Chrome Web Store allows up to 5 screenshots. Minimum 1 required. 1280x800 is the preferred high-resolution size.
 
-### Screenshot 1 — Autofill in Action
+### Screenshot 1 — One-Click Fill
 
 | Property | Value |
 |----------|-------|
@@ -37,9 +49,9 @@ Chrome Web Store allows up to 5 screenshots. Minimum 1 required. 1280x800 is the
 | Dimensions | 1280x800 px |
 | Status | Done |
 
-Shows the extension filling `linear.app@manuelgruber.net` into Linear's signup page. Blue arrow points to the filled field. Clean, minimal browser chrome visible.
+Shows a browser-framed Netflix signup scene with a generated address already filled into the email field.
 
-### Screenshot 2 — Settings + Side-by-Side
+### Screenshot 2 — Instant Popup
 
 | Property | Value |
 |----------|-------|
@@ -47,71 +59,37 @@ Shows the extension filling `linear.app@manuelgruber.net` into Linear's signup p
 | Dimensions | 1280x800 px |
 | Status | Done |
 
-Shows the Clean Autofill Settings page open alongside an Apple Account signup page. Demonstrates the settings UI and real-world usage context.
+Shows a Wikipedia create-account form with the real extension popup open and the generated email visible.
 
-### Screenshot 3 — Email History
+### Screenshot 3 — Provider Match
 
 | Property | Value |
 |----------|-------|
 | File | `screenshot-3.png` |
 | Dimensions | 1280x800 px |
-| Status | TODO |
+| Status | Done |
 
-**What to capture:**
-- Options page with "History" tab active
-- Table populated with 5-8 example entries showing different domains
-- Search bar visible at top
-- Shows: Domain column, Email column, Date column
-- Browser chrome visible (consistent with other screenshots)
+Shows the real Settings page with Gmail provider detection, plus-addressing selected, and two visible example rows.
 
-**How to capture:**
-1. Open extension options page
-2. Navigate to History tab
-3. Generate emails on several sites first to populate history
-4. Take screenshot at 1280x800 (or capture full window and resize)
-
-### Screenshot 4 — Provider Detection
+### Screenshot 4 — Signup History
 
 | Property | Value |
 |----------|-------|
 | File | `screenshot-4.png` |
 | Dimensions | 1280x800 px |
-| Status | TODO |
+| Status | Done |
 
-**What to capture:**
-- Options page with "Settings" tab active
-- Email domain entered (e.g., Gmail address)
-- Provider icon detected and displayed (Gmail logo visible)
-- Mode selection table showing Plus Addressing vs Catch-All
-- Green checkmarks for supported features
-- Live example preview at the bottom
+Shows the real History page with five example entries and one highlighted row.
 
-**How to capture:**
-1. Open extension options page → Settings
-2. Enter a Gmail address to trigger provider detection
-3. Ensure the mode comparison table and examples are visible
-4. Take screenshot at 1280x800
-
-### Screenshot 5 — Popup on Different Site
+### Screenshot 5 — See Examples
 
 | Property | Value |
 |----------|-------|
 | File | `screenshot-5.png` |
 | Dimensions | 1280x800 px |
-| Status | TODO |
+| Status | Done |
 
-**What to capture:**
-- A recognizable website's signup page (GitHub, Amazon, or Spotify)
-- Extension popup open showing the generated email
-- Copy button visible in popup
-- Email filled into the form field below
-- Browser address bar showing the site URL
-
-**How to capture:**
-1. Navigate to a recognizable signup page
-2. Click the extension icon to generate and fill
-3. Keep the popup open
-4. Take screenshot at 1280x800 (may need browser dev tools to keep popup open)
+Shows the real Home page with the 3-step explanation and four example mappings.
 
 ---
 
@@ -122,20 +100,11 @@ Shows the Clean Autofill Settings page open alongside an Apple Account signup pa
 | File | `small-promo-440x280.png` |
 | Dimensions | 440x280 px |
 | Format | PNG |
-| Status | TODO |
+| Status | Done |
 
 **Required** — extensions without this image rank lower in store search results.
 
-**Design spec:**
-- Background: Solid or subtle gradient using Primary Green (#4CAF50 → #388E3C)
-- Center: Extension icon (white @ shield) at ~80px
-- Below icon: "Clean Autofill" in white, semi-bold, ~20px
-- Below name: "One click. Unique emails." in white, lighter weight, ~14px
-- No busy backgrounds or excessive text
-- Ensure well-defined edges, avoid text clipping near borders
-- Leave ~20px padding on all sides
-
-**Tools:** Figma, Canva, or any image editor. Export as PNG at exact 440x280.
+Uses the same visual system as the screenshots: soft background, floating icon tile, and a single email pill to communicate the feature quickly.
 
 ---
 
@@ -146,19 +115,11 @@ Shows the Clean Autofill Settings page open alongside an Apple Account signup pa
 | File | `marquee-1400x560.png` |
 | Dimensions | 1400x560 px |
 | Format | PNG |
-| Status | TODO |
+| Status | Done |
 
 **Optional** — required only if seeking featured placement in the store.
 
-**Design spec:**
-- Background: Light gray (#F5F5F5) or white with subtle green accent
-- Left side (~60%): Extension icon + "Clean Autofill" title + tagline "Stop typing email addresses. One click, done."
-- Right side (~40%): Mockup of the extension popup or a browser window showing the autofill in action
-- Keep text large and readable — this displays at various sizes
-- Use the brand green (#4CAF50) for accent elements
-- Leave generous padding (~40px minimum on all sides)
-
-**Tools:** Figma, Canva, or any image editor. Export as PNG at exact 1400x560.
+Uses the same shared background and browser-card language as the screenshots, with value copy on the left and a Netflix autofill hero scene on the right.
 
 ---
 

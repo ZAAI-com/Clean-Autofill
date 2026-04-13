@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clean Autofill | ZAAI.com</title>
+  <meta name="description" content="One-click email addresses for every website. Generate unique emails, track data leaks, filter spam — all without typing.">
+  <meta property="og:title" content="Clean Autofill — One-Click Email Addresses">
+  <meta property="og:description" content="Generate a unique email address for every signup. Track who shares your data, filter spam easily, and stay in control.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zaai.com/clean-autofill/">
+  <meta property="og:image" content="https://zaai.com/clean-autofill/screenshots/screenshot-5.png">
+
+  <!--
+    Deployment paths for zaai.com:
+    /clean-autofill/
+      index.html              ← this file
+      icon-128.png            ← from docs/store-listing/images/
+      screenshots/
+        screenshot-1.png      ← autofill on Linear
+        screenshot-3.png      ← email history
+        screenshot-4.png      ← provider detection settings
+        screenshot-5.png      ← popup on GitHub
+      providers/
+        gmail.png, outlook.png, protonmail.png, ...  ← from src/icons/providers/
+  -->
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Clean Autofill",
+    "description": "One-click email addresses for every website. Generate unique emails for every signup, track data leaks, and filter spam.",
+    "applicationCategory": "BrowserExtension",
+    "operatingSystem": "Chrome",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "url": "https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf",
+    "author": {
+      "@type": "Person",
+      "name": "Manuel Gruber"
+    }
+  }
+  </script>
+
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #4CAF50;
+      --green-dark: #388E3C;
+      --green-light: #E8F5E9;
+      --text: #333333;
+      --text-light: #666666;
+      --bg-gray: #F5F5F5;
+      --bg-white: #FFFFFF;
+      --footer-bg: #222222;
+      --border: #E0E0E0;
+      --radius: 8px;
+      --max-width: 960px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background: var(--bg-white);
+    }
+
+    a { color: var(--green-dark); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    img { max-width: 100%; height: auto; display: block; }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+      background: var(--bg-gray);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Site Header ── */
+    .site-header {
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+    }
+
+    .site-header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .site-header .logo {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .site-header nav a {
+      color: var(--text-light);
+      margin-left: 24px;
+      font-size: 15px;
+    }
+
+    .site-header nav a:hover { color: var(--text); }
+
+    .breadcrumb {
+      padding: 12px 0;
+      font-size: 13px;
+      color: var(--text-light);
+      background: var(--bg-white);
+    }
+
+    .breadcrumb a { color: var(--text-light); }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* ── Section Spacing ── */
+    .section {
+      padding: 64px 0;
+    }
+
+    .section--gray { background: var(--bg-gray); }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-light);
+      margin-bottom: 40px;
+      max-width: 640px;
+    }
+
+    .section--centered { text-align: center; }
+    .section--centered .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 72px 0 64px;
+      text-align: center;
+      background: var(--bg-gray);
+    }
+
+    .hero-icon {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 24px;
+      border-radius: 20px;
+    }
+
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-tagline {
+      font-size: 20px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .hero-description {
+      font-size: 16px;
+      color: var(--text-light);
+      max-width: 560px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { text-decoration: none; opacity: 0.9; }
+
+    .btn--primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn--secondary {
+      background: var(--bg-white);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .hero-trust {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .hero-trust span {
+      margin: 0 6px;
+    }
+
+    /* ── Benefits Grid ── */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .benefit-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .benefit-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .benefit-card p {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    /* ── Steps ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .examples-box {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 32px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .example-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .example-row + .example-row {
+      border-top: 1px solid var(--bg-gray);
+    }
+
+    .example-site {
+      font-weight: 600;
+      min-width: 120px;
+    }
+
+    .example-arrow {
+      color: var(--text-light);
+    }
+
+    .example-email {
+      font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+      font-size: 13px;
+      color: var(--green-dark);
+    }
+
+    .example-label {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ── Modes ── */
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .mode-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+    }
+
+    .mode-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .mode-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .mode-badge--most {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    .mode-badge--power {
+      background: #F3E5F5;
+      color: #6A1B9A;
+    }
+
+    .mode-format {
+      font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+      font-size: 15px;
+      background: var(--bg-gray);
+      padding: 10px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      color: var(--green-dark);
+    }
+
+    .mode-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .mode-card li {
+      font-size: 14px;
+      color: var(--text-light);
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .mode-card li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .modes-note {
+      text-align: center;
+      font-size: 15px;
+      color: var(--text-light);
+    }
+
+    /* ── Provider Compatibility ── */
+    .provider-icons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .provider-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 6px;
+      background: var(--bg-white);
+    }
+
+    .provider-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .provider-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 480px;
+    }
+
+    .provider-table th {
+      text-align: left;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-bottom: 2px solid var(--border);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-light);
+    }
+
+    .provider-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--bg-gray);
+    }
+
+    .provider-table tr:last-child td { border-bottom: none; }
+
+    .check { color: var(--green); font-weight: 700; }
+    .dash { color: #CCC; }
+
+    .provider-note {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 16px;
+    }
+
+    /* ── Features Grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-white);
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .feature-new {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      background: var(--green-light);
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    /* ── Screenshots ── */
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .screenshot {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg-white);
+    }
+
+    .screenshot img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot-caption {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    /* ── Privacy ── */
+    .privacy-list {
+      list-style: none;
+      padding: 0;
+      max-width: 480px;
+    }
+
+    .section--centered .privacy-list {
+      margin: 0 auto 32px;
+      text-align: left;
+    }
+
+    .privacy-list li {
+      padding: 8px 0;
+      padding-left: 28px;
+      position: relative;
+      font-size: 15px;
+    }
+
+    .privacy-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .privacy-links {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+    }
+
+    /* ── Final CTA ── */
+    .cta-section {
+      padding: 64px 0;
+      text-align: center;
+      background: var(--green-light);
+    }
+
+    .cta-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      color: var(--text-light);
+      margin-bottom: 24px;
+    }
+
+    .cta-section .hero-actions { margin-bottom: 0; }
+
+    /* ── Footer ── */
+    .site-footer {
+      background: var(--footer-bg);
+      padding: 24px 0;
+      text-align: center;
+    }
+
+    .site-footer p {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+    }
+
+    .site-footer a {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .site-footer a:hover { color: white; }
+
+    .footer-links {
+      margin-top: 8px;
+    }
+
+    .footer-links a { margin: 0 12px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 32px; }
+      .hero-tagline { font-size: 18px; }
+
+      .section { padding: 48px 0; }
+      .section-title { font-size: 24px; }
+
+      .benefits-grid { grid-template-columns: 1fr; }
+
+      .steps { grid-template-columns: 1fr; gap: 24px; }
+
+      .modes-grid { grid-template-columns: 1fr; }
+
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .screenshots-grid { grid-template-columns: 1fr; }
+
+      .example-row { flex-wrap: wrap; }
+      .example-label { margin-left: 0; }
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: 48px 0 40px; }
+      .hero h1 { font-size: 28px; }
+
+      .hero-actions { flex-direction: column; }
+
+      .features-grid { grid-template-columns: 1fr; }
+
+      .site-header .container { flex-direction: column; gap: 12px; }
+      .site-header nav a { margin-left: 16px; }
+      .site-header nav a:first-child { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="logo">ZAAI.com</a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/products/">Products</a>
+        <a href="/powerbeat/">PowerBeat</a>
+        <a href="/imprint/">Imprint</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="breadcrumb">
+    <div class="container">
+      <a href="/">Home</a><span>&gt;</span>Clean Autofill
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <img class="hero-icon" src="store-listing/images/icon-128.png" alt="Clean Autofill icon" width="96" height="96">
+      <h1>Clean Autofill</h1>
+      <p class="hero-tagline">One-click email addresses for every website</p>
+      <p class="hero-description">Generate a unique email address for every signup. Track who shares your data, filter spam easily, and stay in control — all without typing.</p>
+      <div class="hero-actions">
+        <a class="btn btn--primary" href="https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf">Add to Chrome — Free</a>
+        <a class="btn btn--secondary" href="https://github.com/ZAAI-com/Clean-Autofill">View on GitHub</a>
+      </div>
+      <p class="hero-trust">Open source<span>·</span>Privacy-first<span>·</span>No data collection</p>
+    </div>
+  </section>
+
+  <!-- Why Unique Emails -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Why Use Unique Email Addresses?</h2>
+      <p class="section-subtitle">Every signup gets its own address. Here's why that matters.</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <h3>Track Data Leaks</h3>
+          <p>Instantly know which company sold or leaked your email address. Each site has a unique address that traces back to the source.</p>
+        </div>
+        <div class="benefit-card">
+          <h3>Filter Your Inbox</h3>
+          <p>Create inbox rules based on which address received the mail. Organize by service without manual labels.</p>
+        </div>
+        <div class="benefit-card">
+          <h3>Control Spam</h3>
+          <p>Disable a single address without affecting everything else. Cut off spam at the source.</p>
+        </div>
+        <div class="benefit-card">
+          <h3>Stay Organized</h3>
+          <p>Every signup has its own address, automatically. No more wondering which email you used for which service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section section--gray">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center;">How It Works</h2>
+      <p class="section-subtitle" style="text-align:center;margin-left:auto;margin-right:auto;">Three steps. One-time setup. Then it's just one click.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Configure once</h3>
+          <p>Enter your email address or domain in settings. The extension detects your provider automatically.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Visit any website</h3>
+          <p>Navigate to any signup or login page — github.com, amazon.com, spotify.com, anywhere.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Click the icon</h3>
+          <p>Clean Autofill generates a unique email and fills it into the form. Done.</p>
+        </div>
+      </div>
+      <div class="examples-box">
+        <div class="example-row">
+          <span class="example-site">github.com</span>
+          <span class="example-arrow">&rarr;</span>
+          <span class="example-email">github.com@yourdomain.com</span>
+          <span class="example-label">Catch-All</span>
+        </div>
+        <div class="example-row">
+          <span class="example-site">github.com</span>
+          <span class="example-arrow">&rarr;</span>
+          <span class="example-email">you+github.com@gmail.com</span>
+          <span class="example-label">Plus Addressing</span>
+        </div>
+        <div class="example-row">
+          <span class="example-site">amazon.com</span>
+          <span class="example-arrow">&rarr;</span>
+          <span class="example-email">amazon.com@yourdomain.com</span>
+          <span class="example-label">Catch-All</span>
+        </div>
+        <div class="example-row">
+          <span class="example-site">amazon.com</span>
+          <span class="example-arrow">&rarr;</span>
+          <span class="example-email">you+amazon.com@gmail.com</span>
+          <span class="example-label">Plus Addressing</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Two Modes -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center;">Two Modes — Works With Any Email</h2>
+      <p class="section-subtitle" style="text-align:center;margin-left:auto;margin-right:auto;">Clean Autofill supports two email generation modes. The extension detects your provider and shows which mode works for you.</p>
+      <div class="modes-grid">
+        <div class="mode-card">
+          <h3>Plus Addressing</h3>
+          <span class="mode-badge mode-badge--most">Most Users</span>
+          <div class="mode-format">you+website.com@gmail.com</div>
+          <ul>
+            <li>Uses the + trick supported by Gmail, Outlook, ProtonMail, Fastmail, and more</li>
+            <li>No special setup required — works with your existing email</li>
+            <li>Enter your full email address and you're ready to go</li>
+          </ul>
+        </div>
+        <div class="mode-card">
+          <h3>Catch-All Prefix</h3>
+          <span class="mode-badge mode-badge--power">Power Users</span>
+          <div class="mode-format">website.com@yourdomain.com</div>
+          <ul>
+            <li>Uses your custom domain with catch-all email routing</li>
+            <li>Cleanest format — the site domain becomes the email prefix</li>
+            <li>Best for users who own their email domain</li>
+          </ul>
+        </div>
+      </div>
+      <p class="modes-note">The extension detects your email provider automatically and shows which mode is available.</p>
+    </div>
+  </section>
+
+  <!-- Provider Compatibility -->
+  <section class="section section--gray section--centered">
+    <div class="container">
+      <h2 class="section-title">Supported Email Providers</h2>
+      <p class="section-subtitle">Automatic provider detection with 20+ email providers recognized.</p>
+
+      <div class="provider-icons">
+        <img class="provider-icon" src="../src/icons/providers/gmail.png" alt="Gmail" title="Gmail">
+        <img class="provider-icon" src="../src/icons/providers/google-workspace.png" alt="Google Workspace" title="Google Workspace">
+        <img class="provider-icon" src="../src/icons/providers/outlook.png" alt="Outlook" title="Outlook">
+        <img class="provider-icon" src="../src/icons/providers/protonmail.png" alt="ProtonMail" title="ProtonMail">
+        <img class="provider-icon" src="../src/icons/providers/fastmail.png" alt="Fastmail" title="Fastmail">
+        <img class="provider-icon" src="../src/icons/providers/mailbox-org.png" alt="mailbox.org" title="mailbox.org">
+        <img class="provider-icon" src="../src/icons/providers/hey.png" alt="Hey" title="Hey">
+        <img class="provider-icon" src="../src/icons/providers/icloud.png" alt="iCloud" title="iCloud">
+        <img class="provider-icon" src="../src/icons/providers/yahoo.png" alt="Yahoo" title="Yahoo">
+        <img class="provider-icon" src="../src/icons/providers/gmx.png" alt="GMX" title="GMX">
+        <img class="provider-icon" src="../src/icons/providers/webde.png" alt="web.de" title="web.de">
+        <img class="provider-icon" src="../src/icons/providers/t-online.png" alt="T-Online" title="T-Online">
+        <img class="provider-icon" src="../src/icons/providers/tutanota.png" alt="Tuta" title="Tuta">
+        <img class="provider-icon" src="../src/icons/providers/zoho.png" alt="Zoho" title="Zoho">
+        <img class="provider-icon" src="../src/icons/providers/yandex.png" alt="Yandex" title="Yandex">
+      </div>
+
+      <div class="provider-table-wrap">
+        <table class="provider-table">
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Plus Addressing</th>
+              <th>Catch-All</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gmail</td>
+              <td class="check">✓</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>Google Workspace</td>
+              <td class="check">✓*</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>Outlook / Hotmail / Live</td>
+              <td class="check">✓</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>ProtonMail</td>
+              <td class="check">✓</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>Fastmail</td>
+              <td class="check">✓</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>mailbox.org</td>
+              <td class="check">✓</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>Custom Domain</td>
+              <td class="check">✓*</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>iCloud</td>
+              <td class="dash">—</td>
+              <td class="dash">—</td>
+            </tr>
+            <tr>
+              <td>Yahoo</td>
+              <td class="dash">—</td>
+              <td class="dash">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="provider-note">* If your email host supports plus addressing. <a href="https://github.com/ZAAI-com/Clean-Autofill/blob/main/docs/Email-Provider.md">See full provider list →</a></p>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center;">Features</h2>
+      <p class="section-subtitle" style="text-align:center;margin-left:auto;margin-right:auto;">Everything you need, nothing you don't.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>One-Click Fill</h3>
+          <p>Click the extension icon and your email is instantly generated and filled into the form.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Smart Field Detection</h3>
+          <p>Finds email fields automatically, or fills your currently focused field. Works with React, Vue, and all major frameworks.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Email History<span class="feature-new">New</span></h3>
+          <p>Searchable log of every email you've generated. Copy or delete any entry. Never forget which address you used.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Provider Detection<span class="feature-new">New</span></h3>
+          <p>Automatically detects your email provider and shows which modes work for you. Supports 20+ providers.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Chrome Profile Import<span class="feature-new">New</span></h3>
+          <p>Detects your logged-in Chrome account email for faster setup. One click to use your profile email.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Cross-Device Sync</h3>
+          <p>Settings sync across Chrome browsers via your Google account. Set up once, use everywhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="section section--gray">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center;">See It In Action</h2>
+      <p class="section-subtitle" style="text-align:center;margin-left:auto;margin-right:auto;"></p>
+      <div class="screenshots-grid">
+        <div class="screenshot">
+          <img src="store-listing/images/screenshot-5.png" alt="Clean Autofill popup on GitHub showing generated email filled into signup form" loading="lazy">
+          <p class="screenshot-caption">One click generates and fills your email</p>
+        </div>
+        <div class="screenshot">
+          <img src="store-listing/images/screenshot-4.png" alt="Clean Autofill settings showing Gmail provider detection and mode selection" loading="lazy">
+          <p class="screenshot-caption">Automatic provider detection with mode selection</p>
+        </div>
+        <div class="screenshot">
+          <img src="store-listing/images/screenshot-3.png" alt="Clean Autofill email history with searchable list of generated emails" loading="lazy">
+          <p class="screenshot-caption">Searchable email history</p>
+        </div>
+        <div class="screenshot">
+          <img src="store-listing/images/screenshot-1.png" alt="Clean Autofill filling an email field on Linear's signup page" loading="lazy">
+          <p class="screenshot-caption">Works on any signup form</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section class="section section--centered">
+    <div class="container">
+      <h2 class="section-title">Privacy-First</h2>
+      <p class="section-subtitle">Nothing leaves the browser. No tricks, no fine print.</p>
+      <ul class="privacy-list">
+        <li>No data is collected or transmitted</li>
+        <li>Your email is stored locally in Chrome's sync storage</li>
+        <li>No analytics, no tracking, no external servers</li>
+        <li>Open source — inspect every line of code</li>
+      </ul>
+      <div class="privacy-links">
+        <a href="https://github.com/ZAAI-com/Clean-Autofill/blob/main/docs/PRIVACY.md">Privacy Policy</a>
+        <a href="https://github.com/ZAAI-com/Clean-Autofill">View Source Code</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Get Clean Autofill</h2>
+      <p>Free and open source. Available on the Chrome Web Store.</p>
+      <div class="hero-actions">
+        <a class="btn btn--primary" href="https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf">Add to Chrome — Free</a>
+        <a class="btn btn--secondary" href="https://github.com/ZAAI-com/Clean-Autofill">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>&copy; 2026 <a href="/">ZAAI.com</a> — Manuel Gruber</p>
+    <div class="footer-links">
+      <a href="/imprint/">Imprint</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/ZAAI-com/Clean-Autofill">GitHub</a>
+    </div>
+  </footer>
+
+</body>
+</html>
