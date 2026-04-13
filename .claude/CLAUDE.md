@@ -127,6 +127,8 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   ├── autofill.ts    # Content script for email filling
 │   │   └── autofill.test.ts
 │   ├── email/             # Email/domain logic + utilities
+│   │   ├── catch-all-instructions.ts  # Provider-specific catch-all setup guides
+│   │   ├── catch-all-instructions.test.ts
 │   │   ├── providers.ts   # Provider status functions
 │   │   ├── providers.test.ts
 │   │   ├── mx-lookup.ts   # MX record DNS lookup + caching
@@ -142,10 +144,14 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   ├── popup.ts       # Popup logic
 │   │   ├── popup.test.ts
 │   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History)
+│   │   ├── options.css    # Options page styles
 │   │   ├── options.ts     # Options page logic
 │   │   ├── options.test.ts
+│   │   ├── options-preview.ts   # Live email preview for options page
+│   │   ├── options-preview.test.ts
 │   │   ├── history.ts     # Email history storage module
-│   │   └── history.test.ts
+│   │   ├── history.test.ts
+│   │   └── message-tokens.css   # Shared CSS tokens for messages
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 └── dist/                  # Build output (load this in Chrome)
     ├── extension/         # Compiled extension entry points
