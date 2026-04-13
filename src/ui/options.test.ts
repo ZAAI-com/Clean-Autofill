@@ -645,15 +645,15 @@ describe('options page integration', () => {
 
   test('disables plus immediately for domain-only input and prevents reselection', async () => {
     mockStorage.emailMode = 'plusAddressing';
-    mockStorage.emailDomain = 'gmail.com';
-    mockStorage.baseEmail = 'user@gmail.com';
+    mockStorage.emailDomain = 'mycorp.com';
+    mockStorage.baseEmail = 'user@mycorp.com';
 
     await initOptionsPage();
     const { input, colPlus, colCatch, radioPlus, radioCatch } = getOptionsElements();
 
     expect(colPlus.classList.contains('selected')).toBe(true);
 
-    input.value = 'gmail.com';
+    input.value = 'mycorp.com';
     input.dispatchEvent(new Event('input', { bubbles: true }));
 
     expect(colPlus.classList.contains('disabled')).toBe(true);
@@ -670,7 +670,7 @@ describe('options page integration', () => {
     await waitForDebounce();
 
     expect(mockStorage.emailMode).toBe('catchAll');
-    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.emailDomain).toBe('mycorp.com');
     expect(mockStorage.baseEmail).toBeUndefined();
   });
 
@@ -714,24 +714,24 @@ describe('options page integration', () => {
 
   test('saving domain-only input clears baseEmail and reloads as domain-only', async () => {
     mockStorage.emailMode = 'plusAddressing';
-    mockStorage.emailDomain = 'gmail.com';
-    mockStorage.baseEmail = 'user@gmail.com';
+    mockStorage.emailDomain = 'mycorp.com';
+    mockStorage.baseEmail = 'user@mycorp.com';
 
     await initOptionsPage();
     let elements = getOptionsElements();
 
-    elements.input.value = 'gmail.com';
+    elements.input.value = 'mycorp.com';
     elements.input.dispatchEvent(new Event('input', { bubbles: true }));
     await waitForDebounce();
 
     expect(mockStorage.emailMode).toBe('catchAll');
-    expect(mockStorage.emailDomain).toBe('gmail.com');
+    expect(mockStorage.emailDomain).toBe('mycorp.com');
     expect(mockStorage.baseEmail).toBeUndefined();
 
     await initOptionsPage();
     elements = getOptionsElements();
 
-    expect(elements.input.value).toBe('gmail.com');
+    expect(elements.input.value).toBe('mycorp.com');
     expect(elements.colPlus.classList.contains('disabled')).toBe(true);
     expect(elements.colCatch.classList.contains('selected')).toBe(true);
   });

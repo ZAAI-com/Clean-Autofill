@@ -822,13 +822,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       setColumnDisabled(colCatch, true);
       setFeedback('info', FEEDBACK_MESSAGES.enterValidEmailOrDomain);
     } else {
+      const isKnownProvider = getProviderStatus(state.normalizedDomain) !== 'custom';
       setColumnDisabled(colPlus, true);
-      setColumnDisabled(colCatch, false);
-      setFeedback('info', FEEDBACK_MESSAGES.plusRequiresFullEmail);
-      if (getMode() === 'plusAddressing') {
-        setMode('catchAll', { persist: false });
+      setColumnDisabled(colCatch, isKnownProvider);
+      if (isKnownProvider) {
+        clearModeSelection();
+        setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
       } else {
-        restorePreferredModeSelection();
+        setFeedback('info', FEEDBACK_MESSAGES.plusRequiresFullEmail);
+        if (getMode() === 'plusAddressing') {
+          setMode('catchAll', { persist: false });
+        } else {
+          restorePreferredModeSelection();
+        }
       }
     }
 
@@ -878,8 +884,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         plusSupportValueEl.textContent = '--';
       }
 
-      // Catch-All indicators
+      // Catch-All indicators + column state
       if (!isCustomDomain) {
+        setColumnDisabled(colCatch, true);
+        if (getMode() === 'catchAll') {
+          clearModeSelection();
+        }
         setIndicator(catchAllDomainEl, 'incompatible');
         catchAllDomainValueEl.textContent = 'No';
         setIndicator(catchAllEnabledEl, 'incompatible');
