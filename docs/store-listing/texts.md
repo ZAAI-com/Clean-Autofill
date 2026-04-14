@@ -78,16 +78,11 @@ HOW IT WORKS
 
 TWO MODES
 
-Plus Addressing: Uses the + trick (you+site@gmail.com). Works with Gmail, Outlook, ProtonMail, Fastmail, mailbox.org, and more. No special setup required.
+Plus Addressing: Uses the + trick (you+site@gmail.com). Works with most major email providers that support plus addressing. No special setup required.
 
 Catch-All Prefix: Uses your custom domain (site@yourdomain.com). Requires a domain with catch-all email routing. Best for power users who own their email domain.
 
-The extension detects your email provider automatically and shows which mode works for you.
-
-
-SUPPORTED PROVIDERS
-
-Gmail, Google Workspace, Outlook, ProtonMail, Fastmail, mailbox.org, Hey, Yahoo, GMX, web.de, iCloud, mail.com, T-Online, Tuta, and custom domains.
+The extension automatically detects your email provider, checks compatibility, and shows which mode works best for you.
 
 
 PRIVACY
@@ -106,4 +101,4 @@ PERMISSIONS
 - identity: Detect your Chrome profile email for easier setup
 ```
 
-_1,893 characters_
+_2,425 characters_

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Clean-Autofill is a Chrome extension that automatically generates email addresses based on the current website's domain. It combines the main domain of the current website with a user-configured email domain (e.g., `example.com@mg1.de`).
+Clean-Autofill is a Chrome extension that generates unique, trackable email addresses for every website. It supports two modes: **Plus Addressing** (e.g., `you+site@gmail.com`) and **Catch-All Prefix** (e.g., `site@yourdomain.com`).
 
 ## Build and Development Commands
 
@@ -12,7 +12,7 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 # Build extension (compile TypeScript + copy assets to dist/)
 bun run build
 
-# Run tests (251 tests with DOM support)
+# Run tests (with DOM support via happy-dom)
 bun run test
 
 # Run tests in watch mode
@@ -41,8 +41,10 @@ bun run bump:major    # 0.1.0 → 1.0.0
 - **TypeScript** - Strict mode, compiles to `dist/`
 - **Biome** - Linting and formatting (single tool, replaces ESLint + Prettier)
 - **Bun** - Test runner with happy-dom for DOM testing
+- **esbuild** - Bundling (ESM for service worker, IIFE for content scripts)
+- **psl** - Public Suffix List library for accurate domain parsing
 - **Husky** - Pre-commit hooks for automated checks
-- **GitHub Actions** - CI/CD pipeline for automated testing
+- **GitHub Actions** - CI/CD pipeline (W1-Test, W2-Build, W3-Release to Chrome Web Store)
 - **Chrome Extension Manifest V3**
 
 ## Architecture
@@ -73,10 +75,11 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 - Shows config prompt if email domain not set
 
 ### 4. Options Page (`src/ui/options.html` + `src/ui/options.ts`)
-- Sidebar navigation with three pages: Home, Settings, History
+- Sidebar navigation with four pages: Home, Settings, History, Help
 - **Home**: Extension explanation and usage examples
-- **Settings**: Email domain configuration, mode selection, Chrome profile import
+- **Settings**: Email domain configuration, mode selection, Chrome profile import, email provider detection with MX lookup
 - **History**: Searchable log of all generated emails with copy/delete actions
+- **Help**: Provider-specific catch-all setup instructions
 - Settings use Chrome sync storage; history uses Chrome local storage
 
 ### 5. History Module (`src/ui/history.ts`)
@@ -93,8 +96,16 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 
 ### 7. Provider Detection (`src/email/`)
 - **`providers.ts`** - `getProviderStatus()` / `getProviderStatusWithMx()` for determining plus-addressing support
-- **`provider-domains.ts`** - Static data: 500+ email domains categorized as plus-supported or unsupported
-- **`mx-lookup.ts`** - DNS MX record lookup via Google DNS API with memory + storage caching
+- **`provider-domains.ts`** - Static data: 300+ email domains categorized as plus-supported or unsupported
+- **`mx-lookup.ts`** - DNS MX record lookup via Google DNS-over-HTTPS API with memory + storage caching
+
+### 8. Catch-All Instructions (`src/email/catch-all-instructions.ts`)
+- Step-by-step setup guides per provider (Google Workspace, Microsoft 365, Fastmail, Proton Mail, Zoho, iCloud)
+- Includes admin console URLs
+- Generic fallback for unrecognized providers
+
+### 9. Options Preview (`src/ui/options-preview.ts`)
+- Live email preview on the options page based on current settings
 
 ## File Structure
 
@@ -103,7 +114,10 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ├── package.json           # NPM/Bun configuration
 ├── .github/
 │   └── workflows/
-│       └── ci.yml         # GitHub Actions CI pipeline
+│       ├── README.md
+│       ├── W1-Test.yml         # CI: typecheck, lint, test, build, validate
+│       ├── W2-Build.yml        # Build + package + upload artifact
+│       └── W3-Release-Chrome-Web-Store.yml  # Full pipeline + CWS publish
 ├── toolkit/
 │   ├── biome/
 │   │   └── biome.json     # Biome linter/formatter config
@@ -138,12 +152,13 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   ├── utils.ts       # Shared utilities (domain extraction, validation)
 │   │   └── utils.test.ts
 │   ├── types/
-│   │   └── index.ts       # TypeScript type definitions
+│   │   ├── index.ts       # TypeScript type definitions
+│   │   └── psl.d.ts       # PSL library type declarations
 │   ├── ui/                # UI pages + data
 │   │   ├── popup.html     # Popup UI
 │   │   ├── popup.ts       # Popup logic
 │   │   ├── popup.test.ts
-│   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History)
+│   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History, Help)
 │   │   ├── options.css    # Options page styles
 │   │   ├── options.ts     # Options page logic
 │   │   ├── options.test.ts
@@ -153,6 +168,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   ├── history.test.ts
 │   │   └── message-tokens.css   # Shared CSS tokens for messages
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
+│       └── providers/     # Provider logos (22 providers)
 └── dist/                  # Build output (load this in Chrome)
     ├── extension/         # Compiled extension entry points
     ├── email/             # Compiled email/domain modules
@@ -175,9 +191,9 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun run test              # Run all 251 tests
+bun run test               # Run all tests
 bun run test:watch         # Watch mode
-bun run test:coverage      # Coverage report (98%+ line coverage)
+bun run test:coverage      # Coverage report
 ```
 
 ## Pre-commit Hooks
@@ -191,11 +207,10 @@ To skip hooks in emergencies: `git commit --no-verify`
 
 ## CI/CD
 
-GitHub Actions runs on push/PR to main:
-- Type checking
-- Linting and formatting
-- Test suite
-- Build validation
+Three GitHub Actions workflows:
+- **W1-Test** (push/PR to main): Typecheck, lint, test, build, validate
+- **W2-Build** (push/PR to main, manual): Build, package, upload artifact
+- **W3-Release** (manual): Run W1 + W2, then upload & publish to Chrome Web Store
 
 ## Development Notes
 
