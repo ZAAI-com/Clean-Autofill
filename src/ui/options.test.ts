@@ -745,7 +745,9 @@ describe('options page integration', () => {
     const { input, colPlus, colCatch, radioPlus, radioCatch, modeFeedback, saveState } =
       getOptionsElements();
 
-    expect(modeFeedback.classList.contains('is-empty')).toBe(true);
+    expect(modeFeedback.classList.contains('is-empty')).toBe(false);
+    expect(modeFeedback.classList.contains('feedback-warning')).toBe(false);
+    expect(modeFeedback.textContent).toBe('Catch-All mode requires a custom domain you own.');
 
     input.value = 'abc@berlin.com';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -755,7 +757,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
+      'This provider does not support Plus-Addressing. Catch-All mode requires a custom domain.',
     );
     expect(modeFeedback.classList.contains('feedback-warning')).toBe(true);
     expect(modeFeedback.classList.contains('is-empty')).toBe(false);
@@ -785,7 +787,7 @@ describe('options page integration', () => {
     expect(radioPlus.checked).toBe(false);
     expect(radioCatch.checked).toBe(false);
     expect(modeFeedback.textContent).toBe(
-      'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
+      'This provider does not support Plus-Addressing. Catch-All mode requires a custom domain.',
     );
   });
 
@@ -810,8 +812,9 @@ describe('options page integration', () => {
     expect(colCatch.classList.contains('disabled')).toBe(true);
     expect(radioPlus.checked).toBe(true);
     expect(radioCatch.checked).toBe(false);
-    expect(modeFeedback.classList.contains('is-empty')).toBe(true);
-    expect(modeFeedback.getAttribute('aria-hidden')).toBe('true');
+    expect(modeFeedback.classList.contains('feedback-warning')).toBe(false);
+    expect(modeFeedback.classList.contains('is-empty')).toBe(false);
+    expect(modeFeedback.textContent).toBe('Catch-All mode requires a custom domain you own.');
   });
 
   test('full email with plus-supported provider disables catch-all column', async () => {

@@ -38,12 +38,13 @@ const SAVE_INDICATOR_LABELS: Record<SaveIndicatorState, string> = {
 
 const FEEDBACK_MESSAGES = {
   unsupportedProvider:
-    'This provider does not support plus addressing. Catch-all mode requires a custom domain.',
-  unsupportedPlusAddressing: 'This email provider does not support plus addressing.',
-  possiblyUnsupportedPlusAddressing: 'This email provider likely does not support plus addressing.',
+    'This provider does not support Plus-Addressing. Catch-All mode requires a custom domain.',
+  catchAllRequiresCustomDomain: 'Catch-All mode requires a custom domain you own.',
+  unsupportedPlusAddressing: 'This email provider does not support Plus-Addressing.',
+  possiblyUnsupportedPlusAddressing: 'This email provider likely does not support Plus-Addressing.',
   enterEmailOrDomain: 'Enter your email or domain above.',
   enterValidEmailOrDomain: 'Enter a valid email or domain.',
-  plusRequiresFullEmail: 'Plus addressing requires a full email address.',
+  plusRequiresFullEmail: 'Plus-Addressing requires a full email address.',
 } as const;
 
 export function getSaveIndicatorLabel(state: SaveIndicatorState): string {
@@ -574,13 +575,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isCustomDomain = syncStatus === 'custom';
     const providerDetected = !isCustomDomain || mxProviderFound;
 
-    // Plus Addressing: Email Provider
+    // Plus-Addressing: Email Provider
     setIndicator(plusProviderEl, providerDetected ? 'supported' : 'incompatible');
     plusProviderValueEl.textContent = providerDetected
       ? (providerName ?? 'Detected')
       : 'Not Detected';
 
-    // Plus Addressing: Plus Addressing Supported
+    // Plus-Addressing: Plus-Addressing Supported
     if (finalStatus === 'plus-supported') {
       setIndicator(plusSupportEl, 'supported');
       plusSupportValueEl.textContent = 'Supported';
@@ -751,6 +752,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? FEEDBACK_MESSAGES.unsupportedPlusAddressing
           : FEEDBACK_MESSAGES.possiblyUnsupportedPlusAddressing,
       );
+    } else if (disabled.catchAll) {
+      setFeedback('info', FEEDBACK_MESSAGES.catchAllRequiresCustomDomain);
     } else {
       setFeedback('clear', '');
     }
@@ -810,6 +813,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       restorePreferredModeSelection();
       if (disabled.plus && disabled.catchAll) {
         setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
+      } else if (disabled.catchAll) {
+        setFeedback('info', FEEDBACK_MESSAGES.catchAllRequiresCustomDomain);
       } else {
         setFeedback('clear', '');
       }
@@ -827,7 +832,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setColumnDisabled(colCatch, isKnownProvider);
       if (isKnownProvider) {
         clearModeSelection();
-        setFeedback('warning', FEEDBACK_MESSAGES.unsupportedProvider);
+        setFeedback('info', FEEDBACK_MESSAGES.catchAllRequiresCustomDomain);
       } else {
         setFeedback('info', FEEDBACK_MESSAGES.plusRequiresFullEmail);
         if (getMode() === 'plusAddressing') {
@@ -851,7 +856,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!state.isFullEmail) {
-      // Domain-only input: Plus Addressing stays disabled, but provider detection still runs
+      // Domain-only input: Plus-Addressing stays disabled, but provider detection still runs
       const cleanValue = state.normalizedDomain;
 
       if (!state.catchAllAllowed) {
@@ -870,7 +875,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showProviderDetection(friendlyName, logoKey);
       }
 
-      // Plus Addressing indicators (informational, column stays disabled)
+      // Plus-Addressing indicators (informational, column stays disabled)
       setIndicator(plusProviderEl, !isCustomDomain ? 'supported' : null);
       plusProviderValueEl.textContent = !isCustomDomain ? (providerName ?? 'Detected') : '--';
       if (syncStatus === 'plus-supported') {
