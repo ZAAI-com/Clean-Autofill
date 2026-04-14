@@ -12,10 +12,16 @@ console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 
 // Check TypeScript source files first
 const requiredSourceFiles = [
-    'src/background.ts',
-    'src/content.ts',
-    'src/options.ts',
-    'src/utils.ts',
+    'src/extension/background.ts',
+    'src/extension/autofill.ts',
+    'src/ui/history.ts',
+    'src/email/utils.ts',
+    'src/ui/options.ts',
+    'src/ui/options-preview.ts',
+    'src/ui/popup.ts',
+    'src/email/mx-lookup.ts',
+    'src/email/provider-domains.ts',
+    'src/email/providers.ts',
     'src/types/index.ts',
 ];
 
@@ -59,13 +65,13 @@ try {
 console.log('\n📦 Bundling utils.js with dependencies...');
 try {
     // ESM bundle for background.js (service worker)
-    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // IIFE bundle for content scripts (sets globalThis.CleanAutofillUtils)
-    execSync('npx esbuild dist/utils.js --bundle --outfile=dist/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // Replace utils.js with ESM version for background.js imports
-    fs.renameSync(path.join(DIST, 'utils.esm.js'), path.join(DIST, 'utils.js'));
-    console.log('  ✅ utils.js (ESM for background.js)');
-    console.log('  ✅ utils-content.js (IIFE for content scripts)');
+    fs.renameSync(path.join(DIST, 'email', 'utils.esm.js'), path.join(DIST, 'email', 'utils.js'));
+    console.log('  ✅ email/utils.js (ESM for background.js)');
+    console.log('  ✅ email/utils-content.js (IIFE for content scripts)');
 } catch (error) {
     console.error('  ❌ Bundling failed:', error.message);
     process.exit(1);
@@ -79,7 +85,7 @@ if (usesESModules) {
     console.log('\n🔧 ES modules enabled - processing scripts...');
 
     // Strip exports from content script files (they use globalThis pattern)
-    const contentScriptFiles = ['content.js', 'options.js'];
+    const contentScriptFiles = ['extension/autofill.js', 'ui/options.js', 'ui/popup.js'];
     for (const file of contentScriptFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -93,11 +99,11 @@ if (usesESModules) {
             console.log(`  ✅ ${file} (stripped exports)`);
         }
     }
-    console.log(`  ✅ background.js (ES module preserved)`);
+    console.log(`  ✅ extension/background.js (ES module preserved)`);
 } else {
     // Strip ES module exports for classic script compatibility
     console.log('\n🔧 Stripping ES module exports for Chrome compatibility...');
-    const jsFiles = ['background.js', 'content.js', 'utils.js', 'options.js'];
+    const jsFiles = ['extension/background.js', 'extension/autofill.js', 'email/utils.js', 'ui/options.js'];
     for (const file of jsFiles) {
         const filePath = path.join(DIST, file);
         if (fs.existsSync(filePath)) {
@@ -120,9 +126,17 @@ console.log('\n📁 Copying static assets...');
 fs.copyFileSync(path.join(ROOT, 'manifest.json'), path.join(DIST, 'manifest.json'));
 console.log('  ✅ manifest.json');
 
-// Copy options.html
-fs.copyFileSync(path.join(SRC, 'options.html'), path.join(DIST, 'options.html'));
-console.log('  ✅ options.html');
+// Copy UI HTML files
+const uiDir = path.join(DIST, 'ui');
+fs.mkdirSync(uiDir, { recursive: true });
+fs.copyFileSync(path.join(SRC, 'ui', 'options.html'), path.join(uiDir, 'options.html'));
+console.log('  ✅ ui/options.html');
+fs.copyFileSync(path.join(SRC, 'ui', 'popup.html'), path.join(uiDir, 'popup.html'));
+console.log('  ✅ ui/popup.html');
+fs.copyFileSync(path.join(SRC, 'ui', 'message-tokens.css'), path.join(uiDir, 'message-tokens.css'));
+console.log('  ✅ ui/message-tokens.css');
+fs.copyFileSync(path.join(SRC, 'ui', 'options.css'), path.join(uiDir, 'options.css'));
+console.log('  ✅ ui/options.css');
 
 // Copy icons
 const iconsDir = path.join(DIST, 'icons');
@@ -133,16 +147,37 @@ icons.forEach(icon => {
     console.log(`  ✅ icons/${icon}`);
 });
 
+// Copy provider icons
+const providerIconsSrc = path.join(SRC, 'icons', 'providers');
+const providerIconsDist = path.join(iconsDir, 'providers');
+if (fs.existsSync(providerIconsSrc)) {
+    fs.mkdirSync(providerIconsDist, { recursive: true });
+    const providerIcons = fs.readdirSync(providerIconsSrc).filter(f => f.endsWith('.png'));
+    providerIcons.forEach(icon => {
+        fs.copyFileSync(path.join(providerIconsSrc, icon), path.join(providerIconsDist, icon));
+        console.log(`  ✅ icons/providers/${icon}`);
+    });
+}
+
 // Verify compiled output
 console.log('\n📋 Verifying compiled files:');
 const requiredCompiledFiles = [
-    'background.js',
-    'content.js',
-    'options.js',
-    'utils.js',
-    'utils-content.js',
+    'extension/background.js',
+    'extension/autofill.js',
+    'ui/history.js',
+    'email/utils.js',
+    'email/utils-content.js',
+    'email/mx-lookup.js',
+    'email/provider-domains.js',
+    'email/providers.js',
     'manifest.json',
-    'options.html',
+    'ui/options.js',
+    'ui/options-preview.js',
+    'ui/options.html',
+    'ui/message-tokens.css',
+    'ui/options.css',
+    'ui/popup.js',
+    'ui/popup.html',
     'icons/icon16.png',
     'icons/icon32.png',
     'icons/icon48.png',

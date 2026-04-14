@@ -1,3 +1,49 @@
+import type { ProviderStatus } from '../email/providers.js';
+
+export type EmailMode = 'catchAll' | 'plusAddressing';
+
+export interface MxRecord {
+  exchange: string;
+  priority: number;
+}
+
+export type DetectedProvider =
+  | 'google-workspace'
+  | 'microsoft-365'
+  | 'fastmail'
+  | 'protonmail'
+  | 'zoho'
+  | 'icloud'
+  | 'mimecast'
+  | 'barracuda';
+
+export interface ProviderInfo {
+  name: string;
+  plusAddressingSupported: boolean;
+}
+
+export interface MxLookupResult {
+  domain: string;
+  provider: DetectedProvider | null;
+  mxRecords: MxRecord[];
+  status: ProviderStatus;
+  timestamp: number;
+  ttl: number;
+}
+
+/**
+ * A single history entry representing one email generation event.
+ */
+export interface EmailHistoryEntry {
+  id: string;
+  email: string;
+  domain: string;
+  pageUrl: string;
+  pageTitle: string;
+  createdAt: string;
+  mode: EmailMode;
+}
+
 /**
  * Interface for shared utility functions exposed globally for use across extension contexts.
  */
@@ -24,6 +70,24 @@ export interface FillEmailResponse {
   success: boolean;
   message?: string;
   error?: string;
+}
+
+/**
+ * Message from popup requesting email generation and fill.
+ */
+export interface GenerateAndFillRequest {
+  action: 'generateAndFill';
+}
+
+/**
+ * Response from background to popup after generating and filling email.
+ */
+export interface GenerateAndFillResponse {
+  success: boolean;
+  email?: string;
+  message?: string;
+  error?: string;
+  needsConfig?: boolean;
 }
 
 declare global {

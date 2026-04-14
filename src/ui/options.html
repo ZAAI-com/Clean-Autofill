@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Clean-Autofill</title>
+  <link rel="stylesheet" href="message-tokens.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="icon"></div>
+      <span>Clean-Autofill</span>
+    </div>
+    <a class="nav-item active" data-page="home">Home</a>
+    <a class="nav-item" data-page="settings">Settings</a>
+    <a class="nav-item" data-page="history">History</a>
+    <a class="nav-item" data-page="help">Help</a>
+  </nav>
+
+  <!-- Content Area -->
+  <main class="content">
+
+    <!-- ── Home Page ── -->
+    <section class="page active" id="page-home">
+      <h1 class="page-title">Clean-Autofill</h1>
+      <p class="page-subtitle">Generate unique email addresses for every website you sign up on.</p>
+
+      <h2 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 20px;">How It Works</h2>
+      <div class="how-it-works">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-text">
+            <strong>Configure your email</strong>
+            <span>Enter your email address or custom domain in Settings.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-text">
+            <strong>Click the extension icon</strong>
+            <span>On any website, click the Clean-Autofill icon in your toolbar.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-text">
+            <strong>Email is generated and filled</strong>
+            <span>A unique email based on the site's domain is created and filled into the email field.</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="settings-section">
+        <h2>Examples</h2>
+        <div class="examples-list">
+          <div class="example-row">
+            <span class="example-site">wikipedia.org</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="wikipedia.org"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">amazon.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="amazon.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">zalando.de</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="zalando.de"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">ui.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="ui.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">cloudflare.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="cloudflare.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">claude.ai</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="claude.ai"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">netflix.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="netflix.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">github.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="github.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">spotify.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="spotify.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">linkedin.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="linkedin.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">stripe.com</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="stripe.com"></code>
+          </div>
+          <div class="example-row">
+            <span class="example-site">notion.so</span>
+            <span class="example-arrow">&rarr;</span>
+            <code class="example-email" data-site="notion.so"></code>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ── Settings Page ── -->
+    <section class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Configure your email for automatic email generation</p>
+        </div>
+        <div
+          id="saveStateIndicator"
+          class="save-state-button is-saved"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          hidden
+        >Saved</div>
+      </div>
+
+      <form id="settingsForm">
+        <!-- Section 1: Provide Email Address -->
+        <section class="settings-section">
+          <h2>1. Provide Email Address</h2>
+          <div class="detection-box" id="detectionChromeProfile">
+            <div class="detection-label">Chrome Profile</div>
+            <div class="detection-content">
+              <span class="detected-email" id="chromeProfileEmail">Not detected</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              id="emailInput"
+              name="emailInput"
+              placeholder="name@gmail.com or yourdomain.com"
+              autocomplete="off"
+              aria-label="Your email address or domain"
+              maxlength="254"
+            >
+            <p class="help-text">Enter a full email for <strong>Plus-Addressing</strong> Mode or just a domain for <strong>Catch-All Prefix</strong> Mode.</p>
+          </div>
+        </section>
+
+        <!-- Section 2: Select Mode -->
+        <section class="settings-section">
+          <h2>2. Select Mode</h2>
+          <div class="detection-box" id="detectionProvider">
+            <div class="detection-label">Email Provider Detection</div>
+            <div class="detection-content">
+              <span id="providerLogo" class="provider-logo" style="display: none;"></span>
+              <div id="providerDetected" class="provider-detected" style="display: none;">
+                <span id="providerText" class="provider-text"></span>
+              </div>
+              <span class="detection-placeholder" id="providerPlaceholder"></span>
+            </div>
+          </div>
+          <div class="mode-table">
+            <div class="mode-column" id="colPlusAddressing" data-mode="plusAddressing">
+              <div class="mode-header">Plus-Addressing</div>
+              <div class="mode-row">
+                <div class="row-label">Format</div>
+                <div class="row-value"><code id="plusFormat">name+example.com@gmail.com</code></div>
+              </div>
+              <div class="mode-row">
+                <div class="row-label">Requirements</div>
+                <div class="row-value req-checks">
+                  <div class="req-check">
+                    <span class="req-label">Email Provider</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="plusProviderValue">--</span>
+                      <span class="req-indicator" id="plusProviderIndicator"></span>
+                    </span>
+                  </div>
+                  <div class="req-check">
+                    <span class="req-label">Plus-Addressing</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="plusSupportValue">--</span>
+                      <span class="req-indicator" id="plusSupportIndicator"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mode-column" id="colCatchAll" data-mode="catchAll">
+              <div class="mode-header">Catch-All Prefix</div>
+              <div class="mode-row">
+                <div class="row-label">Format</div>
+                <div class="row-value"><code id="catchAllFormat">example.com@yourdomain.com</code></div>
+              </div>
+              <div class="mode-row">
+                <div class="row-label">Requirements</div>
+                <div class="row-value req-checks">
+                  <div class="req-check">
+                    <span class="req-label">Custom Domain</span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="catchAllDomainValue">--</span>
+                      <span class="req-indicator" id="catchAllDomainIndicator"></span>
+                    </span>
+                  </div>
+                  <div class="req-check">
+                    <span class="req-label">Catch-All <span class="req-info-icon" id="catchAllInfoIcon" title="How to enable catch-all" style="display: none;">i</span></span>
+                    <span class="req-value-group">
+                      <span class="req-value" id="catchAllEnabledValue">--</span>
+                      <span class="req-indicator" id="catchAllEnabledIndicator"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mode-feedback is-empty" id="modeFeedback" aria-hidden="true"></div>
+          <input type="radio" name="emailMode" value="plusAddressing" id="modePlusAddressing" class="sr-only">
+          <input type="radio" name="emailMode" value="catchAll" id="modeCatchAll" class="sr-only">
+        </section>
+
+        <!-- Section 3: Examples -->
+        <section class="settings-section">
+          <h2>3. Examples</h2>
+          <div class="examples-list">
+            <div class="example-row">
+              <span class="example-site">wikipedia.org</span>
+              <span class="example-arrow">&rarr;</span>
+              <code class="example-email" data-site="wikipedia.org"></code>
+            </div>
+            <div class="example-row">
+              <span class="example-site">amazon.com</span>
+              <span class="example-arrow">&rarr;</span>
+              <code class="example-email" data-site="amazon.com"></code>
+            </div>
+            <div class="example-row">
+              <span class="example-site">zalando.de</span>
+              <span class="example-arrow">&rarr;</span>
+              <code class="example-email" data-site="zalando.de"></code>
+            </div>
+            <div class="example-row">
+              <span class="example-site">ui.com</span>
+              <span class="example-arrow">&rarr;</span>
+              <code class="example-email" data-site="ui.com"></code>
+            </div>
+          </div>
+        </section>
+
+        <div class="messages-area">
+          <div id="status" class="status" role="alert" aria-live="polite"></div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ── History Page ── -->
+    <section class="page" id="page-history">
+      <h1 class="page-title">History</h1>
+      <p class="page-subtitle">Emails generated by Clean-Autofill</p>
+
+      <div class="history-toolbar">
+        <input type="text" class="history-search" id="historySearch" placeholder="Search by domain or email...">
+        <button class="button-danger" id="clearHistoryButton">Clear All</button>
+      </div>
+
+      <div id="historyContent">
+        <table class="history-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Email</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+
+      <div class="history-empty" id="historyEmpty" style="display: none;">
+        <strong>No history yet</strong>
+        Click the extension icon on any website to generate your first email.
+      </div>
+    </section>
+
+    <!-- ── Help Page ── -->
+    <section class="page" id="page-help">
+      <h1 class="page-title">Help</h1>
+      <p class="page-subtitle">Setup guides and documentation</p>
+
+      <section class="settings-section">
+        <h2>Setting Up Catch-All</h2>
+        <p class="help-intro">Catch-All mode requires your custom domain to accept emails sent to any address. Below are instructions for each supported email provider.</p>
+        <div id="helpProvidersContainer"></div>
+      </section>
+    </section>
+
+  </main>
+
+  <script src="../email/utils-content.js"></script>
+  <script src="options-preview.js"></script>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

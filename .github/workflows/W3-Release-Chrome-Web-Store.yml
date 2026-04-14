@@ -1,0 +1,193 @@
+name: W3 Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to Chrome Web Store after upload'
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/W1-Test.yml
+
+  build:
+    needs: ci
+    uses: ./.github/workflows/W2-Build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
+          echo "version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
+
+          PKG_VERSION=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          if [ "$PKG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match manifest.json version ($MANIFEST_VERSION)"
+            exit 1
+          fi
+
+          echo "Release version: $MANIFEST_VERSION"
+
+      - name: Read extension ID from package.json
+        id: config
+        run: |
+          EXTENSION_ID=$(python3 -c "import json; print(json.load(open('package.json'))['chromeWebStore']['extensionId'])")
+          if [ -z "$EXTENSION_ID" ] || [ "$EXTENSION_ID" = "<EXTENSION_ID>" ]; then
+            echo "::error::Chrome Web Store extension ID not configured in package.json"
+            exit 1
+          fi
+          echo "extension_id=$EXTENSION_ID" >> $GITHUB_OUTPUT
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Clean-Autofill
+          path: dist
+
+      - name: Upload to Chrome Web Store
+        id: upload
+        env:
+          CHROME_WEB_STORE_CLIENT_ID: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          CHROME_WEB_STORE_CLIENT_SECRET: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          CHROME_WEB_STORE_REFRESH_TOKEN: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+        run: |
+          MISSING=""
+          [ -z "$CHROME_WEB_STORE_CLIENT_ID" ] && MISSING="$MISSING CHROME_WEB_STORE_CLIENT_ID"
+          [ -z "$CHROME_WEB_STORE_CLIENT_SECRET" ] && MISSING="$MISSING CHROME_WEB_STORE_CLIENT_SECRET"
+          [ -z "$CHROME_WEB_STORE_REFRESH_TOKEN" ] && MISSING="$MISSING CHROME_WEB_STORE_REFRESH_TOKEN"
+
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing required secrets:$MISSING"
+            exit 1
+          fi
+
+          echo "Obtaining OAuth access token..."
+          TOKEN_RESPONSE=$(curl -s -X POST \
+            -d "client_id=$CHROME_WEB_STORE_CLIENT_ID" \
+            -d "client_secret=$CHROME_WEB_STORE_CLIENT_SECRET" \
+            -d "refresh_token=$CHROME_WEB_STORE_REFRESH_TOKEN" \
+            -d "grant_type=refresh_token" \
+            https://oauth2.googleapis.com/token)
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          if 'access_token' not in data:
+              print('Token error: ' + json.dumps(data), file=sys.stderr)
+              sys.exit(1)
+          print(data['access_token'])
+          ")
+
+          echo "::add-mask::$ACCESS_TOKEN"
+
+          EXTENSION_ID="${{ steps.config.outputs.extension_id }}"
+
+          echo "Uploading dist/Clean-Autofill.zip..."
+          UPLOAD_RESPONSE=$(curl -s -X PUT \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -T dist/Clean-Autofill.zip \
+            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$EXTENSION_ID")
+
+          UPLOAD_STATE=$(echo "$UPLOAD_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          state = data.get('uploadState', 'UNKNOWN')
+          print(state)
+          if state != 'SUCCESS':
+              errors = data.get('itemError', [])
+              for e in errors:
+                  print(f\"::error::{e.get('error_detail', e.get('error_code', 'unknown'))}\", file=sys.stderr)
+          ")
+
+          if [ "$UPLOAD_STATE" = "SUCCESS" ]; then
+            echo "Upload successful"
+          else
+            echo "::error::Upload failed with state: $UPLOAD_STATE"
+            echo "$UPLOAD_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$UPLOAD_RESPONSE"
+            exit 1
+          fi
+
+      - name: Publish to Chrome Web Store
+        if: github.event.inputs.publish == 'true'
+        env:
+          CHROME_WEB_STORE_CLIENT_ID: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          CHROME_WEB_STORE_CLIENT_SECRET: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          CHROME_WEB_STORE_REFRESH_TOKEN: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+        run: |
+          echo "Obtaining OAuth access token..."
+          TOKEN_RESPONSE=$(curl -s -X POST \
+            -d "client_id=$CHROME_WEB_STORE_CLIENT_ID" \
+            -d "client_secret=$CHROME_WEB_STORE_CLIENT_SECRET" \
+            -d "refresh_token=$CHROME_WEB_STORE_REFRESH_TOKEN" \
+            -d "grant_type=refresh_token" \
+            https://oauth2.googleapis.com/token)
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          if 'access_token' not in data:
+              print('Token error: ' + json.dumps(data), file=sys.stderr)
+              sys.exit(1)
+          print(data['access_token'])
+          ")
+
+          echo "::add-mask::$ACCESS_TOKEN"
+
+          EXTENSION_ID="${{ steps.config.outputs.extension_id }}"
+
+          echo "Publishing extension..."
+          PUBLISH_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Length: 0" \
+            "https://www.googleapis.com/chromewebstore/v1.1/items/$EXTENSION_ID/publish")
+
+          STATUS=$(echo "$PUBLISH_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          statuses = data.get('status', [])
+          print(statuses[0] if statuses else 'UNKNOWN')
+          ")
+
+          if [ "$STATUS" = "OK" ]; then
+            echo "Extension published successfully"
+          elif [ "$STATUS" = "PUBLISHED_WITH_FRICTION_WARNING" ]; then
+            echo "::warning::Extension published with friction warnings. Check the developer dashboard."
+          else
+            echo "::error::Publish failed with status: $STATUS. Check the Chrome Web Store developer dashboard."
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        if: github.event.inputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Clean Autofill ${{ steps.version.outputs.version }}
+          files: dist/Clean-Autofill.zip
+          generate_release_notes: true
+          make_latest: true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Clean-Autofill-${{ steps.version.outputs.version }}
+          path: dist/Clean-Autofill.zip
+          retention-days: 90

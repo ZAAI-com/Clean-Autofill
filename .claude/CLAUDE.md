@@ -12,8 +12,8 @@ Clean-Autofill is a Chrome extension that automatically generates email addresse
 # Build extension (compile TypeScript + copy assets to dist/)
 bun run build
 
-# Run tests (119 tests with DOM support)
-bun test src/
+# Run tests (251 tests with DOM support)
+bun run test
 
 # Run tests in watch mode
 bun run test:watch
@@ -49,14 +49,15 @@ bun run bump:major    # 0.1.0 → 1.0.0
 
 The extension follows Chrome Extension Manifest V3 architecture with three main components:
 
-### 1. Service Worker (`src/background.ts`)
-- Handles extension icon clicks via `chrome.action.onClicked`
+### 1. Service Worker (`src/extension/background.ts`)
+- Handles messages from popup via `chrome.runtime.onMessage`
 - Generates email addresses using domain extraction logic in `generateEmailForTab()`
+- Sends fill requests to content script and returns results to popup
+- Saves generated emails to history via `src/ui/history.ts`
 - Manages Chrome storage API for user settings
-- Shows notifications for success/error states
 - Opens options page on first install
 
-### 2. Content Script (`src/content.ts`)
+### 2. Autofill Script (`src/extension/autofill.ts`)
 - Injected into all web pages (`<all_urls>`)
 - Receives messages from service worker to fill email fields
 - Smart field detection with priority order:
@@ -65,59 +66,99 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
   3. General text input fields
 - Handles React/framework compatibility with native input events
 
-### 3. Options Page (`src/options.html` + `src/options.ts`)
-- Settings interface for configuring user's email domain
-- Uses Chrome sync storage for cross-device settings
+### 3. Popup (`src/ui/popup.html` + `src/ui/popup.ts`)
+- Opens on extension icon click
+- Triggers email generation and autofill via message to background
+- Displays the generated email with a Copy button
+- Shows config prompt if email domain not set
 
-### 4. Shared Utilities (`src/utils.ts`)
+### 4. Options Page (`src/ui/options.html` + `src/ui/options.ts`)
+- Sidebar navigation with three pages: Home, Settings, History
+- **Home**: Extension explanation and usage examples
+- **Settings**: Email domain configuration, mode selection, Chrome profile import
+- **History**: Searchable log of all generated emails with copy/delete actions
+- Settings use Chrome sync storage; history uses Chrome local storage
+
+### 5. History Module (`src/ui/history.ts`)
+- CRUD operations for email history entries stored in `chrome.storage.local`
+- `addEntry()` - Save new entry (prepend, enforce 10K limit)
+- `getHistory()` - Query with optional search filter and pagination
+- `deleteEntry()` / `clearHistory()` - Deletion
+
+### 6. Shared Utilities (`src/email/utils.ts`)
 - `extractMainDomain()` - Removes subdomains and handles special TLDs (.co.uk, .com.au, etc.)
 - `isValidEmail()` - Basic email format validation
 - `createTimeout()` - Promise-based timeout for async operations
 - `debounce()` - Rate-limiting for input events
+
+### 7. Provider Detection (`src/email/`)
+- **`providers.ts`** - `getProviderStatus()` / `getProviderStatusWithMx()` for determining plus-addressing support
+- **`provider-domains.ts`** - Static data: 500+ email domains categorized as plus-supported or unsupported
+- **`mx-lookup.ts`** - DNS MX record lookup via Google DNS API with memory + storage caching
 
 ## File Structure
 
 ```
 ├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
-├── bunfig.toml            # Bun test configuration (DOM support)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml         # GitHub Actions CI pipeline
 ├── toolkit/
 │   ├── biome/
 │   │   └── biome.json     # Biome linter/formatter config
+│   ├── bun/
+│   │   └── bunfig.toml    # Bun test configuration (DOM support)
 │   ├── typescript/
 │   │   └── tsconfig.json  # TypeScript configuration
 │   ├── husky/
 │   │   └── pre-commit     # Pre-commit hook (typecheck, lint, test)
+│   ├── test/
+│   │   └── test-setup.ts  # DOM test setup (happy-dom)
 │   └── scripts/           # Build scripts
 │       ├── build.js       # Compiles TS + copies assets to dist/
 │       ├── pack.js        # Creates distribution zip
 │       ├── validate.js    # Manifest validation
 │       └── bump-version.js # Version management
 ├── src/                   # TypeScript source (edit these)
-│   ├── background.ts      # Service worker
-│   ├── background.test.ts # Service worker tests
-│   ├── content.ts         # Content script for email filling
-│   ├── content.test.ts    # Content script tests
-│   ├── options.ts         # Options page logic
-│   ├── options.test.ts    # Options page tests
-│   ├── options.html       # Options page UI
-│   ├── utils.ts           # Shared utilities
-│   ├── utils.test.ts      # Utility tests
-│   ├── test-setup.ts      # DOM test setup (happy-dom)
+│   ├── extension/         # Chrome extension entry points
+│   │   ├── background.ts  # Service worker
+│   │   ├── background.test.ts
+│   │   ├── autofill.ts    # Content script for email filling
+│   │   └── autofill.test.ts
+│   ├── email/             # Email/domain logic + utilities
+│   │   ├── catch-all-instructions.ts  # Provider-specific catch-all setup guides
+│   │   ├── catch-all-instructions.test.ts
+│   │   ├── providers.ts   # Provider status functions
+│   │   ├── providers.test.ts
+│   │   ├── mx-lookup.ts   # MX record DNS lookup + caching
+│   │   ├── mx-lookup.test.ts
+│   │   ├── provider-domains.ts  # Static domain sets
+│   │   ├── provider-domains.test.ts
+│   │   ├── utils.ts       # Shared utilities (domain extraction, validation)
+│   │   └── utils.test.ts
 │   ├── types/
 │   │   └── index.ts       # TypeScript type definitions
+│   ├── ui/                # UI pages + data
+│   │   ├── popup.html     # Popup UI
+│   │   ├── popup.ts       # Popup logic
+│   │   ├── popup.test.ts
+│   │   ├── options.html   # Options page UI (sidebar: Home, Settings, History)
+│   │   ├── options.css    # Options page styles
+│   │   ├── options.ts     # Options page logic
+│   │   ├── options.test.ts
+│   │   ├── options-preview.ts   # Live email preview for options page
+│   │   ├── options-preview.test.ts
+│   │   ├── history.ts     # Email history storage module
+│   │   ├── history.test.ts
+│   │   └── message-tokens.css   # Shared CSS tokens for messages
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 └── dist/                  # Build output (load this in Chrome)
-    ├── background.js      # Compiled service worker
-    ├── content.js         # Compiled content script
-    ├── options.js         # Compiled options page
-    ├── utils.js           # Compiled utilities
-    ├── options.html       # Copied from src/
-    ├── manifest.json      # Copied from root
+    ├── extension/         # Compiled extension entry points
+    ├── email/             # Compiled email/domain modules
+    ├── ui/                # Compiled UI pages + history
     ├── icons/             # Copied from src/
+    ├── manifest.json      # Copied from root
     └── Clean-Autofill.zip # Distribution package
 ```
 
@@ -126,7 +167,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 1. Edit TypeScript files in `src/`
 2. Run `bun run build` to compile to `dist/`
 3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
-4. Run `bun test src/` to verify changes
+4. Run `bun run test` to verify changes
 5. Run `bun run check` before committing
 
 ## Testing
@@ -134,7 +175,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 Tests are colocated with source files (`*.test.ts`). DOM testing is supported via happy-dom.
 
 ```bash
-bun test src/              # Run all 119 tests
+bun run test              # Run all 251 tests
 bun run test:watch         # Watch mode
 bun run test:coverage      # Coverage report (98%+ line coverage)
 ```
@@ -158,8 +199,8 @@ GitHub Actions runs on push/PR to main:
 
 ## Development Notes
 
-- Extension requires minimal permissions: activeTab, storage, notifications
-- Uses Chrome's sync storage for cross-device settings persistence
+- Extension permissions: activeTab, storage, notifications, identity, identity.email
+- Uses Chrome's sync storage for settings, local storage for email history
 - Domain extraction handles edge cases like localhost, IP addresses, and special TLDs
 - Content script uses multiple fallback strategies for reliable field detection
 - TypeScript source in `src/`, compiled output in `dist/`
