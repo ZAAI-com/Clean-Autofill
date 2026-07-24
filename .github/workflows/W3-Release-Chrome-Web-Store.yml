@@ -28,7 +28,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Extract and validate version
         id: version
@@ -55,7 +55,7 @@ jobs:
           echo "extension_id=$EXTENSION_ID" >> $GITHUB_OUTPUT
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Clean-Autofill
           path: dist
@@ -177,7 +177,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.event.inputs.publish == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Clean Autofill ${{ steps.version.outputs.version }}
@@ -186,7 +186,7 @@ jobs:
           make_latest: true
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Clean-Autofill-${{ steps.version.outputs.version }}
           path: dist/Clean-Autofill.zip
