@@ -1,0 +1,27 @@
+.conductor/settings.toml
+  s_ff313d91ceea1d::t_9316379a8c5617 3,5-8,14-16,19,27,36
+.conductor/scripts/lib.sh
+  s_ff313d91ceea1d::t_095839628503b1 1-2,6-7,24-25,40-41,57,72
+.conductor/scripts/archive.sh
+  s_ff313d91ceea1d::t_1fb59b5c94050c 3-4,6,13-15,23,38,60-62
+.conductor/scripts/setup.sh
+  s_ff313d91ceea1d::t_2ec77ad330c1c7 12-14,21-22,29-30
+.conductor/scripts/run.sh
+  s_ff313d91ceea1d::t_8e1c4246cf8b93 15-16,23-26,38-39,46-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "447af1f0881b3aef59092974bf04b6f0358611c8",
+  "prompts": {},
+  "sessions": {
+    "s_ff313d91ceea1d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7394b95-1d5b-4a43-8beb-5da1f5c9521d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
