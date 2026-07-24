@@ -112,6 +112,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ```
 ├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
+├── .nvmrc                 # Pinned Node version (matches engines + CI)
 ├── .conductor/            # Conductor workspace config (committed)
 │   ├── settings.toml      # Setup, run and archive scripts, run_mode
 │   └── scripts/
@@ -215,8 +216,8 @@ To skip hooks in emergencies: `git commit --no-verify`
 ## CI/CD
 
 Three GitHub Actions workflows:
-- **W1-Test** (push/PR to main): Typecheck, lint, test, build, validate
-- **W2-Build** (push/PR to main, manual): Build, package, upload artifact
+- **W1-Test** (manual, or called by W3): Typecheck, lint, test, build, validate
+- **W2-Build** (manual, or called by W3): Build, package, upload artifact
 - **W3-Release** (manual): Run W1 + W2, then upload & publish to Chrome Web Store
 
 ## Development Notes

@@ -21,12 +21,25 @@ ca_path_prepend() {
   return 0
 }
 
-# Newest nvm managed Node shipping both node and npx, found by listing the
-# directory rather than sourcing nvm.sh, which is slow and trips "set -u".
+# The Node version this repo pins, or empty when .nvmrc is missing.
+ca_pinned_node() {
+  [ -r "$CA_ROOT/.nvmrc" ] || return 0
+  tr -d ' \t\r\n' < "$CA_ROOT/.nvmrc" | sed 's/^v//'
+  return 0
+}
+
+# The nvm managed Node to use: the .nvmrc pin when it is installed, otherwise
+# the newest one shipping both node and npx. Found by listing the directory
+# rather than sourcing nvm.sh, which is slow and trips "set -u".
 ca_newest_nvm_bin() {
-  local nvm_root version best
+  local nvm_root version best pinned
   nvm_root="${NVM_DIR:-$HOME/.nvm}/versions/node"
   [ -d "$nvm_root" ] || return 0
+  pinned="$(ca_pinned_node)"
+  if [ -n "$pinned" ] && [ -x "$nvm_root/v$pinned/bin/node" ] && [ -x "$nvm_root/v$pinned/bin/npx" ]; then
+    printf '%s\n' "$nvm_root/v$pinned/bin"
+    return 0
+  fi
   best=""
   for version in $(ls -1 "$nvm_root" 2>/dev/null | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n); do
     if [ -x "$nvm_root/v$version/bin/node" ] && [ -x "$nvm_root/v$version/bin/npx" ]; then
@@ -66,6 +79,20 @@ ca_require_toolchain() {
     return 1
   fi
   printf 'toolchain: bun %s, node %s (%s)\n' "$(bun --version)" "$(node --version)" "$(command -v node)"
+  ca_check_node_pin
+  return 0
+}
+
+# Surface drift from .nvmrc without failing, so a mismatch is visible in the
+# run output but never blocks workspace creation.
+ca_check_node_pin() {
+  local pinned actual
+  pinned="$(ca_pinned_node)"
+  [ -n "$pinned" ] || return 0
+  actual="$(node --version 2>/dev/null | sed 's/^v//')"
+  if [ "$actual" != "$pinned" ]; then
+    ca_warn "node $actual does not match the .nvmrc pin $pinned. Run 'nvm use' (or install $pinned) if something behaves oddly."
+  fi
   return 0
 }
 

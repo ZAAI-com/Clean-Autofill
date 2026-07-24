@@ -9,7 +9,7 @@
     "bump:patch": "node toolkit/scripts/bump-version.js patch",
     "bump:minor": "node toolkit/scripts/bump-version.js minor",
     "bump:major": "node toolkit/scripts/bump-version.js major",
-    "release": "npm run pack && echo 'Ready for release. Tag and push to trigger GitHub Actions.'",
+    "release": "bun run pack && echo 'Ready for release. Run the W3-Release-Chrome-Web-Store workflow manually to publish.'",
     "validate": "node toolkit/scripts/validate.js",
     "lint": "biome lint --config-path toolkit/biome/biome.json src/",
     "lint:fix": "biome lint --config-path toolkit/biome/biome.json --write src/",
@@ -44,8 +44,10 @@
     "husky": "^9.1.7",
     "typescript": "^5.9.3"
   },
+  "packageManager": "bun@1.3.14",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=24.15.0",
+    "bun": ">=1.3.14"
   },
   "dependencies": {
     "psl": "^1.15.0"
