@@ -1,0 +1,37 @@
+package.json
+  s_2bcda30f09a0db::t_281bfec814b116 41
+  s_2bcda30f09a0db::t_c05af6f6c99e06 39-40,43
+  s_2bcda30f09a0db::t_df3f7d0d6f1220 45
+src/types/psl.d.ts
+  s_2bcda30f09a0db::t_6fba94d62b1d3f 16
+.nvmrc
+  s_2bcda30f09a0db::t_cf848b5f68e49c 1
+.github/workflows/W1-Test.yml
+  s_2bcda30f09a0db::t_726cabcc788f64 15,18,21
+.github/workflows/W2-Build.yml
+  s_2bcda30f09a0db::t_d76efbc84e5e50 13,16,19
+  s_2bcda30f09a0db::t_be8e1ce78a0b13 33
+.github/workflows/W3-Release-Chrome-Web-Store.yml
+  s_2bcda30f09a0db::t_adc561ec9865c6 31
+  s_2bcda30f09a0db::t_ac1e40a115783f 58
+  s_2bcda30f09a0db::t_c31add4acce314 180
+  s_2bcda30f09a0db::t_d57f4d5f00fe4f 189
+bun.lock
+  s_2bcda30f09a0db::t_6222964461f27f 11-13,15,17,22,24,26,28,30,32,34,36,38,92,94,108-149,154,162,168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "e22efd6620e6ed8f37820b4d5360e1009eede938",
+  "prompts": {},
+  "sessions": {
+    "s_2bcda30f09a0db": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "feeea33d-d1cd-4ab4-bf8e-b240e6b3c399",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
