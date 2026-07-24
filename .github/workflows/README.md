@@ -2,7 +2,7 @@
 
 | # | Workflow | File | Trigger | Purpose |
 |---|---------|------|---------|---------|
-| W1 | Test | `W1-Test.yml` | Manual or called by W3 | Typecheck, lint, test, build, validate |
+| W1 | Test | `W1-Test.yml` | PR to `main`, manual, or called by W3 | Typecheck, lint, test, build, validate |
 | W2 | Build | `W2-Build.yml` | Manual or called by W3 | Build, package, upload artifact |
 | W3 | Release | `W3-Release-Chrome-Web-Store.yml` | Manual only | Run W1 + W2, then upload & publish to Chrome Web Store |
 
@@ -12,8 +12,9 @@
 W3 → W1 (CI gate) → W2 (build + package) → release job
 ```
 
-Nothing runs automatically. All three declare only `workflow_dispatch` and
-`workflow_call`, so W1 and W2 run either on a manual dispatch or as part of W3.
+W1 gates pull requests against `main`. W2 and W3 never run automatically: both
+declare only `workflow_dispatch` and `workflow_call`, so they run on a manual
+dispatch or as part of W3.
 
 ## Comparison
 

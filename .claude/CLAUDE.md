@@ -216,7 +216,7 @@ To skip hooks in emergencies: `git commit --no-verify`
 ## CI/CD
 
 Three GitHub Actions workflows:
-- **W1-Test** (manual, or called by W3): Typecheck, lint, test, build, validate
+- **W1-Test** (PR to main, manual, or called by W3): Typecheck, lint, test, build, validate
 - **W2-Build** (manual, or called by W3): Build, package, upload artifact
 - **W3-Release** (manual): Run W1 + W2, then upload & publish to Chrome Web Store
 
