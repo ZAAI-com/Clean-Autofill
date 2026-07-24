@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 # Conductor setup: prepare a fresh Clean-Autofill workspace.
 # Runs once when the workspace is created. Non-interactive and idempotent.
-#
-# A non-zero exit marks workspace creation as FAILED, so only genuinely fatal
-# problems exit non-zero here. A build that fails because the branch is mid-fix
-# is reported as a warning, since fixing it is usually why the workspace exists.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
@@ -13,32 +9,25 @@ ca_say 'Clean-Autofill workspace setup'
 ca_bootstrap_path
 ca_require_toolchain
 
-# Refresh the shared root checkout's remote refs so the NEXT workspace created
-# from it branches off current code. This workspace is already checked out, so
-# it is not affected. Only "fetch" runs: it adds objects and moves origin/*
-# refs, and never touches a working tree outside this workspace.
-# GIT_TERMINAL_PROMPT=0 stops a credential prompt from hanging a
-# non-interactive setup, and a failure here is never fatal.
+# Fetch only, so the NEXT workspace branches off current code. A bare fetch
+# moves origin/* refs and never touches a working tree, GIT_TERMINAL_PROMPT=0
+# stops a credential prompt from hanging setup, and failure here is not fatal.
 if [ -n "${CONDUCTOR_ROOT_PATH:-}" ] && [ -e "$CONDUCTOR_ROOT_PATH/.git" ]; then
   ca_say "Fetching origin in the shared root checkout: $CONDUCTOR_ROOT_PATH"
   GIT_TERMINAL_PROMPT=0 git -C "$CONDUCTOR_ROOT_PATH" fetch --prune origin \
     || ca_warn 'could not fetch origin, continuing with what is already on disk'
 fi
 
-# Matches the "Install dependencies" step of .github/workflows/W1-Test.yml.
-# bun.lock is the only lockfile in this repo. Plain "bun install" (not
-# --frozen-lockfile) so a branch that changes package.json can still be set up.
-# This also runs the package "prepare" script (husky), which regenerates this
-# worktree's toolkit/husky/_ shims. core.hooksPath is the relative value
-# "toolkit/husky/_" in the shared git config, so every worktree resolves it to
-# its own copy.
+# Plain "bun install", not --frozen-lockfile, so a branch that changes
+# package.json can still be set up. Also runs husky via the prepare script.
 ca_step 'Installing dependencies (bun install)' bun install
 
 if ! git diff --quiet -- bun.lock 2>/dev/null; then
   ca_warn 'bun install changed bun.lock. Review the diff and commit it if that is intended.'
 fi
 
-# Build now so the workspace can be loaded in Chrome immediately.
+# Warn rather than exit: a non-zero exit marks workspace creation as FAILED, and
+# a branch that does not compile yet is usually why the workspace exists.
 if bun run build; then
   ca_say 'Build succeeded'
 else
