@@ -9,15 +9,6 @@ ca_say 'Clean-Autofill workspace setup'
 ca_bootstrap_path
 ca_require_toolchain
 
-# Fetch only, so the NEXT workspace branches off current code. A bare fetch
-# moves origin/* refs and never touches a working tree, GIT_TERMINAL_PROMPT=0
-# stops a credential prompt from hanging setup, and failure here is not fatal.
-if [ -n "${CONDUCTOR_ROOT_PATH:-}" ] && [ -e "$CONDUCTOR_ROOT_PATH/.git" ]; then
-  ca_say "Fetching origin in the shared root checkout: $CONDUCTOR_ROOT_PATH"
-  GIT_TERMINAL_PROMPT=0 git -C "$CONDUCTOR_ROOT_PATH" fetch --prune origin \
-    || ca_warn 'could not fetch origin, continuing with what is already on disk'
-fi
-
 # Plain "bun install", not --frozen-lockfile, so a branch that changes
 # package.json can still be set up. Also runs husky via the prepare script.
 ca_step 'Installing dependencies (bun install)' bun install
@@ -28,9 +19,11 @@ fi
 
 # Warn rather than exit: a non-zero exit marks workspace creation as FAILED, and
 # a branch that does not compile yet is usually why the workspace exists.
+CA_BUILD_OK=1
 if bun run build; then
   ca_say 'Build succeeded'
 else
+  CA_BUILD_OK=0
   ca_warn 'the first build failed. Dependencies are installed, so fix the source and press the "build" run script.'
 fi
 
@@ -47,4 +40,13 @@ Run scripts:
   test-watch  bun test in watch mode
   pack        build plus zip for the Chrome Web Store
 EOF
-ca_print_load_hint
+
+# build.js wipes dist/ before compiling and tsconfig sets no noEmitOnError, so a
+# failed build leaves dist/ half written with no manifest.json. Chrome cannot
+# load that, so do not point at it as if it were ready.
+if [ "$CA_BUILD_OK" = "1" ]; then
+  ca_print_load_hint
+else
+  printf '\ndist/ is incomplete after the failed build and Chrome cannot load it yet.\n'
+  printf 'Fix the source, press the "build" run script, then load it.\n'
+fi

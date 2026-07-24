@@ -119,7 +119,7 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │       ├── lib.sh         # Shared PATH bootstrap and helpers (sourced)
 │       ├── setup.sh       # Install deps + first build on workspace creation
 │       ├── run.sh         # Dispatcher: build | verify | watch | pack
-│       └── archive.sh     # Warn on unsaved work, reclaim node_modules/ + dist/
+│       └── archive.sh     # Report unsaved/unpushed work before archiving (read-only)
 ├── .github/
 │   └── workflows/
 │       ├── README.md
