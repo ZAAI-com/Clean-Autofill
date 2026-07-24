@@ -1,0 +1,33 @@
+.claude/CLAUDE.md
+  s_ff313d91ceea1d::t_07d1b7f1599a92 115-121
+.gitignore
+  s_ff313d91ceea1d::t_c63553b9bea379 66-69
+.conductor/scripts/lib.sh
+  s_ff313d91ceea1d::t_f523e4f49ab73d 1-110
+docs/README.md
+  s_ff313d91ceea1d::t_a0c5de75469b78 228-234
+.conductor/scripts/setup.sh
+  s_ff313d91ceea1d::t_1cfb183462e334 1-61
+.conductor/scripts/archive.sh
+  s_ff313d91ceea1d::t_c63b1a6af72f1c 1-98
+.conductor/scripts/run.sh
+  s_ff313d91ceea1d::t_1ac5245fbe6e32 1-70
+.conductor/settings.toml
+  s_ff313d91ceea1d::t_7940c7748e79f6 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "cc0d372b750a20a674c5f3e5ca2e5b85a880ffa2",
+  "prompts": {},
+  "sessions": {
+    "s_ff313d91ceea1d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7394b95-1d5b-4a43-8beb-5da1f5c9521d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
