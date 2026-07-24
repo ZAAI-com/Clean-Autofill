@@ -112,6 +112,13 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ```
 ├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
+├── .conductor/            # Conductor workspace config (committed)
+│   ├── settings.toml      # Setup, run and archive scripts, run_mode
+│   └── scripts/
+│       ├── lib.sh         # Shared PATH bootstrap and helpers (sourced)
+│       ├── setup.sh       # Install deps + first build on workspace creation
+│       ├── run.sh         # Dispatcher: build | verify | watch | pack
+│       └── archive.sh     # Warn on unsaved work, reclaim node_modules/ + dist/
 ├── .github/
 │   └── workflows/
 │       ├── README.md

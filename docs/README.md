@@ -225,6 +225,13 @@ The extension will:
 Clean-Autofill/
 ├── manifest.json               # Extension configuration (MV3)
 ├── package.json                # NPM/Bun configuration
+├── .conductor/                 # Conductor workspace config (committed)
+│   ├── settings.toml           # Setup, run and archive scripts, run_mode
+│   └── scripts/
+│       ├── lib.sh              # Shared PATH bootstrap and helpers (sourced)
+│       ├── setup.sh            # Install deps + first build on workspace creation
+│       ├── run.sh              # Dispatcher: build | verify | watch | pack
+│       └── archive.sh          # Warn on unsaved work, reclaim node_modules/ + dist/
 ├── .github/
 │   └── workflows/
 │       ├── W1-Test.yml         # CI: typecheck, lint, test, build, validate

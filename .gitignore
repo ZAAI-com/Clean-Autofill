@@ -63,3 +63,7 @@ __pycache__/
 # Workspace files
 .context/
 .gstack/
+
+# Conductor (settings.toml and scripts/ are committed on purpose)
+.conductor/settings.local.toml
+.conductor/settings.local.json
