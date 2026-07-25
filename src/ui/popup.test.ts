@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, mock, test } from '
 
 import type { GenerateAndFillResponse } from '../types';
 
-// Mock chrome API — must be set up before dynamic import of popup.ts
+// Mock chrome API: must be set up before dynamic import of popup.ts
 let mockResponse: GenerateAndFillResponse | undefined;
 
 const mockChrome = {

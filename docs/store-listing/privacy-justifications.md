@@ -1,4 +1,4 @@
-# Chrome Web Store — Permission Justifications
+# Chrome Web Store: Permission Justifications
 
 Ready to paste into the Developer Dashboard privacy tab.
 
@@ -35,14 +35,14 @@ Used to detect the user's Chrome profile email address during initial setup. Thi
 ## Host Permission: `https://dns.google/*`
 
 **Justification:**
-Required for MX record lookups via Google's public DNS API (dns.google). When a user enters a custom email domain, the extension queries MX records to detect the email provider (e.g., Gmail, ProtonMail, Fastmail) and determine whether plus addressing is supported. Only the domain name is sent in the DNS query — no personal data is transmitted.
+Required for MX record lookups via Google's public DNS API (dns.google). When a user enters a custom email domain, the extension queries MX records to detect the email provider (e.g., Gmail, ProtonMail, Fastmail) and determine whether plus addressing is supported. Only the domain name is sent in the DNS query, with no personal data transmitted.
 
 ---
 
 ## Host Permission: `<all_urls>` (Content Script)
 
 **Justification:**
-The content script needs to run on any webpage the user visits in order to fill email addresses into form fields. When the user clicks the extension icon, the content script receives the generated email and fills it into the appropriate input field on the page. The content script only activates when triggered by the user — it does not run automatically or collect any data from pages.
+The content script needs to run on any webpage the user visits in order to fill email addresses into form fields. When the user clicks the extension icon, the content script receives the generated email and fills it into the appropriate input field on the page. The content script only activates when triggered by the user; it does not run automatically or collect any data from pages.
 
 ---
 

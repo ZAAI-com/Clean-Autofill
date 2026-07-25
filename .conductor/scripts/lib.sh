@@ -72,7 +72,7 @@ ca_bootstrap_path() {
 ca_require_toolchain() {
   local missing=0
   ca_have bun  || { printf 'error: bun was not found on PATH. Install Bun from https://bun.sh or add its bin directory to PATH.\n' >&2; missing=1; }
-  ca_have node || { printf 'error: node was not found on PATH. toolkit/scripts/build.js is a Node script.\n' >&2; missing=1; }
+  ca_have node || { printf 'error: node was not found on PATH. toolkit/build/build.js is a Node script.\n' >&2; missing=1; }
   ca_have npx  || { printf 'error: npx was not found on PATH. build.js runs "npx tsc" and "npx esbuild".\n' >&2; missing=1; }
   if [ "$missing" -ne 0 ]; then
     printf 'PATH used: %s\n' "$PATH" >&2
@@ -115,7 +115,7 @@ ca_step() {
 }
 
 ca_print_load_hint() {
-  printf '\nUnpacked extension folder:\n  %s/dist\n' "$CA_ROOT"
+  printf '\nUnpacked extension folder:\n  %s/dist/chromium/unpacked\n' "$CA_ROOT"
   printf 'First time: chrome://extensions, Developer mode, Load unpacked, choose that folder.\n'
   printf 'After that the path never changes, just press the reload arrow on the card.\n'
 }

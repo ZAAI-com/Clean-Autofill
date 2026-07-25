@@ -4,13 +4,13 @@
   "description": "Chrome extension that automatically fills email addresses based on the current website domain",
   "scripts": {
     "prepare": "husky toolkit/husky",
-    "build": "node toolkit/scripts/build.js",
-    "pack": "node toolkit/scripts/pack.js",
-    "bump:patch": "node toolkit/scripts/bump-version.js patch",
-    "bump:minor": "node toolkit/scripts/bump-version.js minor",
-    "bump:major": "node toolkit/scripts/bump-version.js major",
+    "build": "node toolkit/build/build.js",
+    "pack": "node toolkit/release/pack.js",
+    "bump:patch": "node toolkit/release/bump-version.js patch",
+    "bump:minor": "node toolkit/release/bump-version.js minor",
+    "bump:major": "node toolkit/release/bump-version.js major",
     "release": "bun run pack && echo 'Ready for release. Run the W3-Release-Chrome-Web-Store workflow manually to publish.'",
-    "validate": "node toolkit/scripts/validate.js",
+    "validate": "node toolkit/build/validate.js",
     "lint": "biome lint --config-path toolkit/biome/biome.json src/",
     "lint:fix": "biome lint --config-path toolkit/biome/biome.json --write src/",
     "format": "biome format --config-path toolkit/biome/biome.json --write src/",
@@ -53,6 +53,7 @@
     "psl": "^1.15.0"
   },
   "chromeWebStore": {
-    "extensionId": "klbbkndjohchnidkbnjijdbggfadpppf"
+    "extensionId": "klbbkndjohchnidkbnjijdbggfadpppf",
+    "publisherId": "e406690b-e3fb-41f5-af22-cd59fee0d6ff"
   }
 }

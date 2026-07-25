@@ -35,18 +35,18 @@ Workspace ready.
   Hooks:     $(git config --get core.hooksPath 2>/dev/null || echo 'not set') (husky pre-commit runs typecheck, check, test)
 
 Run scripts:
-  build       rebuild dist/ for chrome://extensions
+  build       rebuild dist/chromium/unpacked/ for chrome://extensions
   verify      mirror the W1-Test CI gate before opening a PR
   test-watch  bun test in watch mode
   pack        build plus zip for the Chrome Web Store
 EOF
 
-# build.js wipes dist/ before compiling and tsconfig sets no noEmitOnError, so a
-# failed build leaves dist/ half written with no manifest.json. Chrome cannot
-# load that, so do not point at it as if it were ready.
+# build.js wipes dist/chromium/unpacked/ before compiling and tsconfig sets no
+# noEmitOnError, so a failed build leaves the unpacked folder half written with
+# no manifest.json. Chrome cannot load that, so do not point at it as ready.
 if [ "$CA_BUILD_OK" = "1" ]; then
   ca_print_load_hint
 else
-  printf '\ndist/ is incomplete after the failed build and Chrome cannot load it yet.\n'
+  printf '\ndist/chromium/unpacked/ is incomplete after the failed build and Chrome cannot load it yet.\n'
   printf 'Fix the source, press the "build" run script, then load it.\n'
 fi

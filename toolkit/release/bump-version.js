@@ -14,7 +14,7 @@ if (!['patch', 'minor', 'major'].includes(bumpType)) {
 }
 
 // Read manifest.json
-const manifestPath = path.join(__dirname, '../..', 'manifest.json');
+const manifestPath = path.join(__dirname, '../..', 'src', 'manifest.json');
 let manifest;
 
 try {
@@ -63,7 +63,7 @@ try {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
     console.log(`✅ Version bumped from ${currentVersion} to ${newVersion}`);
     console.log(`   Type: ${bumpType}`);
-    console.log(`   File: manifest.json`);
+    console.log(`   File: src/manifest.json`);
 } catch (error) {
     console.error('❌ Failed to write manifest.json:', error.message);
     process.exit(1);
@@ -83,6 +83,6 @@ try {
 // Output new version for use in scripts
 console.log(`\n📦 New version: ${newVersion}`);
 console.log(`\nNext steps:`);
-console.log(`  1. Commit: git add manifest.json && git commit -m "Bump version to ${newVersion}"`);
+console.log(`  1. Commit: git add src/manifest.json package.json && git commit -m "Bump version to ${newVersion}"`);
 console.log(`  2. Tag: git tag v${newVersion}`);
 console.log(`  3. Push: git push && git push --tags`);

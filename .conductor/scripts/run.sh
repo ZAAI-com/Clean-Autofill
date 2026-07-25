@@ -47,11 +47,12 @@ case "$TASK" in
     # binary, so check zip up front rather than surfacing a swallowed error.
     ca_require_deps
     if ! ca_have zip; then
-      printf 'error: toolkit/scripts/pack.js needs the system "zip" binary (macOS ships it at /usr/bin/zip).\n' >&2
+      printf 'error: toolkit/release/pack.js needs the system "zip" binary (macOS ships it at /usr/bin/zip).\n' >&2
       exit 1
     fi
     ca_step 'Packaging the extension (bun run pack)' bun run pack
-    printf '\nArtifact: %s/dist/Clean-Autofill.zip\n' "$CA_ROOT"
+    CA_VERSION="$(node -p "require('./src/manifest.json').version")"
+    printf '\nArtifact: %s/dist/chromium/Clean-Autofill-%s.zip\n' "$CA_ROOT" "$CA_VERSION"
     ;;
 
   *)

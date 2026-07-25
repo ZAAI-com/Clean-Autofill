@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "../../dist",
+    "outDir": "../../dist/chromium/unpacked",
     "rootDir": "../../src",
     "declaration": false,
     "sourceMap": false,

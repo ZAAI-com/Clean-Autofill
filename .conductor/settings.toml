@@ -4,16 +4,16 @@
 #
 # Scripts run in a non-interactive shell that reads no rc file, so each one
 # bootstraps its own PATH. This repo needs bun, node and npx, because
-# toolkit/scripts/build.js shells out to "npx tsc" and "npx esbuild".
+# toolkit/build/build.js shells out to "npx tsc" and "npx esbuild".
 # Nothing here binds a port, so no script uses CONDUCTOR_PORT.
 
 [scripts]
 setup = "bash .conductor/scripts/setup.sh"
 archive = "bash .conductor/scripts/archive.sh"
 
-# Safe in parallel: no port, no daemon, no shared database, and manifest.json
-# has no "key", so unpacked builds from different folders get different Chrome
-# extension IDs and can coexist in one profile.
+# Safe in parallel: no port, no daemon, no shared database, and
+# src/manifest.json has no "key", so unpacked builds from different folders get
+# different Chrome extension IDs and can coexist in one profile.
 run_mode = "concurrent"
 
 # setup.sh already installs and builds.

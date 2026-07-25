@@ -11,7 +11,7 @@ let warnings = 0;
 // Validate manifest.json
 console.log('📋 Checking manifest.json:');
 try {
-    const manifestPath = path.join(__dirname, '../..', 'manifest.json');
+    const manifestPath = path.join(__dirname, '../..', 'src', 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     
     // Required fields
@@ -70,13 +70,13 @@ try {
     errors++;
 }
 
-// Check file sizes (compiled files in dist/)
+// Check file sizes in the unpacked extension
 console.log('\n📏 Checking file sizes:');
 const files = [
-    { path: 'dist/extension/background.js', maxSize: 1024 * 200 }, // 200KB (bundled)
-    { path: 'dist/extension/autofill.js', maxSize: 1024 * 200 },  // 200KB (bundled)
-    { path: 'dist/ui/options.js', maxSize: 1024 * 100 },  // 100KB
-    { path: 'dist/ui/popup.js', maxSize: 1024 * 50 },    // 50KB
+    { path: 'dist/chromium/unpacked/extension/background.js', maxSize: 1024 * 200 }, // 200KB (bundled)
+    { path: 'dist/chromium/unpacked/extension/autofill.js', maxSize: 1024 * 200 },  // 200KB (bundled)
+    { path: 'dist/chromium/unpacked/ui/options.js', maxSize: 1024 * 100 },  // 100KB
+    { path: 'dist/chromium/unpacked/ui/popup.js', maxSize: 1024 * 50 },    // 50KB
     { path: 'src/ui/options.html', maxSize: 1024 * 50 },  // 50KB
 ];
 
@@ -96,6 +96,12 @@ files.forEach(({ path: filePath, maxSize }) => {
         errors++;
     }
 });
+
+const emittedTypesPath = path.join(__dirname, '../..', 'dist', 'chromium', 'unpacked', 'types');
+if (fs.existsSync(emittedTypesPath)) {
+    console.log('  ❌ dist/chromium/unpacked/types: Type-only source must not ship');
+    errors++;
+}
 
 // Check icons
 console.log('\n🎨 Checking icons:');

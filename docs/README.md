@@ -2,7 +2,7 @@
 
 **Stop typing email addresses. One click, done.**
 
-Clean Autofill is a Chrome extension that generates unique, trackable email addresses for every website — without the hassle of typing them manually. It supports both **Plus Addressing** (e.g., `you+site@gmail.com`) and **Catch-All Prefix** (e.g., `site@yourdomain.com`).
+Clean Autofill is a Chrome extension that generates unique, trackable email addresses for every website without the hassle of typing them manually. It supports both **Plus Addressing** (e.g., `you+site@gmail.com`) and **Catch-All Prefix** (e.g., `site@yourdomain.com`).
 
 **[Learn more at zaai.com/clean-autofill](https://zaai.com/clean-autofill/)** | **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/clean-autofill/klbbkndjohchnidkbnjijdbggfadpppf)**
 
@@ -11,32 +11,32 @@ Clean Autofill is a Chrome extension that generates unique, trackable email addr
 ## Why Clean Autofill?
 
 If you want a unique email address per website, you know the benefits:
-- **Track who sells your data** — instantly know which company leaked your email
-- **Easy filtering** — create rules based on the sender address
-- **Spam control** — disable a single address without affecting others
+- **Track who sells your data**: instantly know which company leaked your email
+- **Easy filtering**: create rules based on the sender address
+- **Spam control**: disable a single address without affecting others
 
 Whether you use plus addressing with Gmail or Outlook, or a catch-all domain like `@yourdomain.com`, typing a unique email on every signup form gets old fast. **Clean Autofill does it for you in one click.**
 
 ## Features
 
-- **Two Email Modes** — Plus Addressing (`you+site@gmail.com`) or Catch-All Prefix (`site@yourdomain.com`)
-- **One-Click Fill** — Click the extension icon and your email is instantly generated, filled, and ready to copy
-- **Automatic Domain Detection** — Generates emails like `linear.app@yourdomain.com` based on the current site
-- **Smart Field Detection** — Finds email fields automatically, or fills your focused field
-- **Email Provider Detection** — Auto-detects your provider via MX record lookup and shows which modes are available
-- **Email History** — Searchable log of every email generated, with copy and delete actions
-- **Chrome Profile Import** — Auto-detects your Chrome profile email on first install
-- **Provider Setup Guides** — Built-in catch-all configuration instructions for Google Workspace, Microsoft 365, Fastmail, and more
-- **Privacy-First** — No analytics, no tracking. All data stays local (see [Privacy](#privacy) for one exception)
-- **Cross-Device Sync** — Your settings sync across Chrome browsers via your Google account
+- **Two Email Modes**: Plus Addressing (`you+site@gmail.com`) or Catch-All Prefix (`site@yourdomain.com`)
+- **One-Click Fill**: Click the extension icon and your email is instantly generated, filled, and ready to copy
+- **Automatic Domain Detection**: Generates emails like `linear.app@yourdomain.com` based on the current site
+- **Smart Field Detection**: Finds email fields automatically, or fills your focused field
+- **Email Provider Detection**: Auto-detects your provider via MX record lookup and shows which modes are available
+- **Email History**: Searchable log of every email generated, with copy and delete actions
+- **Chrome Profile Import**: Auto-detects your Chrome profile email on first install
+- **Provider Setup Guides**: Built-in catch-all configuration instructions for Google Workspace, Microsoft 365, Fastmail, and more
+- **Privacy-First**: No analytics, no tracking. All data stays local (see [Privacy](#privacy) for one exception)
+- **Cross-Device Sync**: Your settings sync across Chrome browsers via your Google account
 
 ![Settings and Preview](Screenshots/Options-2a-Settings-PlusAddressing.png)
 
 ## How It Works
 
-1. **Configure once** — Enter your email address (for Plus Addressing) or custom domain (for Catch-All Prefix) in settings
-2. **Visit any website** — Navigate to a signup or login page
-3. **Click the icon** — A popup appears with the generated email, which is automatically filled into the page
+1. **Configure once**: Enter your email address (for Plus Addressing) or custom domain (for Catch-All Prefix) in settings
+2. **Visit any website**: Navigate to a signup or login page
+3. **Click the icon**: A popup appears with the generated email, which is automatically filled into the page
 
 The extension extracts the main domain (removing subdomains like `www.` or `app.`) and combines it with your configured email:
 
@@ -58,16 +58,16 @@ Clean Autofill supports two modes. Provider compatibility determines which mode 
 |----------|:-:|:-:|
 | Custom domain | ✅* | ✅ |
 | Google Workspace | ✅* | ✅ |
-| Gmail | ✅ | — |
-| Outlook / Hotmail / Live | ✅ | — |
-| Apple iCloud | ❌ | — |
-| Yahoo / Ymail | ❌ | — |
-| ProtonMail | ✅ | — |
-| GMX / web.de | ❌ | — |
-| mail.com | ❌ | — |
-| T-Online | ❌ | — |
-| Fastmail | ✅ | — |
-| mailbox.org | ✅ | — |
+| Gmail | ✅ | - |
+| Outlook / Hotmail / Live | ✅ | - |
+| Apple iCloud | ❌ | - |
+| Yahoo / Ymail | ❌ | - |
+| ProtonMail | ✅ | - |
+| GMX / web.de | ❌ | - |
+| mail.com | ❌ | - |
+| T-Online | ❌ | - |
+| Fastmail | ✅ | - |
+| mailbox.org | ✅ | - |
 
 \*If your email host supports plus addressing. Outlook.com consumer accounts commonly work with `+tag` but Microsoft's official plus-addressing docs are for Exchange Online. Zoho Mail is unverified.
 
@@ -75,19 +75,19 @@ See [Email Provider Details](Email-Provider.md) for the full decision table and 
 
 ## Tech Stack
 
-- **TypeScript** — Strict mode, compiles to `dist/`
-- **Bun** — Test runner with happy-dom for DOM testing
-- **Biome** — Linting and formatting (single tool, replaces ESLint + Prettier)
-- **esbuild** — Bundling (ESM for service worker, IIFE for content scripts)
-- **psl** — Public Suffix List library for accurate domain parsing
-- **Husky** — Pre-commit hooks for automated checks
-- **GitHub Actions** — CI/CD pipeline for automated testing and Chrome Web Store releases
+- **TypeScript**: Strict mode, compiles to `dist/chromium/unpacked/`
+- **Bun**: Test runner with happy-dom for DOM testing
+- **Biome**: Linting and formatting (single tool, replaces ESLint + Prettier)
+- **esbuild**: Bundling (ESM for service worker, IIFE for content scripts)
+- **psl**: Public Suffix List library for accurate domain parsing
+- **Husky**: Pre-commit hooks for automated checks
+- **GitHub Actions**: CI/CD pipeline for automated testing and Chrome Web Store releases
 - **Chrome Extension Manifest V3**
 
 ## Build & Development Commands
 
 ```bash
-# Build extension (compile TypeScript + bundle + copy assets to dist/)
+# Build extension (compile TypeScript + bundle + copy assets to dist/chromium/unpacked/)
 bun run build
 
 # Run tests (with DOM support via happy-dom)
@@ -151,16 +151,16 @@ The extension follows Chrome Extension Manifest V3 architecture:
 
 ### Options Page (`src/ui/options.html` + `src/ui/options.ts`)
 - Sidebar navigation with four pages:
-  1. **Home** — Extension explanation, how-it-works steps, live examples based on current settings
-  2. **Settings** — Email input, mode selection (Plus Addressing / Catch-All Prefix), Chrome profile import, email provider detection with MX lookup
-  3. **History** — Searchable table of all generated emails, copy/delete per entry, clear all
-  4. **Help** — Provider-specific catch-all setup instructions
+  1. **Home**: Extension explanation, how-it-works steps, live examples based on current settings
+  2. **Settings**: Email input, mode selection (Plus Addressing / Catch-All Prefix), Chrome profile import, email provider detection with MX lookup
+  3. **History**: Searchable table of all generated emails, copy/delete per entry, clear all
+  4. **Help**: Provider-specific catch-all setup instructions
 
 ### Email Utilities (`src/email/utils.ts`)
-- `extractMainDomain()` — Uses PSL (Public Suffix List) for accurate domain extraction; handles special TLDs, IPv4/IPv6, localhost
-- `isValidEmail()` — Basic email format validation
-- `createTimeout()` — Promise-based timeout for async operations
-- `debounce()` — Rate-limiting for input events
+- `extractMainDomain()`: Uses PSL (Public Suffix List) for accurate domain extraction; handles special TLDs, IPv4/IPv6, localhost
+- `isValidEmail()`: Basic email format validation
+- `createTimeout()`: Promise-based timeout for async operations
+- `debounce()`: Rate-limiting for input events
 
 ### History Module (`src/ui/history.ts`)
 - CRUD operations: `addEntry()`, `getHistory()`, `deleteEntry()`, `clearHistory()`
@@ -168,8 +168,8 @@ The extension follows Chrome Extension Manifest V3 architecture:
 - Supports search filtering and pagination
 
 ### Provider Detection (`src/email/providers.ts` + `src/email/provider-domains.ts`)
-- `getProviderStatus()` — Synchronous lookup against 300+ known provider domains
-- `getProviderStatusWithMx()` — Falls back to MX record lookup for unknown/custom domains
+- `getProviderStatus()`: Synchronous lookup against 300+ known provider domains
+- `getProviderStatusWithMx()`: Falls back to MX record lookup for unknown/custom domains
 - Categorizes providers as: plus-supported, plus-unsupported, or custom
 
 ### MX Lookup (`src/email/mx-lookup.ts`)
@@ -196,7 +196,7 @@ Install directly from the [Chrome Web Store](https://chromewebstore.google.com/d
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" in the top right corner
 3. Click "Load unpacked"
-4. Select the `dist/` directory after building
+4. Select the `dist/chromium/unpacked/` directory after building
 5. The extension will appear in your extensions bar
 
 ### First-Time Setup
@@ -209,7 +209,7 @@ Install directly from the [Chrome Web Store](https://chromewebstore.google.com/d
 ## Usage
 
 1. **Navigate to any website**
-2. **Click the Clean Autofill icon** in your extensions bar — a popup appears with the generated email
+2. **Click the Clean Autofill icon** in your extensions bar, and a popup appears with the generated email
 3. The email is **automatically filled** into detected email fields on the page
 4. Use the **Copy button** in the popup if you need to paste it elsewhere
 
@@ -223,7 +223,6 @@ The extension will:
 
 ```
 Clean-Autofill/
-├── manifest.json               # Extension configuration (MV3)
 ├── package.json                # NPM/Bun configuration
 ├── .conductor/                 # Conductor workspace config (committed)
 │   ├── settings.toml           # Setup, run and archive scripts, run_mode
@@ -238,6 +237,7 @@ Clean-Autofill/
 │       ├── W2-Build.yml        # Build + package + upload artifact
 │       └── W3-Release-Chrome-Web-Store.yml  # Full pipeline + CWS publish
 ├── src/
+│   ├── manifest.json           # Extension configuration (MV3)
 │   ├── email/                  # Email generation & provider logic
 │   │   ├── utils.ts            # Domain extraction, validation, shared helpers
 │   │   ├── utils.test.ts
@@ -281,10 +281,11 @@ Clean-Autofill/
 │   │   └── tsconfig.json       # TypeScript configuration
 │   ├── husky/
 │   │   └── pre-commit          # Pre-commit hook (typecheck, lint, test)
-│   ├── scripts/                # Build scripts
+│   ├── build/
 │   │   ├── build.js            # Compile TS + bundle + copy assets
-│   │   ├── pack.js             # Create distribution zip
-│   │   ├── validate.js         # Manifest validation
+│   │   └── validate.js         # Manifest and build validation
+│   ├── release/
+│   │   ├── pack.js             # Create versioned distribution zip
 │   │   └── bump-version.js     # Version management
 │   └── test/
 │       └── test-setup.ts       # DOM test setup (happy-dom)
@@ -294,27 +295,29 @@ Clean-Autofill/
 │   ├── Email-Provider.md       # Provider compatibility details
 │   ├── Screenshots/            # Extension screenshots
 │   └── store-listing/          # Chrome Web Store listing assets
-└── dist/                       # Build output (load this in Chrome)
-    ├── extension/              # Compiled extension scripts
-    ├── email/                  # Compiled email modules
-    ├── ui/                     # Compiled UI pages
-    ├── icons/                  # Copied from src/
-    ├── manifest.json           # Copied from root
-    └── Clean-Autofill.zip      # Distribution package
+└── dist/
+    └── chromium/
+        ├── unpacked/            # Build output loaded in Chrome
+        │   ├── extension/       # Compiled extension scripts
+        │   ├── email/           # Compiled email modules
+        │   ├── ui/              # Compiled UI pages
+        │   ├── icons/           # Copied from src/
+        │   └── manifest.json    # Copied from src/
+        └── Clean-Autofill-<version>.zip
 ```
 
 ## Permissions
 
 The extension requires the following permissions:
 
-- **activeTab** — To interact with the current tab and read its URL
-- **storage** — To save settings (sync) and email history (local)
-- **notifications** — To show install and error notifications
-- **identity** — To detect the Chrome profile email for auto-configuration
-- **identity.email** — To read the Chrome profile email address
+- **activeTab**: To interact with the current tab and read its URL
+- **storage**: To save settings (sync) and email history (local)
+- **notifications**: To show install and error notifications
+- **identity**: To detect the Chrome profile email for auto-configuration
+- **identity.email**: To read the Chrome profile email address
 
 **Host permissions:**
-- **`https://dns.google/*`** — For MX record lookups to detect email providers on custom domains
+- **`https://dns.google/*`**: For MX record lookups to detect email providers on custom domains
 
 ## Privacy
 
@@ -347,8 +350,8 @@ See [Privacy Policy](PRIVACY.md) for full details.
 ## Development Workflow
 
 1. Edit TypeScript files in `src/` (organized into `email/`, `extension/`, `ui/`, `types/`)
-2. Run `bun run build` to compile to `dist/`
-3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
+2. Run `bun run build` to compile to `dist/chromium/unpacked/`
+3. Load `dist/chromium/unpacked/` in Chrome (chrome://extensions, Developer mode)
 4. Run `bun run test` to verify changes
 5. Run `bun run check` before committing
 6. Run `bun run validate` to verify manifest and build output

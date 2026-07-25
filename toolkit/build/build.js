@@ -5,8 +5,9 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '../..');
-const DIST = path.join(ROOT, 'dist');
+const DIST = path.join(ROOT, 'dist', 'chromium', 'unpacked');
 const SRC = path.join(ROOT, 'src');
+const MANIFEST = path.join(SRC, 'manifest.json');
 
 console.log('🔨 Building Clean-Autofill Chrome Extension...\n');
 
@@ -42,13 +43,13 @@ if (hasErrors) {
     process.exit(1);
 }
 
-// Clean dist directory
-console.log('\n🧹 Cleaning dist directory...');
+// Clean unpacked extension directory
+console.log('\n🧹 Cleaning unpacked extension directory...');
 if (fs.existsSync(DIST)) {
     fs.rmSync(DIST, { recursive: true });
 }
 fs.mkdirSync(DIST, { recursive: true });
-console.log('  ✅ dist directory cleaned');
+console.log('  ✅ dist/chromium/unpacked directory cleaned');
 
 // Compile TypeScript
 console.log('\n📦 Compiling TypeScript...');
@@ -60,14 +61,20 @@ try {
     process.exit(1);
 }
 
+// TypeScript needs src/types for checking, but those modules contain no runtime code.
+const compiledTypesDir = path.join(DIST, 'types');
+if (fs.existsSync(compiledTypesDir)) {
+    fs.rmSync(compiledTypesDir, { recursive: true });
+}
+
 // Bundle utils.js with dependencies using esbuild
 // Create two versions: ESM for background.js, IIFE for content scripts
 console.log('\n📦 Bundling utils.js with dependencies...');
 try {
     // ESM bundle for background.js (service worker)
-    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/chromium/unpacked/email/utils.js --bundle --outfile=dist/chromium/unpacked/email/utils.esm.js --format=esm --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // IIFE bundle for content scripts (sets globalThis.CleanAutofillUtils)
-    execSync('npx esbuild dist/email/utils.js --bundle --outfile=dist/email/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
+    execSync('npx esbuild dist/chromium/unpacked/email/utils.js --bundle --outfile=dist/chromium/unpacked/email/utils-content.js --format=iife --global-name=CleanAutofillUtils --platform=browser --minify', { cwd: ROOT, stdio: 'inherit' });
     // Replace utils.js with ESM version for background.js imports
     fs.renameSync(path.join(DIST, 'email', 'utils.esm.js'), path.join(DIST, 'email', 'utils.js'));
     console.log('  ✅ email/utils.js (ESM for background.js)');
@@ -78,7 +85,7 @@ try {
 }
 
 // Check if service worker uses ES modules
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
 const usesESModules = manifest.background?.type === 'module';
 
 if (usesESModules) {
@@ -119,11 +126,11 @@ if (usesESModules) {
     }
 }
 
-// Copy static assets to dist
+// Copy static assets to the unpacked extension
 console.log('\n📁 Copying static assets...');
 
 // Copy manifest.json
-fs.copyFileSync(path.join(ROOT, 'manifest.json'), path.join(DIST, 'manifest.json'));
+fs.copyFileSync(MANIFEST, path.join(DIST, 'manifest.json'));
 console.log('  ✅ manifest.json');
 
 // Copy UI HTML files
@@ -187,12 +194,17 @@ const requiredCompiledFiles = [
 requiredCompiledFiles.forEach(file => {
     const filePath = path.join(DIST, file);
     if (fs.existsSync(filePath)) {
-        console.log(`  ✅ dist/${file}`);
+        console.log(`  ✅ dist/chromium/unpacked/${file}`);
     } else {
-        console.log(`  ❌ dist/${file} - MISSING`);
+        console.log(`  ❌ dist/chromium/unpacked/${file} - MISSING`);
         hasErrors = true;
     }
 });
+
+if (fs.existsSync(path.join(DIST, 'types'))) {
+    console.log('  ❌ dist/chromium/unpacked/types - MUST NOT BE EMITTED');
+    hasErrors = true;
+}
 
 // Validate manifest.json
 console.log('\n📄 Validating manifest.json:');
@@ -213,9 +225,9 @@ try {
 }
 
 if (!hasErrors) {
-    console.log('\n✅ Build complete! Extension ready at: dist/');
+    console.log('\n✅ Build complete! Extension ready at: dist/chromium/unpacked/');
     console.log('\n📦 Next steps:');
-    console.log('   • Load dist/ folder in Chrome (chrome://extensions)');
+    console.log('   • Load dist/chromium/unpacked/ in Chrome (chrome://extensions)');
     console.log('   • Run "bun run pack" to create zip for distribution');
 } else {
     console.error('\n❌ Build failed. Please fix the errors above.');

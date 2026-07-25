@@ -20,9 +20,9 @@ The extension does not:
 
 The extension stores the following data locally:
 
-- **Your email settings** (email address or domain, selected mode) — Stored in Chrome's sync storage so your preferences persist across browser sessions and sync across your devices if you're signed into Chrome.
-- **Email history** — A log of generated emails (domain, email, timestamp) stored in Chrome's local storage. This data never leaves your device.
-- **MX lookup cache** — Cached results of email provider detection (see below). Stored in Chrome's local storage to avoid repeated lookups.
+- **Your email settings** (email address or domain, selected mode): Stored in Chrome's sync storage so your preferences persist across browser sessions and sync across your devices if you're signed into Chrome.
+- **Email history**: A log of generated emails (domain, email, timestamp) stored in Chrome's local storage. This data never leaves your device.
+- **MX lookup cache**: Cached results of email provider detection (see below). Stored in Chrome's local storage to avoid repeated lookups.
 
 These settings are configured by you in the extension's options page.
 
@@ -30,7 +30,7 @@ These settings are configured by you in the extension's options page.
 
 The extension makes one type of network request:
 
-- **MX record lookup** — When you enter a custom domain email in settings, the extension performs a DNS MX record lookup via Google's public DNS API (`https://dns.google/resolve?name=YOUR_DOMAIN&type=MX`) to detect your email provider and determine which email modes are available. **Only the domain portion is sent** (e.g., `yourdomain.com`), never your full email address. Results are cached locally to minimize requests. This lookup is subject to [Google's Privacy Policy](https://policies.google.com/privacy) for their public DNS service.
+- **MX record lookup**: When you enter a custom domain email in settings, the extension performs a DNS MX record lookup via Google's public DNS API (`https://dns.google/resolve?name=YOUR_DOMAIN&type=MX`) to detect your email provider and determine which email modes are available. **Only the domain portion is sent** (e.g., `yourdomain.com`), never your full email address. Results are cached locally to minimize requests. This lookup is subject to [Google's Privacy Policy](https://policies.google.com/privacy) for their public DNS service.
 
 No other network requests are made by the extension.
 
@@ -54,7 +54,7 @@ All processing happens locally in your browser, with the sole exception of the M
 
 ## Third Parties
 
-Clean Autofill does not share any personal data with third parties. The only external service contacted is Google's public DNS API for MX record lookups (see [Network Requests](#network-requests)), which receives only the email domain — never your email address or browsing data.
+Clean Autofill does not share any personal data with third parties. The only external service contacted is Google's public DNS API for MX record lookups (see [Network Requests](#network-requests)), which receives only the email domain, never your email address or browsing data.
 
 ## Changes to This Policy
 

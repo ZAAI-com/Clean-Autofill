@@ -33,32 +33,38 @@ jobs:
       - name: Extract and validate version
         id: version
         run: |
-          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
-          echo "version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('src/manifest.json'))['version'])")
+          echo "version=$MANIFEST_VERSION" >> "$GITHUB_OUTPUT"
 
           PKG_VERSION=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
           if [ "$PKG_VERSION" != "$MANIFEST_VERSION" ]; then
-            echo "::error::package.json version ($PKG_VERSION) does not match manifest.json version ($MANIFEST_VERSION)"
+            echo "::error::package.json version ($PKG_VERSION) does not match src/manifest.json version ($MANIFEST_VERSION)"
             exit 1
           fi
 
           echo "Release version: $MANIFEST_VERSION"
 
-      - name: Read extension ID from package.json
+      - name: Read Chrome Web Store IDs from package.json
         id: config
         run: |
           EXTENSION_ID=$(python3 -c "import json; print(json.load(open('package.json'))['chromeWebStore']['extensionId'])")
+          PUBLISHER_ID=$(python3 -c "import json; print(json.load(open('package.json'))['chromeWebStore']['publisherId'])")
           if [ -z "$EXTENSION_ID" ] || [ "$EXTENSION_ID" = "<EXTENSION_ID>" ]; then
             echo "::error::Chrome Web Store extension ID not configured in package.json"
             exit 1
           fi
-          echo "extension_id=$EXTENSION_ID" >> $GITHUB_OUTPUT
+          if [ -z "$PUBLISHER_ID" ] || [ "$PUBLISHER_ID" = "<PUBLISHER_ID>" ]; then
+            echo "::error::Chrome Web Store publisher ID not configured in package.json"
+            exit 1
+          fi
+          echo "extension_id=$EXTENSION_ID" >> "$GITHUB_OUTPUT"
+          echo "publisher_id=$PUBLISHER_ID" >> "$GITHUB_OUTPUT"
 
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
           name: Clean-Autofill
-          path: dist
+          path: dist/chromium
 
       - name: Upload to Chrome Web Store
         id: upload
@@ -97,32 +103,60 @@ jobs:
           echo "::add-mask::$ACCESS_TOKEN"
 
           EXTENSION_ID="${{ steps.config.outputs.extension_id }}"
+          PUBLISHER_ID="${{ steps.config.outputs.publisher_id }}"
+          ZIP_PATH="dist/chromium/Clean-Autofill-${{ steps.version.outputs.version }}.zip"
+          ITEM_NAME="publishers/$PUBLISHER_ID/items/$EXTENSION_ID"
 
-          echo "Uploading dist/Clean-Autofill.zip..."
-          UPLOAD_RESPONSE=$(curl -s -X PUT \
+          if [ ! -f "$ZIP_PATH" ]; then
+            echo "::error::Build artifact not found: $ZIP_PATH"
+            exit 1
+          fi
+
+          echo "Uploading $ZIP_PATH..."
+          UPLOAD_RESPONSE=$(curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "x-goog-api-version: 2" \
-            -T dist/Clean-Autofill.zip \
-            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$EXTENSION_ID")
+            -H "Content-Type: application/zip" \
+            -T "$ZIP_PATH" \
+            "https://chromewebstore.googleapis.com/upload/v2/$ITEM_NAME:upload")
 
           UPLOAD_STATE=$(echo "$UPLOAD_RESPONSE" | python3 -c "
           import sys, json
           data = json.load(sys.stdin)
-          state = data.get('uploadState', 'UNKNOWN')
+          expected = '$EXTENSION_ID'
+          if data.get('itemId') != expected:
+              print(f\"Unexpected item ID: {data.get('itemId')!r}\", file=sys.stderr)
+              sys.exit(1)
+          state = data.get('uploadState', 'UPLOAD_STATE_UNSPECIFIED')
           print(state)
-          if state != 'SUCCESS':
-              errors = data.get('itemError', [])
-              for e in errors:
-                  print(f\"::error::{e.get('error_detail', e.get('error_code', 'unknown'))}\", file=sys.stderr)
           ")
 
-          if [ "$UPLOAD_STATE" = "SUCCESS" ]; then
-            echo "Upload successful"
-          else
-            echo "::error::Upload failed with state: $UPLOAD_STATE"
-            echo "$UPLOAD_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$UPLOAD_RESPONSE"
+          if [ "$UPLOAD_STATE" = "IN_PROGRESS" ]; then
+            for ATTEMPT in $(seq 1 30); do
+              echo "Upload processing, status check $ATTEMPT of 30..."
+              sleep 10
+              STATUS_RESPONSE=$(curl --fail-with-body --silent --show-error \
+                -H "Authorization: Bearer $ACCESS_TOKEN" \
+                "https://chromewebstore.googleapis.com/v2/$ITEM_NAME:fetchStatus")
+              UPLOAD_STATE=$(echo "$STATUS_RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          expected = '$EXTENSION_ID'
+          if data.get('itemId') != expected:
+              print(f\"Unexpected item ID: {data.get('itemId')!r}\", file=sys.stderr)
+              sys.exit(1)
+          print(data.get('lastAsyncUploadState', 'UPLOAD_STATE_UNSPECIFIED'))
+          ")
+              if [ "$UPLOAD_STATE" != "IN_PROGRESS" ]; then
+                break
+              fi
+            done
+          fi
+
+          if [ "$UPLOAD_STATE" != "SUCCEEDED" ]; then
+            echo "::error::Upload failed or timed out with state: $UPLOAD_STATE"
             exit 1
           fi
+          echo "Upload successful"
 
       - name: Publish to Chrome Web Store
         if: github.event.inputs.publish == 'true'
@@ -151,29 +185,34 @@ jobs:
           echo "::add-mask::$ACCESS_TOKEN"
 
           EXTENSION_ID="${{ steps.config.outputs.extension_id }}"
+          PUBLISHER_ID="${{ steps.config.outputs.publisher_id }}"
+          ITEM_NAME="publishers/$PUBLISHER_ID/items/$EXTENSION_ID"
 
           echo "Publishing extension..."
-          PUBLISH_RESPONSE=$(curl -s -X POST \
+          PUBLISH_RESPONSE=$(curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "x-goog-api-version: 2" \
-            -H "Content-Length: 0" \
-            "https://www.googleapis.com/chromewebstore/v1.1/items/$EXTENSION_ID/publish")
+            -H "Content-Type: application/json" \
+            -d '{"publishType":"DEFAULT_PUBLISH","blockOnWarnings":false}' \
+            "https://chromewebstore.googleapis.com/v2/$ITEM_NAME:publish")
 
-          STATUS=$(echo "$PUBLISH_RESPONSE" | python3 -c "
+          echo "$PUBLISH_RESPONSE" | python3 -c "
           import sys, json
           data = json.load(sys.stdin)
-          statuses = data.get('status', [])
-          print(statuses[0] if statuses else 'UNKNOWN')
-          ")
-
-          if [ "$STATUS" = "OK" ]; then
-            echo "Extension published successfully"
-          elif [ "$STATUS" = "PUBLISHED_WITH_FRICTION_WARNING" ]; then
-            echo "::warning::Extension published with friction warnings. Check the developer dashboard."
-          else
-            echo "::error::Publish failed with status: $STATUS. Check the Chrome Web Store developer dashboard."
-            exit 1
-          fi
+          expected = '$EXTENSION_ID'
+          if data.get('itemId') != expected:
+              print(f\"::error::Unexpected item ID: {data.get('itemId')!r}\", file=sys.stderr)
+              sys.exit(1)
+          state = data.get('state', 'ITEM_STATE_UNSPECIFIED')
+          accepted = {'PENDING_REVIEW', 'STAGED', 'PUBLISHED', 'PUBLISHED_TO_TESTERS'}
+          if state not in accepted:
+              print(f\"::error::Publish failed with state: {state}\", file=sys.stderr)
+              sys.exit(1)
+          for warning in data.get('warningInfo', {}).get('warnings', []):
+              reason = warning.get('reason', 'warning')
+              description = warning.get('description', '')
+              print(f\"::warning::{reason}: {description}\")
+          print(f\"Extension submission accepted with state: {state}\")
+          "
 
       - name: Create GitHub Release
         if: github.event.inputs.publish == 'true'
@@ -181,7 +220,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Clean Autofill ${{ steps.version.outputs.version }}
-          files: dist/Clean-Autofill.zip
+          files: dist/chromium/Clean-Autofill-${{ steps.version.outputs.version }}.zip
           generate_release_notes: true
           make_latest: true
 
@@ -189,5 +228,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Clean-Autofill-${{ steps.version.outputs.version }}
-          path: dist/Clean-Autofill.zip
+          path: dist/chromium/Clean-Autofill-${{ steps.version.outputs.version }}.zip
           retention-days: 90
