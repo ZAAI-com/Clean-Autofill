@@ -3,6 +3,30 @@
 const fs = require('fs');
 const path = require('path');
 
+const MAX_VERSION_COMPONENT = 65535;
+
+function parseChromeVersion(version) {
+    if (typeof version !== 'string') return null;
+
+    const components = version.split('.');
+    if (
+        components.length !== 3 ||
+        components.some(component => !/^(0|[1-9]\d*)$/.test(component))
+    ) {
+        return null;
+    }
+
+    const parts = components.map(Number);
+    if (
+        parts.some(part => part > MAX_VERSION_COMPONENT) ||
+        parts.every(part => part === 0)
+    ) {
+        return null;
+    }
+
+    return parts;
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const bumpType = args[0] || 'patch'; // patch, minor, or major
@@ -33,17 +57,15 @@ try {
 
 // Parse current version
 const currentVersion = manifest.version;
-const versionComponents = typeof currentVersion === 'string' ? currentVersion.split('.') : [];
+const versionParts = parseChromeVersion(currentVersion);
 
-if (
-    versionComponents.length !== 3 ||
-    versionComponents.some(component => !/^\d+$/.test(component))
-) {
-    console.error('❌ Invalid version format. Expected: major.minor.patch');
+if (!versionParts) {
+    console.error(
+        '❌ Invalid Chrome version. Expected three components from 0 to 65535 without leading zeros, and not all zero.'
+    );
     process.exit(1);
 }
 
-const versionParts = versionComponents.map(Number);
 let [major, minor, patch] = versionParts;
 
 // Bump version based on type
@@ -64,6 +86,11 @@ switch (bumpType) {
 
 // Create new version string
 const newVersion = `${major}.${minor}.${patch}`;
+
+if (!parseChromeVersion(newVersion)) {
+    console.error(`❌ Version bump would produce an invalid Chrome version: ${newVersion}`);
+    process.exit(1);
+}
 
 manifest.version = newVersion;
 pkg.version = newVersion;
