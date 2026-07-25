@@ -1,0 +1,21 @@
+package.json
+  s_49c59fd8a2e1cc::t_e09fb345ab77d3 3
+src/manifest.json
+  s_49c59fd8a2e1cc::t_84a2b186e3b1cf 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2b087961fbf422a7ec71b63536d00da772a2866e",
+  "prompts": {},
+  "sessions": {
+    "s_49c59fd8a2e1cc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8a77b02a-e835-4211-9107-1bf7f914f72c",
+        "model": "unknown"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
