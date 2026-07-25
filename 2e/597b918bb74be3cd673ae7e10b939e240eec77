@@ -1,0 +1,21 @@
+toolkit/release/bump-version.js
+  s_2229154e268564::t_0cca520bce3a14 63-65
+  s_2229154e268564::t_64b331897ed232 6-29,60,62,90-93
+  s_2229154e268564::t_6fe90c9b2c0416 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2e597b918bb74be3cd673ae7e10b939e240eec77",
+  "prompts": {},
+  "sessions": {
+    "s_2229154e268564": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9a29-b7d7-7032-8fdf-878bad1acf4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
