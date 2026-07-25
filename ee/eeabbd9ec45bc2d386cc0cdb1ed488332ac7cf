@@ -1,0 +1,25 @@
+docs/PRIVACY.md
+  s_2229154e268564::t_04039d60c346a9 23
+docs/store-listing/privacy-justifications.md
+  s_2229154e268564::t_04039d60c346a9 45
+docs/README.md
+  s_2229154e268564::t_04039d60c346a9 320
+docs/store-listing/texts.md
+  s_2229154e268564::t_04039d60c346a9 5,15,25,33,41,68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "eeeeabbd9ec45bc2d386cc0cdb1ed488332ac7cf",
+  "prompts": {},
+  "sessions": {
+    "s_2229154e268564": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9a29-b7d7-7032-8fdf-878bad1acf4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
