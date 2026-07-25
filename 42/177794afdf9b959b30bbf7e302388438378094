@@ -1,0 +1,21 @@
+.conductor/scripts/archive.sh
+  s_2229154e268564::t_04039d60c346a9 12-15
+.conductor/scripts/lib.sh
+  s_2229154e268564::t_04039d60c346a9 8,101-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "42177794afdf9b959b30bbf7e302388438378094",
+  "prompts": {},
+  "sessions": {
+    "s_2229154e268564": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9a29-b7d7-7032-8fdf-878bad1acf4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
