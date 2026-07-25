@@ -1,0 +1,21 @@
+package.json
+  s_107ec83b6eb9b7::t_a2e0991b61a21d 56
+.github/workflows/W3-Release-Chrome-Web-Store.yml
+  s_107ec83b6eb9b7::t_a2e0991b61a21d 47,51,56-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "37b8cd53f0a97230e369b917db1459ea2a18a966",
+  "prompts": {},
+  "sessions": {
+    "s_107ec83b6eb9b7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9994-5ba8-7e10-8f12-2d420ea38345",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
