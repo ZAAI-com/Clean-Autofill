@@ -1,0 +1,23 @@
+.github/workflows/W3-Release-Chrome-Web-Store.yml
+  s_2229154e268564::t_04039d60c346a9 221
+.github/dependabot.yml
+  s_2229154e268564::t_04039d60c346a9 4-5
+.github/workflows/README.md
+  s_2229154e268564::t_04039d60c346a9 15-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7a97a9880ca254854384308654a1723923cf3479",
+  "prompts": {},
+  "sessions": {
+    "s_2229154e268564": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9a29-b7d7-7032-8fdf-878bad1acf4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
