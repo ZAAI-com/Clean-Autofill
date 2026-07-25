@@ -1,0 +1,19 @@
+.github/workflows/W3-Release-Chrome-Web-Store.yml
+  s_94d6afcdf9bcb6::t_0e3abde655ffcf 222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ef0f13d696578bcffe39901ff2ba62c7dc4bf698",
+  "prompts": {},
+  "sessions": {
+    "s_94d6afcdf9bcb6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9ab7-f778-7520-a5da-ea2768ea03ae",
+        "model": "gpt-5.3-codex-spark"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
