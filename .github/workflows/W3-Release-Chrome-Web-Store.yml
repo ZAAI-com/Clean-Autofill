@@ -44,17 +44,17 @@ jobs:
 
           echo "Release version: $MANIFEST_VERSION"
 
-      - name: Read Chrome Web Store IDs from package.json
+      - name: Read Chrome Web Store configuration
         id: config
         run: |
           EXTENSION_ID=$(python3 -c "import json; print(json.load(open('package.json'))['chromeWebStore']['extensionId'])")
-          PUBLISHER_ID=$(python3 -c "import json; print(json.load(open('package.json'))['chromeWebStore']['publisherId'])")
+          PUBLISHER_ID="${{ vars.CHROME_WEB_STORE_PUBLISHER_ID }}"
           if [ -z "$EXTENSION_ID" ] || [ "$EXTENSION_ID" = "<EXTENSION_ID>" ]; then
             echo "::error::Chrome Web Store extension ID not configured in package.json"
             exit 1
           fi
-          if [ -z "$PUBLISHER_ID" ] || [ "$PUBLISHER_ID" = "<PUBLISHER_ID>" ]; then
-            echo "::error::Chrome Web Store publisher ID not configured in package.json"
+          if [ -z "$PUBLISHER_ID" ]; then
+            echo "::error::Chrome Web Store publisher ID not configured in the CHROME_WEB_STORE_PUBLISHER_ID Actions variable"
             exit 1
           fi
           echo "extension_id=$EXTENSION_ID" >> "$GITHUB_OUTPUT"

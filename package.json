@@ -53,7 +53,6 @@
     "psl": "^1.15.0"
   },
   "chromeWebStore": {
-    "extensionId": "klbbkndjohchnidkbnjijdbggfadpppf",
-    "publisherId": "e406690b-e3fb-41f5-af22-cd59fee0d6ff"
+    "extensionId": "klbbkndjohchnidkbnjijdbggfadpppf"
   }
 }
