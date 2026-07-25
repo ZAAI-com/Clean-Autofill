@@ -1,4 +1,5 @@
 name: W2 Build
+run-name: W2 Build
 
 on:
   workflow_dispatch:
