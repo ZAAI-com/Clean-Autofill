@@ -1,8 +1,8 @@
 version: 2
 
 updates:
-  # Bun uses the npm ecosystem; Dependabot reads bun.lock.
-  - package-ecosystem: npm
+  # Dependabot manages Bun dependencies and bun.lock.
+  - package-ecosystem: bun
     directory: /
     schedule:
       interval: monthly

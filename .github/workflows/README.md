@@ -12,9 +12,9 @@
 W3 → W1 (CI gate) → W2 (build + package) → release job
 ```
 
-W1 gates pull requests against `main`. W2 and W3 never run automatically: both
-declare only `workflow_dispatch` and `workflow_call`, so they run on a manual
-dispatch or as part of W3.
+W1 gates pull requests against `main`. W2 supports manual dispatch and
+`workflow_call` from W3. W3 supports manual dispatch only, then calls W1 and W2
+as part of its release flow.
 
 ## Comparison
 
