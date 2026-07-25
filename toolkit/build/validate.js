@@ -55,14 +55,26 @@ try {
         warnings++;
     }
     
-    // Check permissions
-    if (manifest.permissions) {
-        const dangerousPerms = ['<all_urls>', 'tabs', 'webNavigation', 'webRequest'];
-        const foundDangerous = manifest.permissions.filter(p => dangerousPerms.includes(p));
-        if (foundDangerous.length > 0) {
-            console.log(`  ⚠️  Using broad permissions: ${foundDangerous.join(', ')}`);
-            warnings++;
+    // Check permissions and URL match patterns
+    const dangerousPerms = new Set(['<all_urls>', 'tabs', 'webNavigation', 'webRequest']);
+    const broadUrlPatterns = new Set(['<all_urls>', '*://*/*', 'http://*/*', 'https://*/*']);
+    const foundDangerous = new Set(
+        (manifest.permissions || []).filter(permission => dangerousPerms.has(permission))
+    );
+
+    for (const pattern of manifest.host_permissions || []) {
+        if (broadUrlPatterns.has(pattern)) foundDangerous.add(pattern);
+    }
+
+    for (const contentScript of manifest.content_scripts || []) {
+        for (const pattern of contentScript.matches || []) {
+            if (broadUrlPatterns.has(pattern)) foundDangerous.add(pattern);
         }
+    }
+
+    if (foundDangerous.size > 0) {
+        console.log(`  ⚠️  Using broad permissions: ${Array.from(foundDangerous).join(', ')}`);
+        warnings++;
     }
     
 } catch (error) {
@@ -77,7 +89,7 @@ const files = [
     { path: 'dist/chromium/unpacked/extension/autofill.js', maxSize: 1024 * 200 },  // 200KB (bundled)
     { path: 'dist/chromium/unpacked/ui/options.js', maxSize: 1024 * 100 },  // 100KB
     { path: 'dist/chromium/unpacked/ui/popup.js', maxSize: 1024 * 50 },    // 50KB
-    { path: 'src/ui/options.html', maxSize: 1024 * 50 },  // 50KB
+    { path: 'dist/chromium/unpacked/ui/options.html', maxSize: 1024 * 50 },  // 50KB
 ];
 
 files.forEach(({ path: filePath, maxSize }) => {

@@ -13,27 +13,37 @@ if (!['patch', 'minor', 'major'].includes(bumpType)) {
     process.exit(1);
 }
 
-// Read manifest.json
 const manifestPath = path.join(__dirname, '../..', 'src', 'manifest.json');
+const packagePath = path.join(__dirname, '../..', 'package.json');
+let manifestContent;
+let packageContent;
 let manifest;
+let pkg;
 
+// Preflight both version files before changing either one.
 try {
-    const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    packageContent = fs.readFileSync(packagePath, 'utf8');
     manifest = JSON.parse(manifestContent);
+    pkg = JSON.parse(packageContent);
 } catch (error) {
-    console.error('❌ Failed to read manifest.json:', error.message);
+    console.error('❌ Failed to read version files:', error.message);
     process.exit(1);
 }
 
 // Parse current version
 const currentVersion = manifest.version;
-const versionParts = currentVersion.split('.').map(Number);
+const versionComponents = typeof currentVersion === 'string' ? currentVersion.split('.') : [];
 
-if (versionParts.length !== 3) {
+if (
+    versionComponents.length !== 3 ||
+    versionComponents.some(component => !/^\d+$/.test(component))
+) {
     console.error('❌ Invalid version format. Expected: major.minor.patch');
     process.exit(1);
 }
 
+const versionParts = versionComponents.map(Number);
 let [major, minor, patch] = versionParts;
 
 // Bump version based on type
@@ -55,30 +65,69 @@ switch (bumpType) {
 // Create new version string
 const newVersion = `${major}.${minor}.${patch}`;
 
-// Update manifest
 manifest.version = newVersion;
+pkg.version = newVersion;
 
-// Write updated manifest
+const manifestOutput = JSON.stringify(manifest, null, 2) + '\n';
+const packageOutput = JSON.stringify(pkg, null, 2) + '\n';
+const manifestTempPath = `${manifestPath}.${process.pid}.tmp`;
+const packageTempPath = `${packagePath}.${process.pid}.tmp`;
+const manifestRollbackPath = `${manifestPath}.${process.pid}.rollback`;
+const manifestMode = fs.statSync(manifestPath).mode & 0o777;
+const packageMode = fs.statSync(packagePath).mode & 0o777;
+
+function removeIfPresent(filePath) {
+    try {
+        fs.unlinkSync(filePath);
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            console.warn(`⚠️  Could not remove temporary file ${filePath}:`, error.message);
+        }
+    }
+}
+
+// Stage both updates before replacing either target.
 try {
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-    console.log(`✅ Version bumped from ${currentVersion} to ${newVersion}`);
-    console.log(`   Type: ${bumpType}`);
-    console.log(`   File: src/manifest.json`);
+    fs.writeFileSync(manifestTempPath, manifestOutput, { mode: manifestMode });
+    fs.writeFileSync(packageTempPath, packageOutput, { mode: packageMode });
 } catch (error) {
-    console.error('❌ Failed to write manifest.json:', error.message);
+    removeIfPresent(manifestTempPath);
+    removeIfPresent(packageTempPath);
+    console.error('❌ Failed to stage version files:', error.message);
     process.exit(1);
 }
 
-// Also update package.json
-const packagePath = path.join(__dirname, '../..', 'package.json');
+let manifestCommitted = false;
 try {
-    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    pkg.version = newVersion;
-    fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
-    console.log(`   File: package.json`);
+    fs.renameSync(manifestTempPath, manifestPath);
+    manifestCommitted = true;
+    fs.renameSync(packageTempPath, packagePath);
 } catch (error) {
-    console.warn('⚠️  Could not update package.json:', error.message);
+    let rollbackError = null;
+
+    if (manifestCommitted) {
+        try {
+            fs.writeFileSync(manifestRollbackPath, manifestContent, { mode: manifestMode });
+            fs.renameSync(manifestRollbackPath, manifestPath);
+        } catch (caughtRollbackError) {
+            rollbackError = caughtRollbackError;
+        }
+    }
+
+    removeIfPresent(manifestTempPath);
+    removeIfPresent(packageTempPath);
+    removeIfPresent(manifestRollbackPath);
+    console.error('❌ Failed to commit version files:', error.message);
+    if (rollbackError) {
+        console.error('❌ Failed to restore manifest.json:', rollbackError.message);
+    }
+    process.exit(1);
 }
+
+console.log(`✅ Version bumped from ${currentVersion} to ${newVersion}`);
+console.log(`   Type: ${bumpType}`);
+console.log(`   File: src/manifest.json`);
+console.log(`   File: package.json`);
 
 // Output new version for use in scripts
 console.log(`\n📦 New version: ${newVersion}`);
