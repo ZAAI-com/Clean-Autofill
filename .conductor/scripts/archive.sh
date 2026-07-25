@@ -9,7 +9,10 @@
 # No "set -e" and always exits 0: a hiccup here must never block an archive.
 set -uo pipefail
 
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+if ! . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"; then
+  echo 'Could not initialize the archive hook. Removing nothing.'
+  exit 0
+fi
 
 ca_say "Clean-Autofill archive hook: $CA_ROOT"
 

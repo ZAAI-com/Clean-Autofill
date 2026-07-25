@@ -5,7 +5,7 @@ CA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
 # Every entry point in this repo is root-relative (bunfig preload, biome
 # --config-path, tsc -p), so pin cwd instead of trusting the caller.
-cd "$CA_ROOT" || exit 1
+cd "$CA_ROOT" || return 1
 
 ca_say()  { printf '\n==> %s\n' "$*"; }
 ca_warn() { printf 'warning: %s\n' "$*" >&2; }
@@ -98,7 +98,9 @@ ca_check_node_pin() {
 
 # Self-heal instead of dead-ending a run button.
 ca_require_deps() {
-  [ -x "$CA_ROOT/node_modules/.bin/tsc" ] && return 0
+  [ -x "$CA_ROOT/node_modules/.bin/tsc" ] &&
+    [ -x "$CA_ROOT/node_modules/.bin/esbuild" ] &&
+    return 0
   ca_say 'Dependencies are missing or incomplete, running bun install'
   bun install
 }
