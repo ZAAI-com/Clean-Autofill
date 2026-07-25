@@ -317,6 +317,7 @@ The extension requires the following permissions:
 - **identity.email**: To read the Chrome profile email address
 
 **Host permissions:**
+- **`<all_urls>`**: Enables content-script injection across all web pages so the extension can fill email fields after the user clicks its icon
 - **`https://dns.google/*`**: For MX record lookups to detect email providers on custom domains
 
 ## Privacy

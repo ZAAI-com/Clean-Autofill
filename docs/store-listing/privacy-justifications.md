@@ -42,7 +42,7 @@ Required for MX record lookups via Google's public DNS API (dns.google). When a 
 ## Host Permission: `<all_urls>` (Content Script)
 
 **Justification:**
-The content script needs to run on any webpage the user visits in order to fill email addresses into form fields. When the user clicks the extension icon, the content script receives the generated email and fills it into the appropriate input field on the page. The content script only activates when triggered by the user; it does not run automatically or collect any data from pages.
+The content script is injected into webpages so it is present to receive messages from the extension. It scans for and fills an email field only after the user clicks the extension icon, and it does not otherwise collect data from pages.
 
 ---
 

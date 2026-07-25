@@ -20,7 +20,7 @@ The extension does not:
 
 The extension stores the following data locally:
 
-- **Your email settings** (email address or domain, selected mode): Stored in Chrome's sync storage so your preferences persist across browser sessions and sync across your devices if you're signed into Chrome.
+- **Your email settings** (email address or domain, selected mode): Clean Autofill does not collect or transmit these settings. Chrome stores them in sync storage and may synchronize them across your signed-in devices.
 - **Email history**: A log of generated emails (domain, email, timestamp) stored in Chrome's local storage. This data never leaves your device.
 - **MX lookup cache**: Cached results of email provider detection (see below). Stored in Chrome's local storage to avoid repeated lookups.
 

@@ -2,7 +2,7 @@
 
 ## Title
 
-```
+```text
 Clean Autofill: One-Click Email Addresses
 ```
 
@@ -12,7 +12,7 @@ _43 characters (limit: 75)_
 
 ## Summary
 
-```
+```text
 Generate unique email addresses for every website. One click to fill. Track spam, filter easily, stay private.
 ```
 
@@ -22,7 +22,7 @@ _111 characters (limit: 132)_
 
 ## Category
 
-```
+```text
 Productivity
 ```
 
@@ -30,7 +30,7 @@ Productivity
 
 ## Language
 
-```
+```text
 English
 ```
 
@@ -38,7 +38,7 @@ English
 
 ## Description
 
-```
+```text
 Stop typing email addresses. One click, done.
 
 Clean Autofill generates a unique email address for every website you visit and fills it into signup forms automatically. Perfect for users with catch-all email domains or anyone who uses plus addressing.
@@ -65,7 +65,7 @@ FEATURES
 - Smart Field Detection: Finds email fields automatically, or fills your focused field
 - Email History: Searchable log of every email you've generated
 - Provider Detection: Automatically detects your email provider and shows compatibility
-- Privacy-First: No data collection, no tracking, works entirely offline
+- Privacy-First: No analytics or tracking; custom-domain provider detection uses Google DNS MX lookups
 - Cross-Device Sync: Settings sync across Chrome browsers via your Google account
 
 
