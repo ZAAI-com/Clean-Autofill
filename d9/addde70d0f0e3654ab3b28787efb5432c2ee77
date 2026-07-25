@@ -1,0 +1,30 @@
+toolkit/release/bump-version.js
+  s_2229154e268564::t_8e0592bdfb4b84 17-19,21,23,25-26,28,30,36,38-41,46,69-77,79-89,91-92,94-96,100,102-104,106-124,127-130
+  s_c5e64b342fc9f7::t_58076848fecb7a 131
+toolkit/build/validate.js
+  s_2229154e268564::t_04039d60c346a9 58-71,74-78,92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "d9addde70d0f0e3654ab3b28787efb5432c2ee77",
+  "prompts": {},
+  "sessions": {
+    "s_2229154e268564": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9a29-b7d7-7032-8fdf-878bad1acf4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    },
+    "s_c5e64b342fc9f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bd7c3ef6-d2a2-4592-89e4-d89332f95e58",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
