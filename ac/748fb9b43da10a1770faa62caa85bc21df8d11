@@ -1,0 +1,21 @@
+.github/workflows/W1-Test.yml
+  s_94d6afcdf9bcb6::t_703c083ec975b4 2
+.github/workflows/W2-Build.yml
+  s_94d6afcdf9bcb6::t_703c083ec975b4 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ac748fb9b43da10a1770faa62caa85bc21df8d11",
+  "prompts": {},
+  "sessions": {
+    "s_94d6afcdf9bcb6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9ab7-f778-7520-a5da-ea2768ea03ae",
+        "model": "gpt-5.3-codex-spark"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
