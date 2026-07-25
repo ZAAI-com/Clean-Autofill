@@ -40,6 +40,7 @@ jobs:
       run: |
         VERSION=$(python3 -c "import json; print(json.load(open('src/manifest.json'))['version'])")
         ZIP_PATH="dist/chromium/Clean-Autofill-$VERSION.zip"
+        SUMMARY_FILE="${GITHUB_STEP_SUMMARY:-/tmp/build-report.md}"
         {
           echo "## Build Report"
           echo ""
@@ -49,12 +50,12 @@ jobs:
           echo "- **Files**: $(unzip -l "$ZIP_PATH" | tail -1 | awk '{print $2}')"
           echo ""
           echo "### Manifest Info"
-          python3 -c "
-          import json
-          with open('src/manifest.json', 'r') as f:
-              m = json.load(f)
-              print(f\"- **Version**: {m.get('version')}\")
-              print(f\"- **Name**: {m.get('name')}\")
-              print(f\"- **Permissions**: {', '.join(m.get('permissions', []))}\")
-          "
-        } >> "$GITHUB_STEP_SUMMARY"
+          python3 <<'PY'
+import json
+with open('src/manifest.json', 'r') as f:
+    m = json.load(f)
+    print(f"- **Version**: {m.get('version')}")
+    print(f"- **Name**: {m.get('name')}")
+    print(f"- **Permissions**: {', '.join(m.get('permissions', []))}")
+PY
+        } >> "$SUMMARY_FILE"
