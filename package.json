@@ -1,16 +1,16 @@
 {
   "name": "clean-autofill",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Chrome extension that automatically fills email addresses based on the current website domain",
   "scripts": {
     "prepare": "husky toolkit/husky",
-    "build": "node toolkit/scripts/build.js",
-    "pack": "node toolkit/scripts/pack.js",
-    "bump:patch": "node toolkit/scripts/bump-version.js patch",
-    "bump:minor": "node toolkit/scripts/bump-version.js minor",
-    "bump:major": "node toolkit/scripts/bump-version.js major",
-    "release": "npm run pack && echo 'Ready for release. Tag and push to trigger GitHub Actions.'",
-    "validate": "node toolkit/scripts/validate.js",
+    "build": "node toolkit/build/build.js",
+    "pack": "node toolkit/release/pack.js",
+    "bump:patch": "node toolkit/release/bump-version.js patch",
+    "bump:minor": "node toolkit/release/bump-version.js minor",
+    "bump:major": "node toolkit/release/bump-version.js major",
+    "release": "bun run pack && echo 'Ready for release. Run the W3-Release-Chrome-Web-Store workflow manually to publish.'",
+    "validate": "node toolkit/build/validate.js",
     "lint": "biome lint --config-path toolkit/biome/biome.json src/",
     "lint:fix": "biome lint --config-path toolkit/biome/biome.json --write src/",
     "format": "biome format --config-path toolkit/biome/biome.json --write src/",
@@ -36,16 +36,18 @@
   "author": "Manuel Gruber",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.11",
-    "@happy-dom/global-registrator": "^20.9.0",
-    "@types/chrome": "^0.1.40",
-    "esbuild": "^0.27.7",
-    "happy-dom": "^20.9.0",
+    "@biomejs/biome": "^2.5.5",
+    "@happy-dom/global-registrator": "^20.11.1",
+    "@types/chrome": "^0.2.2",
+    "esbuild": "^0.28.1",
+    "happy-dom": "^20.11.1",
     "husky": "^9.1.7",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
+  "packageManager": "bun@1.3.14",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=24.15.0",
+    "bun": ">=1.3.14"
   },
   "dependencies": {
     "psl": "^1.15.0"

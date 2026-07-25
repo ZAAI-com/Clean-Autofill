@@ -8,7 +8,7 @@ Clean Autofill supports two email generation modes. Which modes are available de
 
 Format: `yourname+website.com@provider.com`
 
-Uses sub-addressing (based on the concept described in [RFC 5233](https://www.rfc-editor.org/rfc/rfc5233), which defines Sieve filtering for subaddressed emails) to append the visited site's domain as a tag. The `+` separator convention is provider-specific — requires an email provider that supports it. No setup needed; it works automatically.
+Uses sub-addressing (based on the concept described in [RFC 5233](https://www.rfc-editor.org/rfc/rfc5233), which defines Sieve filtering for subaddressed emails) to append the visited site's domain as a tag. The `+` separator convention is provider-specific and requires an email provider that supports it. No setup needed; it works automatically.
 
 ### Catch-All Prefix
 

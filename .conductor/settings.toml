@@ -1,0 +1,40 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Conductor settings for Clean-Autofill, a Chrome MV3 extension.
+#
+# Scripts run in a non-interactive shell that reads no rc file, so each one
+# bootstraps its own PATH. This repo needs bun, node and npx, because
+# toolkit/build/build.js shells out to "npx tsc" and "npx esbuild".
+# Nothing here binds a port, so no script uses CONDUCTOR_PORT.
+
+[scripts]
+setup = "bash .conductor/scripts/setup.sh"
+archive = "bash .conductor/scripts/archive.sh"
+
+# Safe in parallel: no port, no daemon, no shared database, and
+# src/manifest.json has no "key", so unpacked builds from different folders get
+# different Chrome extension IDs and can coexist in one profile.
+run_mode = "concurrent"
+
+# setup.sh already installs and builds.
+auto_run_after_setup = false
+
+[scripts.run.build]
+command = "bash .conductor/scripts/run.sh build"
+icon = "package"
+default = true
+
+# Mirrors .github/workflows/W1-Test.yml.
+[scripts.run.verify]
+command = "bash .conductor/scripts/run.sh verify"
+icon = "test-tube"
+
+[scripts.run.test-watch]
+command = "bash .conductor/scripts/run.sh watch"
+icon = "flame"
+
+# Needs the system zip binary, and the artifact is only useful locally.
+[scripts.run.pack]
+command = "bash .conductor/scripts/run.sh pack"
+icon = "rocket"
+available_in = "local"

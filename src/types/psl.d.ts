@@ -13,7 +13,7 @@ declare module 'psl' {
   function get(domain: string): string | null;
   function isValid(domain: string): boolean;
 
-  export { parse, get, isValid, ParsedDomain };
+  export { get, isValid, ParsedDomain, parse };
 
   const psl: { parse: typeof parse; get: typeof get; isValid: typeof isValid };
   export default psl;

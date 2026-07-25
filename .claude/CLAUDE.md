@@ -9,7 +9,7 @@ Clean-Autofill is a Chrome extension that generates unique, trackable email addr
 ## Build and Development Commands
 
 ```bash
-# Build extension (compile TypeScript + copy assets to dist/)
+# Build extension (compile TypeScript + copy assets to dist/chromium/unpacked/)
 bun run build
 
 # Run tests (with DOM support via happy-dom)
@@ -38,7 +38,7 @@ bun run bump:major    # 0.1.0 → 1.0.0
 
 ## Tech Stack
 
-- **TypeScript** - Strict mode, compiles to `dist/`
+- **TypeScript** - Strict mode, compiles to `dist/chromium/unpacked/`
 - **Biome** - Linting and formatting (single tool, replaces ESLint + Prettier)
 - **Bun** - Test runner with happy-dom for DOM testing
 - **esbuild** - Bundling (ESM for service worker, IIFE for content scripts)
@@ -110,8 +110,15 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 ## File Structure
 
 ```
-├── manifest.json          # Extension configuration (MV3) - paths relative to dist/
 ├── package.json           # NPM/Bun configuration
+├── .nvmrc                 # Pinned Node version (matches engines + CI)
+├── .conductor/            # Conductor workspace config (committed)
+│   ├── settings.toml      # Setup, run and archive scripts, run_mode
+│   └── scripts/
+│       ├── lib.sh         # Shared PATH bootstrap and helpers (sourced)
+│       ├── setup.sh       # Install deps + first build on workspace creation
+│       ├── run.sh         # Dispatcher: build | verify | watch | pack
+│       └── archive.sh     # Report unsaved/unpushed work before archiving (read-only)
 ├── .github/
 │   └── workflows/
 │       ├── README.md
@@ -129,12 +136,14 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   └── pre-commit     # Pre-commit hook (typecheck, lint, test)
 │   ├── test/
 │   │   └── test-setup.ts  # DOM test setup (happy-dom)
-│   └── scripts/           # Build scripts
-│       ├── build.js       # Compiles TS + copies assets to dist/
-│       ├── pack.js        # Creates distribution zip
-│       ├── validate.js    # Manifest validation
+│   ├── build/
+│   │   ├── build.js       # Compiles TS + copies unpacked assets
+│   │   └── validate.js    # Manifest and build validation
+│   └── release/
+│       ├── pack.js        # Creates the versioned distribution zip
 │       └── bump-version.js # Version management
 ├── src/                   # TypeScript source (edit these)
+│   ├── manifest.json      # Extension configuration (MV3)
 │   ├── extension/         # Chrome extension entry points
 │   │   ├── background.ts  # Service worker
 │   │   ├── background.test.ts
@@ -169,20 +178,22 @@ The extension follows Chrome Extension Manifest V3 architecture with three main 
 │   │   └── message-tokens.css   # Shared CSS tokens for messages
 │   └── icons/             # Extension icons (16, 32, 48, 128px)
 │       └── providers/     # Provider logos (22 providers)
-└── dist/                  # Build output (load this in Chrome)
-    ├── extension/         # Compiled extension entry points
-    ├── email/             # Compiled email/domain modules
-    ├── ui/                # Compiled UI pages + history
-    ├── icons/             # Copied from src/
-    ├── manifest.json      # Copied from root
-    └── Clean-Autofill.zip # Distribution package
+└── dist/
+    └── chromium/
+        ├── unpacked/      # Build output loaded in Chrome
+        │   ├── extension/ # Compiled extension entry points
+        │   ├── email/     # Compiled email/domain modules
+        │   ├── ui/        # Compiled UI pages + history
+        │   ├── icons/     # Copied from src/
+        │   └── manifest.json # Copied from src/
+        └── Clean-Autofill-<version>.zip
 ```
 
 ## Development Workflow
 
 1. Edit TypeScript files in `src/`
-2. Run `bun run build` to compile to `dist/`
-3. Load `dist/` folder in Chrome (chrome://extensions, Developer mode)
+2. Run `bun run build` to compile to `dist/chromium/unpacked/`
+3. Load `dist/chromium/unpacked/` in Chrome (chrome://extensions, Developer mode)
 4. Run `bun run test` to verify changes
 5. Run `bun run check` before committing
 
@@ -208,8 +219,8 @@ To skip hooks in emergencies: `git commit --no-verify`
 ## CI/CD
 
 Three GitHub Actions workflows:
-- **W1-Test** (push/PR to main): Typecheck, lint, test, build, validate
-- **W2-Build** (push/PR to main, manual): Build, package, upload artifact
+- **W1-Test** (PR to main, manual, or called by W3): Typecheck, lint, test, build, validate
+- **W2-Build** (manual, or called by W3): Build, package, upload artifact
 - **W3-Release** (manual): Run W1 + W2, then upload & publish to Chrome Web Store
 
 ## Development Notes
@@ -218,5 +229,5 @@ Three GitHub Actions workflows:
 - Uses Chrome's sync storage for settings, local storage for email history
 - Domain extraction handles edge cases like localhost, IP addresses, and special TLDs
 - Content script uses multiple fallback strategies for reliable field detection
-- TypeScript source in `src/`, compiled output in `dist/`
-- Only edit `.ts` files; `.js` files in `dist/` are auto-generated
+- TypeScript source in `src/`, compiled output in `dist/chromium/unpacked/`
+- Only edit `.ts` files; `.js` files in `dist/chromium/unpacked/` are auto-generated

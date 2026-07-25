@@ -58,7 +58,7 @@ async function handleGenerateAndFill(): Promise<GenerateAndFillResponse> {
       if (response?.error) {
         return { success: true, email, message: `Email generated (${response.error})` };
       }
-      // No response — no field found, but email still generated
+      // No response: no field found, but email still generated
       return { success: true, email, message: 'Email generated (no field found to fill)' };
     } catch (fillError) {
       const msg = fillError instanceof Error ? fillError.message : 'Fill failed';

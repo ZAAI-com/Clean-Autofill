@@ -79,7 +79,7 @@ const INSTRUCTIONS: Record<DetectedProvider | 'generic', CatchAllInstructions> =
   mimecast: {
     providerName: 'Mimecast (Security Gateway)',
     steps: [
-      'Mimecast is a security gateway — your actual email provider is behind it',
+      'Mimecast is a security gateway: your actual email provider is behind it',
       'Configure catch-all in your underlying email provider (e.g., Google Workspace or Microsoft 365)',
       'Ensure Mimecast is configured to forward unrecognized recipients to your mail server',
     ],
@@ -89,7 +89,7 @@ const INSTRUCTIONS: Record<DetectedProvider | 'generic', CatchAllInstructions> =
   barracuda: {
     providerName: 'Barracuda (Security Gateway)',
     steps: [
-      'Barracuda is a security gateway — your actual email provider is behind it',
+      'Barracuda is a security gateway: your actual email provider is behind it',
       'Configure catch-all in your underlying email provider (e.g., Google Workspace or Microsoft 365)',
       'Ensure Barracuda is configured to forward unrecognized recipients to your mail server',
     ],

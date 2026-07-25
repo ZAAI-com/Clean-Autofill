@@ -5,7 +5,7 @@ const DNS_API_URL = 'https://dns.google/resolve';
 const MX_RECORD_TYPE = 15;
 const MIN_TTL = 3600; // 1 hour
 const MAX_TTL = 86400; // 24 hours
-const ERROR_TTL = 300; // 5 minutes — retry sooner on failure
+const ERROR_TTL = 300; // 5 minutes: retry sooner on failure
 const MX_FETCH_TIMEOUT = 5000;
 const MX_CACHE_STORAGE_KEY = 'mxCache';
 
@@ -32,7 +32,7 @@ const PROVIDER_INFO: Record<DetectedProvider, ProviderInfo> = {
   barracuda: { name: 'Barracuda', plusAddressingSupported: false },
 };
 
-// Security gateways — MX points here but actual mail provider is unknown
+// Security gateways: MX points here but actual mail provider is unknown
 const SECURITY_GATEWAYS: ReadonlySet<DetectedProvider> = new Set(['mimecast', 'barracuda']);
 
 interface DnsResponse {
