@@ -1,4 +1,5 @@
 name: W3 Release
+run-name: W3 Release
 
 on:
   workflow_dispatch:
