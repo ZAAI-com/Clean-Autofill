@@ -1,0 +1,72 @@
+package.json
+  s_12a08a5635c7d3::t_84758f99703954 7-11,13,56-57
+.claude/CLAUDE.md
+  s_12a08a5635c7d3::t_3d386446302bfa 139-143,146,181-189
+  s_12a08a5635c7d3::t_e54cc36c37f5e1 12,41,195-196
+  s_12a08a5635c7d3::t_74889cf74bab63 232-233
+.conductor/settings.toml
+  s_12a08a5635c7d3::t_c21f8f0577dc8b 7,14-16
+toolkit/typescript/tsconfig.json
+  s_12a08a5635c7d3::t_84758f99703954 12
+toolkit/release/pack.js
+  s_12a08a5635c7d3::t_7941cd1db098b5 1-59
+docs/README.md
+  s_12a08a5635c7d3::t_3d386446302bfa 240,284,286-288,298-306
+  s_12a08a5635c7d3::t_74889cf74bab63 14-16,22-31,37-39,61-70,78-84,154-157,160-163,171-172,313-317,320
+  s_12a08a5635c7d3::t_e54cc36c37f5e1 90,199,353-354
+  s_12a08a5635c7d3::t_7ea1d302db3e8b 5,212
+.conductor/scripts/setup.sh
+  s_12a08a5635c7d3::t_c21f8f0577dc8b 38,44-46,50
+docs/store-listing/privacy-justifications.md
+  s_12a08a5635c7d3::t_74889cf74bab63 1
+  s_12a08a5635c7d3::t_7ea1d302db3e8b 38,45
+toolkit/build/build.js
+  s_12a08a5635c7d3::t_84758f99703954 1-235
+src/email/catch-all-instructions.ts
+  s_12a08a5635c7d3::t_74889cf74bab63 82,92
+toolkit/release/bump-version.js
+  s_12a08a5635c7d3::t_84758f99703954 1-88
+.conductor/scripts/lib.sh
+  s_12a08a5635c7d3::t_c21f8f0577dc8b 75,118
+docs/Email-Provider.md
+  s_12a08a5635c7d3::t_7ea1d302db3e8b 11
+src/extension/background.ts
+  s_12a08a5635c7d3::t_74889cf74bab63 61
+.github/workflows/W3-Release-Chrome-Web-Store.yml
+  s_12a08a5635c7d3::t_ac38e79615898c 37,60-61
+  s_12a08a5635c7d3::t_38ca0f10894d2a 36,41,47,51,56-59,67,106-113,115-116,118-120,125-129,133-156,159,188-189,192,194-196,198,201-215,223,231
+.conductor/scripts/run.sh
+  s_12a08a5635c7d3::t_c21f8f0577dc8b 50,54-55
+toolkit/build/validate.js
+  s_12a08a5635c7d3::t_f357adb1ec7449 100-105
+  s_12a08a5635c7d3::t_84758f99703954 1-99,106-172
+docs/PRIVACY.md
+  s_12a08a5635c7d3::t_7ea1d302db3e8b 57
+  s_12a08a5635c7d3::t_74889cf74bab63 23-25,33
+.github/workflows/W2-Build.yml
+  s_12a08a5635c7d3::t_572a3dc38aa7db 36,41-42
+  s_12a08a5635c7d3::t_ac38e79615898c 43-60
+docs/store-listing/texts.md
+  s_12a08a5635c7d3::t_74889cf74bab63 1,6,55-58,63-69,74-76
+  s_12a08a5635c7d3::t_7ea1d302db3e8b 44
+src/ui/popup.test.ts
+  s_12a08a5635c7d3::t_74889cf74bab63 5
+src/email/mx-lookup.ts
+  s_12a08a5635c7d3::t_74889cf74bab63 8,35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9ef88c240e507554649a1d88c38f107b6f776bd6",
+  "prompts": {},
+  "sessions": {
+    "s_12a08a5635c7d3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9884-b8fe-7d60-9636-79f7abf18a06",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Manuel <m@manuelgruber.com>"
+    }
+  }
+}
